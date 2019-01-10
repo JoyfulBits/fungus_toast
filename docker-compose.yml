@@ -1,0 +1,11 @@
+version: '2'
+services:
+  db:
+    image: postgres:11.1
+  web:
+    build: .
+    command: mix phx.server
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
