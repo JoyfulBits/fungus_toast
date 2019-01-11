@@ -71,5 +71,5 @@ config :fungus_toast, FungusToast.Repo,
   username: "postgres",
   password: "postgres",
   database: "fungus_toast_dev",
-  hostname: "localhost",
+  hostname: System.get_env("PGHOST") || "localhost",
   pool_size: 10
