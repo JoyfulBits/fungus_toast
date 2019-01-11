@@ -20,26 +20,28 @@ defmodule FungusToastWeb do
   def controller do
     quote do
       use Phoenix.Controller, namespace: FungusToastWeb
+
       import Plug.Conn
-      import FungusToastWeb.Router.Helpers
       import FungusToastWeb.Gettext
+      alias FungusToastWeb.Router.Helpers, as: Routes
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/fungus_toast_web/templates",
-                        namespace: FungusToastWeb
+      use Phoenix.View,
+        root: "lib/fungus_toast_web/templates",
+        namespace: FungusToastWeb
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
+      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import FungusToastWeb.Router.Helpers
       import FungusToastWeb.ErrorHelpers
       import FungusToastWeb.Gettext
+      alias FungusToastWeb.Router.Helpers, as: Routes
     end
   end
 

@@ -3,6 +3,7 @@ services:
   db:
     image: postgres:11.1
   web:
+    image: local/fungus_toast
     build: .
     command: mix phx.server
     ports:

@@ -14,7 +14,7 @@ defmodule FungusToastWeb.Router do
   end
 
   scope "/", FungusToastWeb do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
   end
