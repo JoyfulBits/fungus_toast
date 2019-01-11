@@ -2,11 +2,17 @@ version: '2'
 services:
   db:
     image: postgres:11.1
+    environment:
+      POSTGRES_DB: fungus_toast_dev
   web:
     image: local/fungus_toast
     build: .
-    command: mix phx.server
+    # NOTE: revisit this if we have trouble on Windows
+    volumes:
+      - .:/opt/app
     ports:
       - "4000:4000"
+    environment:
+      PGHOST: db
     depends_on:
       - db

@@ -1,36 +1,25 @@
-FROM bitwalker/alpine-elixir:1.7.3
-MAINTAINER Paul Schoenfelder <paulschoenfelder@gmail.com>
+FROM bitwalker/alpine-elixir-phoenix:latest
 
-# Important!  Update this no-op ENV variable when this Dockerfile
-# is updated with the current date. It will force refresh of all
-# of the base images and things like `apt-get update` won't be using
-# old cached versions when the Dockerfile is built.
-ENV REFRESHED_AT=2018-08-30 \
-    # Set this so that CTRL+G works properly
-    TERM=xterm
+# Set exposed ports
+EXPOSE 4000
+ENV PORT=4000 MIX_ENV=dev REPLACE_OS_VARS=true
 
-# Install NPM
-RUN \
-    mkdir -p /opt/app && \
-    chmod -R 777 /opt/app && \
-    apk update && \
-    apk --no-cache --update add \
-      git make g++ wget curl inotify-tools \
-      nodejs nodejs-npm && \
-    npm install npm -g --no-progress && \
-    update-ca-certificates --fresh && \
-    rm -rf /var/cache/apk/*
+# Cache elixir deps
+ADD mix.exs mix.lock ./
+RUN mix do deps.get, deps.compile
 
-# Add local node module binaries to PATH
-ENV PATH=./node_modules/.bin:$PATH \
-    MIX_HOME=/opt/mix \
-    HEX_HOME=/opt/hex \
-    HOME=/opt/app
+# Same with npm deps
+ADD assets/package.json assets/
+RUN cd assets && \
+    npm install
+ADD . .
 
-# Install Hex+Rebar
-RUN mix local.hex --force && \
-    mix local.rebar --force
+# Run frontend build, compile, and digest assets
+RUN cd assets/ && \
+    npm run deploy && \
+    cd - && \
+    mix do compile, phx.digest
 
-WORKDIR /opt/app
+USER default
 
-CMD ["/bin/sh"]
+CMD ["mix", "phx.server"]
