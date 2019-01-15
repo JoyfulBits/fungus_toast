@@ -16,6 +16,8 @@ services:
       - MIX_ENV=dev
       - PORT=4000
     command: iex -S mix phx.server
+    stdin_open: true
+    tty: true
     depends_on:
       - db
   test:
