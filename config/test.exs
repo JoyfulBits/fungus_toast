@@ -14,5 +14,5 @@ config :fungus_toast, FungusToast.Repo,
   username: "postgres",
   password: "postgres",
   database: "fungus_toast_test",
-  hostname: "localhost",
+  hostname: System.get_env("PGHOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
