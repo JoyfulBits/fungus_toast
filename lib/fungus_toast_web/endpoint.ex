@@ -2,7 +2,9 @@ defmodule FungusToastWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :fungus_toast
 
   socket "/socket", FungusToastWeb.UserSocket,
-    websocket: true,
+    # NOTE: the below timeout ensures that any idle connections are closed
+    # before they reach Heroku’s 55-second timeout window.UserSocket,
+    websocket: [timeout: 45_000],
     longpoll: false
 
   # Serve at "/" the static files from "priv/static" directory.
