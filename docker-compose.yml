@@ -3,31 +3,14 @@ version: '3'
 services:
   db:
     image: postgres:11.1
-    environment:
-      POSTGRES_DB: fungus_toast_dev
-  web:
+  app:
     build: .
-    volumes:
-      - .:/opt/app
-    ports:
-      - "4000:4000"
-    environment:
-      - PGHOST=db
-      - MIX_ENV=dev
-      - PORT=4000
-    command: iex -S mix phx.server
-    stdin_open: true
-    tty: true
-    depends_on:
-      - db
-  test:
-    image: fungus_toast_web
-    command: mix test
     environment:
       - PGHOST=db
       - MIX_ENV=test
     volumes:
       - .:/opt/app
+    depends_on:
+      - db
     links:
       - db
-

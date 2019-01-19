@@ -43,3 +43,6 @@ npm-debug.log
 
 # VSCode lang server
 /.elixir_ls/
+
+.bash_history
+.vscode/

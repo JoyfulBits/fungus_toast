@@ -11,8 +11,8 @@ config :logger, level: :warn
 
 # Configure your database
 config :fungus_toast, FungusToast.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: System.get_env("PG_USER") || "postgres",
+  password: System.get_env("PG_PASSWORD") || "postgres",
   database: "fungus_toast_test",
   hostname: System.get_env("PGHOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
