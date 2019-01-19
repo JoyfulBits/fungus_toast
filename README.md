@@ -4,15 +4,8 @@
 
 
 ## Dev Workflow
-To start Phoenix in Docker:
-  * `docker-compose up`
-
-Debuggering in Docker:
-  * once you've run `docker-compose up`
-    * `docker attach fungus_toast_web_1`
-
 To run tests in Docker:
-  * `docker-compose run --rm test`
+  * `docker-compose run app mix test`
 
 To start your Phoenix server:
 

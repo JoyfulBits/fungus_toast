@@ -68,8 +68,8 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Configure your database
 config :fungus_toast, FungusToast.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: System.get_env("PG_USER") || "postgres",
+  password: System.get_env("PG_PASSWORD") || "postgres",
   database: "fungus_toast_dev",
   hostname: System.get_env("PGHOST") || "localhost",
   pool_size: 10
