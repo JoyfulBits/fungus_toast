@@ -6,7 +6,7 @@ defmodule FungusToast.GamesTest do
   describe "games" do
     alias FungusToast.Games.Game
 
-    @valid_attrs %{}
+    @valid_attrs %{"number_of_human_players" => 1}
     @update_attrs %{active: true, game_state: %{}}
 
     def game_fixture(attrs \\ %{}) do
@@ -30,6 +30,10 @@ defmodule FungusToast.GamesTest do
 
     test "create_game/1 with valid data creates a game" do
       assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
+    end
+
+    test "create_game/1 with invalid data does not create a game" do
+      assert {:error, %Ecto.Changeset{valid?: false}} = Games.create_game()
     end
 
     test "update_game/2 with valid data updates the game" do
