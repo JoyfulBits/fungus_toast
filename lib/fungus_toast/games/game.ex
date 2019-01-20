@@ -16,13 +16,14 @@ defmodule FungusToast.Games.Game do
     timestamps()
   end
 
-  @attrs [:active,
-          :game_state,
-          :number_of_human_players,
-          :number_of_ai_players,
-          :number_of_rows,
-          :number_of_columns
-        ]
+  @attrs [
+    :active,
+    :game_state,
+    :number_of_human_players,
+    :number_of_ai_players,
+    :number_of_rows,
+    :number_of_columns
+  ]
   @doc false
   def changeset(game, attrs) do
     game

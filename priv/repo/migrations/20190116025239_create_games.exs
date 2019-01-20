@@ -10,6 +10,5 @@ defmodule FungusToast.Repo.Migrations.CreateGames do
 
       timestamps()
     end
-
   end
 end

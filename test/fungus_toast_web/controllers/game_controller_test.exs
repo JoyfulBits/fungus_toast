@@ -24,7 +24,7 @@ defmodule FungusToastWeb.GameControllerTest do
     test "renders game when data is valid", %{conn: conn, game: %Game{id: id}} do
       conn = get(conn, Routes.game_path(conn, :show, id))
 
-      assert %{ "id" => id } = json_response(conn, 200)
+      assert %{"id" => id} = json_response(conn, 200)
     end
   end
 
@@ -34,7 +34,7 @@ defmodule FungusToastWeb.GameControllerTest do
         "number_of_human_players" => 2,
         "number_of_ai_players" => 2,
         "number_of_columns" => 100,
-        "number_of_rows" => 100,
+        "number_of_rows" => 100
       }
     end
 

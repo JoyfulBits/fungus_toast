@@ -4,7 +4,7 @@ defmodule FungusToastWeb.GameView do
   def render("show.json", %{game: game}) do
     %{
       id: game.id,
-      created: game.inserted_at,
-     }
+      created: game.inserted_at
+    }
   end
 end
