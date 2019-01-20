@@ -9,4 +9,12 @@ defmodule FungusToastWeb.GameController do
     game = Games.get_game!(id)
     render(conn, "show.json", game: game)
   end
+
+  def create(conn, game) do
+    with {:ok, game} <- Games.create_game(game) do
+      conn
+      |> put_status(:created)
+      |> render("show.json", game: game)
+    end
+  end
 end

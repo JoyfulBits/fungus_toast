@@ -22,6 +22,6 @@ defmodule FungusToastWeb.Router do
    scope "/api", FungusToastWeb do
      pipe_through :api
 
-     resources "/games", GameController, only: [:show]
+     resources "/games", GameController, only: [:show, :create]
    end
 end
