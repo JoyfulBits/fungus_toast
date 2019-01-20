@@ -2,8 +2,18 @@ defmodule FungusToast.Games.Game do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @attrs [
+    :active,
+    :game_state,
+    :number_of_human_players,
+    :number_of_ai_players,
+    :number_of_rows,
+    :number_of_columns
+  ]
+
   @default_rows 50
   @default_columns 50
+  @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "games" do
     field :game_state, :map
@@ -16,14 +26,6 @@ defmodule FungusToast.Games.Game do
     timestamps()
   end
 
-  @attrs [
-    :active,
-    :game_state,
-    :number_of_human_players,
-    :number_of_ai_players,
-    :number_of_rows,
-    :number_of_columns
-  ]
   @doc false
   def changeset(game, attrs) do
     game
