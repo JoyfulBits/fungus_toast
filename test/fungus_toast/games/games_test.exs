@@ -36,6 +36,11 @@ defmodule FungusToast.GamesTest do
       assert {:error, %Ecto.Changeset{valid?: false}} = Games.create_game()
     end
 
+    test "create_game/1 with invalid status does not create a game" do
+      assert {:error, %Ecto.Changeset{valid?: false}} =
+               Games.create_game(%{status: "Nope", number_of_human_players: 2})
+    end
+
     test "update_game/2 with valid data updates the game" do
       game = game_fixture()
       assert {:ok, %Game{} = game} = Games.update_game(game, @update_attrs)
