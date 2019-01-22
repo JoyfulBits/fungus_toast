@@ -11,6 +11,7 @@ defmodule FungusToastWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug ProperCase.Plug.SnakeCaseParams
   end
 
   scope "/", FungusToastWeb do
