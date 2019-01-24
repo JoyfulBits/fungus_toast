@@ -47,5 +47,12 @@ defmodule FungusToast.Games.Game do
         when count > 0 do
       Map.put(attrs, "status", "In Progress")
     end
+
+    def create_state(%{"number_of_human_players" => 1, "number_of_ai_players" => count} = attrs)
+        when count <= 0 do
+      Map.put(attrs, "status", "Finished")
+    end
+
+    def create_state(attrs), do: attrs
   end
 end
