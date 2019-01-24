@@ -12,6 +12,14 @@ defmodule FungusToast.Games.Game.EngineTest do
       assert result["status"] == "In Progress"
     end
 
+    test "game state population" do
+      attrs = %{"number_of_human_players" => 1, "number_of_ai_players" => 1}
+
+      result = Engine.create_state(attrs)
+
+      assert result["game_state"] != nil
+    end
+
     test "status is finished without ai players" do
       attrs = %{"number_of_human_players" => 1, "number_of_ai_players" => 0}
 

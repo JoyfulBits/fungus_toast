@@ -42,10 +42,12 @@ defmodule FungusToast.Games.Game do
     Provides game state transformations to be passed to
     Game.changeset/2
     """
+    alias FungusToast.Games.Game.State
 
     def create_state(%{"number_of_human_players" => 1, "number_of_ai_players" => count} = attrs)
         when count > 0 do
       Map.put(attrs, "status", "In Progress")
+      |> Map.put("game_state", game_state())
     end
 
     def create_state(%{"number_of_human_players" => 1, "number_of_ai_players" => count} = attrs)
@@ -54,5 +56,9 @@ defmodule FungusToast.Games.Game do
     end
 
     def create_state(attrs), do: attrs
+
+    def game_state() do
+      %State{}
+    end
   end
 end
