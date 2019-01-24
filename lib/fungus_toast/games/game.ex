@@ -36,4 +36,16 @@ defmodule FungusToast.Games.Game do
     |> validate_required([:number_of_human_players])
     |> validate_inclusion(:status, [@default_status] ++ @statuses)
   end
+
+  defmodule Engine do
+    @moduledoc """
+    Provides game state transformations to be passed to
+    Game.changeset/2
+    """
+
+    def create_state(%{"number_of_human_players" => 1, "number_of_ai_players" => count} = attrs)
+        when count > 0 do
+      Map.put(attrs, "status", "In Progress")
+    end
+  end
 end
