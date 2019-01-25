@@ -16,6 +16,8 @@ defmodule FungusToast.Games.Game do
 
   @default_rows 50
   @default_columns 50
+  def default_cols, do: @default_columns
+  def default_rows, do: @default_rows
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "games" do
@@ -38,6 +40,9 @@ defmodule FungusToast.Games.Game do
   end
 
   defmodule Engine do
+    alias FungusToast.Games.Grid
+    alias FungusToast.Games.Game
+
     @moduledoc """
     Provides game state transformations to be passed to
     Game.changeset/2
@@ -46,7 +51,7 @@ defmodule FungusToast.Games.Game do
     def create_state(%{"number_of_human_players" => 1, "number_of_ai_players" => count} = attrs)
         when count > 0 do
       Map.put(attrs, "status", "In Progress")
-      |> Map.put("game_state", game_state())
+      |> with_game_state()
     end
 
     def create_state(%{"number_of_human_players" => 1, "number_of_ai_players" => count} = attrs)
@@ -56,7 +61,22 @@ defmodule FungusToast.Games.Game do
 
     def create_state(attrs), do: attrs
 
-    def game_state() do
+    defp with_game_state(%{"number_of_rows" => rows, "number_of_colums" => cols} = attrs) do
+      Map.put(attrs, "game_state", Grid.new(rows, cols) |> wrap_state())
     end
+
+    defp with_game_state(%{"number_of_colums" => cols} = attrs) do
+      Map.put(attrs, "game_state", Grid.new(Game.default_rows(), cols) |> wrap_state())
+    end
+
+    defp with_game_state(%{"number_of_rows" => rows} = attrs) do
+      Map.put(attrs, "game_state", Grid.new(rows, Game.default_cols()) |> wrap_state())
+    end
+
+    defp with_game_state(attrs) do
+      Map.put(attrs, "game_state", Grid.new(Game.default_rows(), Game.default_cols()) |> wrap_state())
+    end
+
+    defp wrap_state(grid), do: %{grid: grid}
   end
 end
