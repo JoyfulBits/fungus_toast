@@ -73,4 +73,16 @@ defmodule FungusToast.Games.Grid do
     row = Integer.floor_div(flat_index, columns)
     replace(grid, row, col, val)
   end
+
+  @doc ~S"""
+  Returns the number of elements within the grid
+
+   ## Examples
+
+
+   iex> grid = [[%{a: 0}, %{a: 1}, %{a: 2}],[%{b: 0}, %{b: 1}, %{b: 2}]]
+   iex> Grid.size(grid)
+   6
+  """
+  def size(grid), do: grid |> List.flatten() |> length
 end

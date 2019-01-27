@@ -1,5 +1,5 @@
-defmodule FungusToast.Games.Game.EngineTest do
-  alias FungusToast.Games.Game.Engine
+defmodule FungusToast.Games.EngineTest do
+  alias FungusToast.Games.Engine
   use ExUnit.Case, async: true
   doctest Engine
 

@@ -7,6 +7,7 @@ defmodule FungusToast.Games do
   alias FungusToast.Repo
 
   alias FungusToast.Games.Game
+  alias FungusToast.Games.Engine
 
   @doc """
   Returns the list of games.
@@ -50,7 +51,7 @@ defmodule FungusToast.Games do
 
   """
   def create_game(attrs \\ %{}) do
-    updated_attrs = Game.Engine.create_state(attrs)
+    updated_attrs = Engine.create_state(attrs)
 
     %Game{}
     |> Game.changeset(updated_attrs)
