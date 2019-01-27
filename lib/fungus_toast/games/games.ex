@@ -51,6 +51,7 @@ defmodule FungusToast.Games do
   """
   def create_game(attrs \\ %{}) do
     updated_attrs = Game.Engine.create_state(attrs)
+
     %Game{}
     |> Game.changeset(updated_attrs)
     |> Repo.insert()

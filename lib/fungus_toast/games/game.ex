@@ -74,7 +74,11 @@ defmodule FungusToast.Games.Game do
     end
 
     defp with_game_state(attrs) do
-      Map.put(attrs, "game_state", Grid.new(Game.default_rows(), Game.default_cols()) |> wrap_state())
+      Map.put(
+        attrs,
+        "game_state",
+        Grid.new(Game.default_rows(), Game.default_cols()) |> wrap_state()
+      )
     end
 
     defp wrap_state(grid), do: %{grid: grid}

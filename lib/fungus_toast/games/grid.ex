@@ -10,7 +10,8 @@ defmodule FungusToast.Games.Grid do
      [ %{}, %{} ]
    ]
   """
-  def new(rows, cols, empty \\ %{}), do: 1..cols |> Enum.reduce([], fn _, acc -> acc ++ [row(rows, empty)] end)
+  def new(rows, cols, empty \\ %{}),
+    do: 1..cols |> Enum.reduce([], fn _, acc -> acc ++ [row(rows, empty)] end)
 
   defp row(len, empty), do: 1..len |> Enum.reduce([], fn _, acc -> acc ++ [empty] end)
 
@@ -27,6 +28,18 @@ defmodule FungusToast.Games.Grid do
   def at(grid, row, col), do: grid |> Enum.at(row) |> Enum.at(col)
 
   @doc ~S"""
+  Returns the cell at flat_index
+
+   ## Examples
+
+
+   iex> grid = [[%{a: 0}, %{a: 1}, %{a: 2}],[%{b: 0}, %{b: 1}, %{b: 2}]]
+   iex> Grid.at(grid ,3)
+   %{b: 0}
+  """
+  def at(grid, flat_index), do: List.flatten(grid) |> Enum.at(flat_index)
+
+  @doc ~S"""
   Replaces the cell at row, col with val
 
    ## Examples
@@ -34,10 +47,7 @@ defmodule FungusToast.Games.Grid do
 
    iex> grid = [[%{}],[%{}]]
    iex> Grid.replace(grid, 0,0, %{foo: "bar"})
-   [
-     [%{foo: "bar"}],
-     [%{}]
-   ]
+   [ [%{foo: "bar"}], [%{}] ]
   """
   def replace(grid, row, col, val) do
     new_row =
@@ -46,4 +56,5 @@ defmodule FungusToast.Games.Grid do
 
     List.replace_at(grid, row, new_row)
   end
+
 end
