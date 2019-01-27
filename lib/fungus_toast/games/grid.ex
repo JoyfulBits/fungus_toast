@@ -57,4 +57,20 @@ defmodule FungusToast.Games.Grid do
     List.replace_at(grid, row, new_row)
   end
 
+  @doc ~S"""
+  Replaces the cell at flat_index with val
+
+   ## Examples
+
+
+   iex> grid = [[%{a: 0}, %{a: 1}, %{a: 2}],[%{b: 0}, %{b: 1}, %{b: 2}]]
+   iex> Grid.replace(grid, 3, %{foo: "bar"})
+   [[%{a: 0}, %{a: 1}, %{a: 2}], [%{foo: "bar"}, %{b: 1}, %{b: 2}]]
+  """
+  def replace(grid, flat_index, val) do
+    columns = grid |> List.first() |> length
+    col = Integer.mod(flat_index, columns)
+    row = Integer.floor_div(flat_index, columns)
+    replace(grid, row, col, val)
+  end
 end
