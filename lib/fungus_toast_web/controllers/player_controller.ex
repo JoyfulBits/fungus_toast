@@ -15,7 +15,6 @@ defmodule FungusToastWeb.PlayerController do
     with {:ok, %Player{} = player} <- Players.create_player(player_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.player_path(conn, :show, player))
       |> render("show.json", player: player)
     end
   end
@@ -34,10 +33,6 @@ defmodule FungusToastWeb.PlayerController do
   end
 
   def delete(conn, %{"id" => id}) do
-    player = Players.get_player!(id)
-
-    with {:ok, %Player{}} <- Players.delete_player(player) do
-      send_resp(conn, :no_content, "")
-    end
+    update(conn, %{"id" => id, "player" => %{active: false}})
   end
 end

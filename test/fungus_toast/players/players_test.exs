@@ -54,10 +54,10 @@ defmodule FungusToast.PlayersTest do
       assert player == Players.get_player!(player.id)
     end
 
-    test "delete_player/1 deletes the player" do
+    test "delete_player/1 deactivates the player" do
       player = player_fixture()
-      assert {:ok, %Player{}} = Players.delete_player(player)
-      assert_raise Ecto.NoResultsError, fn -> Players.get_player!(player.id) end
+      assert {:ok, player} = Players.delete_player(player)
+      refute player.active
     end
 
     test "change_player/1 returns a player changeset" do
