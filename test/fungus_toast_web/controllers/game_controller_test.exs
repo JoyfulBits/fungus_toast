@@ -52,20 +52,16 @@ defmodule FungusToastWeb.GameControllerTest do
 
     test "case transformation", %{conn: conn} do
       params = %{
-        "numberOfHumanPlayers" => 2,
-        "gameState" => %{"camelCased" => %{"shouldBe" => [%{"snakeCased" => "value"}]}}
+        "numberOfHumanPlayers" => 2
       }
 
       conn = post(conn, Routes.game_path(conn, :create), params)
 
       assert %{
-               "id" => id,
-               "gameState" => %{"camelCased" => %{"shouldBe" => [%{"snakeCased" => "value"}]}}
+               "id" => id
              } = json_response(conn, 201)
 
-      transformed_game_state = %{"camel_cased" => %{"should_be" => [%{"snake_cased" => "value"}]}}
-
-      assert %Games.Game{id: id, game_state: ^transformed_game_state, number_of_human_players: 2} =
+      assert %Games.Game{id: id, number_of_human_players: 2} =
                Games.get_game!(id)
     end
   end
