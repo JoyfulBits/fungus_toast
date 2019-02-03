@@ -26,5 +26,7 @@ defmodule FungusToastWeb.Router do
     resources "/games", GameController, only: [:show, :create] do
       resources "/rounds", RoundController, only: [:show, :create]
     end
+
+    resources "/players", PlayerController, only: [:show, :create, :update]
   end
 end
