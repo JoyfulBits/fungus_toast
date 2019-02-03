@@ -74,7 +74,7 @@ defmodule FungusToast.Players do
   end
 
   @doc """
-  Deletes a Player.
+  Deactivates a Player.
 
   ## Examples
 
@@ -86,7 +86,7 @@ defmodule FungusToast.Players do
 
   """
   def delete_player(%Player{} = player) do
-    Repo.delete(player)
+    update_player(player, %{active: false})
   end
 
   @doc """

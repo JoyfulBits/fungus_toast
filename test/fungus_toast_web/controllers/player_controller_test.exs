@@ -21,6 +21,11 @@ defmodule FungusToastWeb.PlayerControllerTest do
     player
   end
 
+  defp create_player(_) do
+    player = fixture(:player)
+    {:ok, player: player}
+  end
+
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -28,14 +33,14 @@ defmodule FungusToastWeb.PlayerControllerTest do
   describe "index" do
     test "lists all players", %{conn: conn} do
       conn = get(conn, Routes.player_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)
     end
   end
 
   describe "create player" do
     test "renders player when data is valid", %{conn: conn} do
       conn = post(conn, Routes.player_path(conn, :create), player: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+      assert %{"id" => id} = json_response(conn, 201)
 
       conn = get(conn, Routes.player_path(conn, :show, id))
 
@@ -43,8 +48,9 @@ defmodule FungusToastWeb.PlayerControllerTest do
                "id" => id,
                "active" => true,
                "human" => true,
-               "user_name" => "some user_name"
-             } = json_response(conn, 200)["data"]
+                # TODO: Find a way to snake case this
+               "userName" => "some user_name"
+             } = json_response(conn, 200)
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -58,7 +64,7 @@ defmodule FungusToastWeb.PlayerControllerTest do
 
     test "renders player when data is valid", %{conn: conn, player: %Player{id: id} = player} do
       conn = put(conn, Routes.player_path(conn, :update, player), player: @update_attrs)
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+      assert %{"id" => ^id} = json_response(conn, 200)
 
       conn = get(conn, Routes.player_path(conn, :show, id))
 
@@ -66,8 +72,9 @@ defmodule FungusToastWeb.PlayerControllerTest do
                "id" => id,
                "active" => false,
                "human" => false,
-               "user_name" => "some updated user_name"
-             } = json_response(conn, 200)["data"]
+                # TODO: Find a way to snake case this
+               "userName" => "some updated user_name"
+             } = json_response(conn, 200)
     end
 
     test "renders errors when data is invalid", %{conn: conn, player: player} do
@@ -79,18 +86,14 @@ defmodule FungusToastWeb.PlayerControllerTest do
   describe "delete player" do
     setup [:create_player]
 
-    test "deletes chosen player", %{conn: conn, player: player} do
+    test "deactivates chosen player", %{conn: conn, player: player} do
       conn = delete(conn, Routes.player_path(conn, :delete, player))
-      assert response(conn, 204)
 
-      assert_error_sent 404, fn ->
-        get(conn, Routes.player_path(conn, :show, player))
-      end
+      assert %{
+               "id" => id,
+               "active" => false,
+             } = json_response(conn, 200)
     end
   end
 
-  defp create_player(_) do
-    player = fixture(:player)
-    {:ok, player: player}
-  end
 end
