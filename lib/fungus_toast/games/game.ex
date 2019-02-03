@@ -6,7 +6,6 @@ defmodule FungusToast.Games.Game do
   @statuses ["In Progress", "Finished", "Abandoned", "Archived"]
 
   @attrs [
-    :game_state,
     :number_of_human_players,
     :number_of_ai_players,
     :number_of_rows,
@@ -20,11 +19,12 @@ defmodule FungusToast.Games.Game do
 
   schema "games" do
     field :status, :string, default: @default_status
-    field :game_state, :map
     field :number_of_columns, :integer, default: @default_columns, null: false
     field :number_of_rows, :integer, default: @default_rows, null: false
     field :number_of_human_players, :integer, null: false
     field :number_of_ai_players, :integer, default: 0, null: false
+
+    has_many :rounds, FungusToast.Games.Round, on_delete: :delete_all
 
     timestamps()
   end
