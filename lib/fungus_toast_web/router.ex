@@ -28,5 +28,6 @@ defmodule FungusToastWeb.Router do
     end
 
     resources "/players", PlayerController, except: [:new, :edit]
+    resources "/skills", SkillController, except: [:new, :edit]
   end
 end
