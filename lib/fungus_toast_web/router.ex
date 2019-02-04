@@ -27,6 +27,8 @@ defmodule FungusToastWeb.Router do
       resources "/rounds", RoundController, only: [:show, :create]
     end
 
+    resources "/users", UserController, except: [:new, :edit]
+    #TODO: add a UserPlayersController to list players for a given user
     resources "/players", PlayerController, except: [:new, :edit]
     resources "/skills", SkillController, except: [:new, :edit]
   end

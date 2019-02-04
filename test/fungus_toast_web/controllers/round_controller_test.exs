@@ -15,14 +15,14 @@ defmodule FungusToastWeb.RoundControllerTest do
     game
   end
 
-  def fixture(:round, game_id) do
-    {:ok, round} = Games.create_round(game_id, @create_attrs)
+  def fixture(:round, game) do
+    {:ok, round} = Games.create_round(game, @create_attrs)
     round
   end
 
   defp create_round(_) do
     game = fixture(:game)
-    round = fixture(:round, game.id)
+    round = fixture(:round, game)
     {:ok, game: game, round: round}
   end
 
@@ -36,8 +36,6 @@ defmodule FungusToastWeb.RoundControllerTest do
     test "renders round when data is valid", %{conn: conn, game: %Game{id: game_id}, round: %Round{id: id}} do
       conn = get(conn, Routes.game_round_path(conn, :show, game_id, id))
       assert %{"id" => id, "gameId" => game_id, "gameState" => %{}, "stateChange" => %{}} = json_response(conn, 200)
-      # Why aren't we using the SnakeCase formatter here?
-      # assert %{"id" => id, "game_id" => game_id, "game_state" => %{}, "state_change" => %{}} = json_response(conn, 200)
     end
   end
 

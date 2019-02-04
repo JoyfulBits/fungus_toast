@@ -6,6 +6,7 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
+  alias FungusToast.Accounts.User
   alias FungusToast.Players.Player
 
   @doc """
@@ -19,6 +20,25 @@ defmodule FungusToast.Players do
   """
   def list_players do
     Repo.all(Player)
+  end
+
+  @doc """
+  Returns the list of players for a given user.
+
+  ## Examples
+
+      iex> list_players_for_user(%User{})
+      [%Player{}, ...]
+
+      iex> list_players_for_user(1)
+      [%Player{}, ...]
+
+  """
+  def list_players_for_user(%User{} = user) do
+    list_players_for_user(user.id)
+  end
+  def list_players_for_user(user_id) do
+    from(p in Player, where: p.user_id == ^user_id) |> Repo.all()
   end
 
   @doc """
@@ -42,15 +62,25 @@ defmodule FungusToast.Players do
 
   ## Examples
 
-      iex> create_player(%{field: value})
+      iex> create_player(user, %{field: value})
       {:ok, %Player{}}
 
-      iex> create_player(%{field: bad_value})
+      iex> create_player(user, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+      iex> create_player(1, %{field: value})
+      {:ok, %Player{}}
+
+      iex> create_player(1, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_player(attrs \\ %{}) do
-    %Player{}
+  def create_player(user, attrs \\ %{})
+  def create_player(%User{} = user, attrs) when is_map(attrs) do
+    create_player(user.id, attrs)
+  end
+  def create_player(user_id, attrs) when is_map(attrs) do
+    %Player{user_id: user_id}
     |> Player.changeset(attrs)
     |> Repo.insert()
   end
@@ -71,22 +101,6 @@ defmodule FungusToast.Players do
     player
     |> Player.changeset(attrs)
     |> Repo.update()
-  end
-
-  @doc """
-  Deactivates a Player.
-
-  ## Examples
-
-      iex> delete_player(player)
-      {:ok, %Player{}}
-
-      iex> delete_player(player)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_player(%Player{} = player) do
-    update_player(player, %{active: false})
   end
 
   @doc """
