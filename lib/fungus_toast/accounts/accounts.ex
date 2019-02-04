@@ -38,6 +38,19 @@ defmodule FungusToast.Accounts do
   def get_user!(id), do: Repo.get!(User, id)
 
   @doc """
+  Gets a single user by their user_name.
+
+  ## Examples
+
+      iex> get_user_for_name("abc")
+      %User{}
+
+  """
+  def get_user_for_name(user_name) do
+    from(u in User, where: u.user_name == ^user_name, limit: 1) |> Repo.one()
+  end
+
+  @doc """
   Creates a user.
 
   ## Examples
