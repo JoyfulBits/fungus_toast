@@ -67,7 +67,7 @@ defmodule FungusToast.Games do
 
   defp add_player_to_game(%Game{} = game, user_name) do
     {:ok, player} = Accounts.get_user_for_name(user_name)
-                    |> Players.create_player()
+                    |> Players.create_player(%{human: true})
     player = player |> Repo.preload(:games)
     game = game |> Repo.preload(:players)
     add_player_to_game(game, player, Enum.member?(game.players, player))
