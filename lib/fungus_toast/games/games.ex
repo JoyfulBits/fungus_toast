@@ -1,4 +1,5 @@
 defmodule FungusToast.Games do
+
   @moduledoc """
   The Games context.
   """
@@ -6,6 +7,9 @@ defmodule FungusToast.Games do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
+  alias FungusToast.Accounts
+  alias FungusToast.Players
+  alias FungusToast.Players.Player
   alias FungusToast.Games.{Game, Round}
 
   @doc """
@@ -50,9 +54,32 @@ defmodule FungusToast.Games do
 
   """
   def create_game(attrs \\ %{}) do
-    %Game{}
-    |> Game.changeset(attrs)
-    |> Repo.insert()
+    changeset = %Game{} |> Game.changeset(attrs)
+    with {:ok, game} <- Repo.insert(changeset) do
+      # TODO: handle the case where a user_name is not passed in
+      user = attrs |> Map.get("user_name")
+      game = add_player_to_game(game, user)
+      {:ok, game}
+    end
+  end
+
+  defp add_player_to_game(%Game{} = game, user_name) do
+    {:ok, player} = Accounts.get_user_for_name(user_name)
+                    |> Players.create_player()
+    player = player |> Repo.preload(:games)
+    game = game |> Repo.preload(:players)
+    add_player_to_game(game, player, Enum.member?(game.players, player))
+  end
+  defp add_player_to_game(%Game{} = game, %Player{} = player, false) do
+    new_players = game.players ++ [player]
+                  |> Enum.map(&Ecto.Changeset.change/1)
+    game
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_assoc(:players, new_players)
+    |> Repo.update!()
+  end
+  defp add_player_to_game(%Game{} = game, _, true) do
+    game
   end
 
   @doc """

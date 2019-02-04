@@ -1,11 +1,13 @@
 defmodule FungusToastWeb.GameControllerTest do
   use FungusToastWeb.ConnCase
 
+  alias FungusToast.Accounts
   alias FungusToast.Games
   alias FungusToast.Games.Game
 
   def fixture(:game) do
-    {:ok, game} = Games.create_game(%{number_of_human_players: 2})
+    {:ok, _} = Accounts.create_user(%{user_name: "testUser"})
+    {:ok, game} = Games.create_game(%{"user_name" => "testUser", "number_of_human_players" => 2})
     game
   end
 
@@ -31,6 +33,7 @@ defmodule FungusToastWeb.GameControllerTest do
   describe "POST" do
     def game_params() do
       %{
+        "user_name" => "testUser",
         "number_of_human_players" => 2,
         "number_of_ai_players" => 2,
         "number_of_columns" => 100,
@@ -52,6 +55,7 @@ defmodule FungusToastWeb.GameControllerTest do
 
     test "case transformation", %{conn: conn} do
       params = %{
+        "userName" => "testUser",
         "numberOfHumanPlayers" => 2
       }
 

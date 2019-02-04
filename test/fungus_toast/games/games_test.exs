@@ -1,21 +1,38 @@
 defmodule FungusToast.GamesTest do
   use FungusToast.DataCase
 
+  alias FungusToast.Accounts
   alias FungusToast.Games
 
+  def user_fixture(attrs \\ %{}) do
+    {:ok, user} =
+      attrs
+      |> Enum.into(%{"user_name" => "testUser"})
+      |> Accounts.create_user()
+
+    user
+  end
+
   def game_fixture(attrs \\ %{}) do
+    user_fixture()
     {:ok, game} =
       attrs
-      |> Enum.into(%{"number_of_human_players" => 1})
+      |> Enum.into(%{"user_name" => "testUser", "number_of_human_players" => 1})
       |> Games.create_game()
 
-    game
+    # Reload the game to pick up the new Player association
+    Games.get_game!(game.id)
+  end
+
+  def create_test_user(_) do
+    user_fixture()
   end
 
   describe "games" do
     alias FungusToast.Games.Game
 
-    @valid_attrs %{"number_of_human_players" => 1}
+    # TODO: Evaluate if this is the best way to do this
+    @valid_attrs %{"user_name" => "testUser", "number_of_human_players" => 1}
     @update_attrs %{active: true}
 
     test "list_games/0 returns all games" do
@@ -29,7 +46,10 @@ defmodule FungusToast.GamesTest do
     end
 
     test "create_game/1 with valid data creates a game" do
+      user_fixture()
       assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
+      game = game |> FungusToast.Repo.preload(:players)
+      assert length(game.players) == 1
     end
 
     test "create_game/1 with invalid data does not create a game" do

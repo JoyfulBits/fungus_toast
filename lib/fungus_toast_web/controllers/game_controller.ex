@@ -6,7 +6,7 @@ defmodule FungusToastWeb.GameController do
   action_fallback FungusToastWeb.FallbackController
 
   def show(conn, %{"id" => id}) do
-    game = Games.get_game!(id) |> FungusToast.Repo.preload(:rounds)
+    game = Games.get_game!(id) |> FungusToast.Repo.preload(:rounds) |> FungusToast.Repo.preload(:players)
     render(conn, "show.json", game: game)
   end
 
