@@ -58,7 +58,9 @@ defmodule FungusToast.Games do
     with {:ok, game} <- Repo.insert(changeset) do
       # TODO: handle the case where a user_name is not passed in
       user = attrs |> Map.get("user_name")
+      create_round_for_game(game, 1, %{}, %{})
       game = add_player_to_game(game, user)
+
       {:ok, game}
     end
   end
@@ -216,5 +218,9 @@ defmodule FungusToast.Games do
     %Round{game_id: game_id}
     |> Round.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def create_round_for_game(%Game{} = game, number, state, change) do
+    create_round(game, %{number: number, game_state: state, state_change: change})
   end
 end
