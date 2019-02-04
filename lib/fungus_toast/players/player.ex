@@ -3,25 +3,22 @@ defmodule FungusToast.Players.Player do
   import Ecto.Changeset
 
   @attrs [
-    :user_name,
     :human,
-    :active
   ]
 
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "players" do
-    field :active, :boolean, default: false
     field :human, :boolean, default: false
-    field :user_name, :string
 
+    belongs_to :user, FungusToast.Accounts.User, foreign_key: :user_id
     timestamps()
   end
 
   @doc false
   def changeset(player, attrs) do
     player
-    |> cast(attrs, [:user_name, :active, :human])
-    |> validate_required([:user_name, :active, :human])
+    |> cast(attrs, [:human])
+    |> validate_required([:human])
   end
 end

@@ -1,21 +1,31 @@
 defmodule FungusToast.PlayersTest do
   use FungusToast.DataCase
 
+  alias FungusToast.Accounts
   alias FungusToast.Players
 
   describe "players" do
     alias FungusToast.Players.Player
 
-    @valid_attrs %{active: true, human: true, user_name: "some user_name"}
-    @update_attrs %{active: false, human: false, user_name: "some updated user_name"}
-    @invalid_attrs %{active: nil, human: nil, user_name: nil}
+    @valid_attrs %{human: true}
+    @update_attrs %{human: false}
+    @invalid_attrs %{human: nil}
+
+    def user_fixture(attrs \\ %{}) do
+      {:ok, user} =
+        attrs
+        |> Enum.into(%{active: true, user_name: "some user_name"})
+        |> Accounts.create_user()
+
+      user
+    end
 
     def player_fixture(attrs \\ %{}) do
-      {:ok, player} =
-        attrs
-        |> Enum.into(@valid_attrs)
-        |> Players.create_player()
+      user = user_fixture()
+      adjusted_attrs = attrs
+                       |> Enum.into(@valid_attrs)
 
+      {:ok, player} = Players.create_player(user, adjusted_attrs)
       player
     end
 
@@ -29,35 +39,38 @@ defmodule FungusToast.PlayersTest do
       assert Players.get_player!(player.id) == player
     end
 
-    test "create_player/1 with valid data creates a player" do
-      assert {:ok, %Player{} = player} = Players.create_player(@valid_attrs)
-      assert player.active == true
+    test "create_player/1 with valid data and a %User{} creates a player" do
+      user = user_fixture()
+      assert {:ok, %Player{} = player} = Players.create_player(user, @valid_attrs)
+      player = player |> Repo.preload(:user)
       assert player.human == true
-      assert player.user_name == "some user_name"
+      assert player.user == user
+    end
+
+    test "create_player/1 with valid data and a user ID creates a player" do
+      user = user_fixture()
+      assert {:ok, %Player{} = player} = Players.create_player(user.id, @valid_attrs)
+      # TODO: find a better place to do this
+      player = player |> FungusToast.Repo.preload(:user)
+      assert player.human == true
+      assert player.user == user
     end
 
     test "create_player/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Players.create_player(@invalid_attrs)
+      user = user_fixture()
+      assert {:error, %Ecto.Changeset{}} = Players.create_player(user, @invalid_attrs)
     end
 
     test "update_player/2 with valid data updates the player" do
       player = player_fixture()
       assert {:ok, %Player{} = player} = Players.update_player(player, @update_attrs)
-      assert player.active == false
       assert player.human == false
-      assert player.user_name == "some updated user_name"
     end
 
     test "update_player/2 with invalid data returns error changeset" do
       player = player_fixture()
       assert {:error, %Ecto.Changeset{}} = Players.update_player(player, @invalid_attrs)
       assert player == Players.get_player!(player.id)
-    end
-
-    test "delete_player/1 deactivates the player" do
-      player = player_fixture()
-      assert {:ok, player} = Players.delete_player(player)
-      refute player.active
     end
 
     test "change_player/1 returns a player changeset" do

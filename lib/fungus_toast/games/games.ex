@@ -107,10 +107,16 @@ defmodule FungusToast.Games do
 
   ## Examples
 
+      iex> list_rounds_for_game(game)
+      [%Round{}, ...]
+
       iex> list_rounds_for_game(1)
       [%Round{}, ...]
 
   """
+  def list_rounds_for_game(%Game{} = game) do
+    list_rounds_for_game(game.id)
+  end
   def list_rounds_for_game(game_id) do
     from(r in Round, where: r.game_id == ^game_id) |> Repo.all()
   end
@@ -162,6 +168,12 @@ defmodule FungusToast.Games do
 
   ## Examples
 
+      iex> create_round(game, %{field: value})
+      {:ok, %Round{}}
+
+      iex> create_round(game, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
       iex> create_round(1, %{field: value})
       {:ok, %Round{}}
 
@@ -169,7 +181,11 @@ defmodule FungusToast.Games do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_round(game_id, attrs \\ %{}) do
+  def create_round(game, attrs \\ %{})
+  def create_round(%Game{} = game, attrs) when is_map(attrs) do
+    create_round(game.id, attrs)
+  end
+  def create_round(game_id, attrs) when is_map(attrs) do
     %Round{game_id: game_id}
     |> Round.changeset(attrs)
     |> Repo.insert()
