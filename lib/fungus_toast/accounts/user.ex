@@ -23,5 +23,6 @@ defmodule FungusToast.Accounts.User do
     user
     |> cast(attrs, [:user_name, :active])
     |> validate_required([:user_name, :active])
+    |> unique_constraint(:user_name)
   end
 end
