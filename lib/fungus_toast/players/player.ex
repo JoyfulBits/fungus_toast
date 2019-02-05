@@ -3,6 +3,7 @@ defmodule FungusToast.Players.Player do
   import Ecto.Changeset
 
   @attrs [
+    :name,
     :human,
     :mutation_points,
     :top_left_growth_chance,
@@ -26,6 +27,7 @@ defmodule FungusToast.Players.Player do
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "players" do
+    field :name, :string, null: false
     field :human, :boolean, default: false, null: false
 
     field :mutation_points, :integer, default: 0, null: false
