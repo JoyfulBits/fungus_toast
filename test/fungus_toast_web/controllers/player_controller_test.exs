@@ -3,7 +3,6 @@ defmodule FungusToastWeb.PlayerControllerTest do
 
   alias FungusToast.Accounts
   alias FungusToast.Games
-  alias FungusToast.Players
 
   @create_attrs %{
     human: true,
@@ -22,7 +21,7 @@ defmodule FungusToastWeb.PlayerControllerTest do
   end
 
   def fixture(:player, user) do
-    {:ok, player} = Players.create_player(user, @create_attrs)
+    {:ok, player} = Games.create_player(user, @create_attrs)
     player
   end
 

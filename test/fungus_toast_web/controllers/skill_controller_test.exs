@@ -1,8 +1,8 @@
 defmodule FungusToastWeb.SkillControllerTest do
   use FungusToastWeb.ConnCase
 
-  alias FungusToast.Skills
-  alias FungusToast.Skills.Skill
+  alias FungusToast.Games
+  alias FungusToast.Games.Skill
 
   @create_attrs %{
     description: "some description",
@@ -19,7 +19,7 @@ defmodule FungusToastWeb.SkillControllerTest do
   @invalid_attrs %{description: nil, increase_per_point: nil, name: nil, up_is_good: nil}
 
   def fixture(:skill) do
-    {:ok, skill} = Skills.create_skill(@create_attrs)
+    {:ok, skill} = Games.create_skill(@create_attrs)
     skill
   end
 
@@ -49,7 +49,7 @@ defmodule FungusToastWeb.SkillControllerTest do
       assert %{
                "id" => id,
                "description" => "some description",
-               "increasePerPoint" => "120.5",
+               "increasePerPoint" => 120.5,
                "name" => "some name",
                "upIsGood" => true
              } = json_response(conn, 200)
@@ -73,7 +73,7 @@ defmodule FungusToastWeb.SkillControllerTest do
       assert %{
                "id" => id,
                "description" => "some updated description",
-               "increasePerPoint" => "456.7",
+               "increasePerPoint" => 456.7,
                "name" => "some updated name",
                "upIsGood" => false
              } = json_response(conn, 200)

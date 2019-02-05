@@ -1,12 +1,12 @@
 defmodule FungusToast.Skills do
   @moduledoc """
-  The Skills context.
+  The Games.context.
   """
 
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Skills.Skill
+  alias FungusToast.Games.Skill
 
   @doc """
   Returns the list of skills.

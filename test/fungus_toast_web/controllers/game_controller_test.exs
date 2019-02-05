@@ -56,7 +56,7 @@ defmodule FungusToastWeb.GameControllerTest do
     test "invalid params", %{conn: conn} do
       conn = post(conn, Routes.game_path(conn, :create), %{"bad" => "params"})
 
-      assert %{"errors" => _} = json_response(conn, 422)
+      assert "Bad Request" = json_response(conn, 400)
     end
 
     test "case transformation", %{conn: conn} do

@@ -25,7 +25,7 @@ defmodule FungusToast.Games.Game do
     field :number_of_ai_players, :integer, default: 0, null: false
 
     has_many :rounds, FungusToast.Games.Round, on_delete: :delete_all
-    has_many :players, FungusToast.Players.Player, on_delete: :delete_all
+    has_many :players, FungusToast.Games.Player, on_delete: :delete_all
 
     timestamps()
   end

@@ -1,4 +1,4 @@
-defmodule FungusToast.Players.Player do
+defmodule FungusToast.Games.Player do
   use Ecto.Schema
   import Ecto.Changeset
 

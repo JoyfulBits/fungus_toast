@@ -13,7 +13,7 @@ defmodule FungusToast.Accounts.User do
     field :active, :boolean, default: true, null: false
     field :user_name, :string
 
-    has_many :players, FungusToast.Players.Player
+    has_many :players, FungusToast.Games.Player
 
     timestamps()
   end

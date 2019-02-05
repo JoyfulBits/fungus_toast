@@ -1,14 +1,13 @@
 defmodule FungusToast.Players do
   @moduledoc """
-  The Players context.
+  The Games.context.
   """
 
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
   alias FungusToast.Accounts.User
-  alias FungusToast.Games.Game
-  alias FungusToast.Players.Player
+  alias FungusToast.Games.{Game, Player}
 
   @doc """
   Returns the list of players.

@@ -14,17 +14,12 @@ defmodule FungusToast.GamesTest do
   end
 
   def game_fixture(attrs \\ %{}) do
-    user_fixture()
     {:ok, game} =
       attrs
       |> Enum.into(%{user_name: "testUser", number_of_human_players: 1})
       |> Games.create_game()
 
     game
-  end
-
-  def create_test_user(_) do
-    user_fixture()
   end
 
   describe "games" do
@@ -35,11 +30,13 @@ defmodule FungusToast.GamesTest do
     @update_attrs %{active: true}
 
     test "list_games/0 returns all games" do
+      user_fixture()
       game = game_fixture()
       assert Games.list_games() == [game]
     end
 
     test "get_game!/1 returns the game with given id" do
+      user_fixture()
       game = game_fixture()
       assert Games.get_game!(game.id) == game
     end
@@ -52,26 +49,29 @@ defmodule FungusToast.GamesTest do
     end
 
     test "create_game/1 with invalid data does not create a game" do
-      assert {:error, %Ecto.Changeset{valid?: false}} = Games.create_game()
+      assert {:error, :bad_request} = Games.create_game()
     end
 
     test "create_game/1 with invalid status does not create a game" do
-      assert {:error, %Ecto.Changeset{valid?: false}} =
+      assert {:error, :bad_request} =
                Games.create_game(%{status: "Nope", number_of_human_players: 2})
     end
 
     test "update_game/2 with valid data updates the game" do
+      user_fixture()
       game = game_fixture()
       assert {:ok, %Game{} = game} = Games.update_game(game, @update_attrs)
     end
 
     test "delete_game/1 deletes the game" do
+      user_fixture()
       game = game_fixture()
       assert {:ok, %Game{}} = Games.delete_game(game)
       assert_raise Ecto.NoResultsError, fn -> Games.get_game!(game.id) end
     end
 
     test "change_game/1 returns a game changeset" do
+      user_fixture()
       game = game_fixture()
       assert %Ecto.Changeset{} = Games.change_game(game)
     end
@@ -92,12 +92,14 @@ defmodule FungusToast.GamesTest do
     end
 
     test "get_round!/1 returns the round with given id" do
+      user_fixture()
       game = game_fixture()
       round = round_fixture(game.id)
       assert Games.get_round!(round.id) == round
     end
 
     test "create_round/2 with valid data creates a round" do
+      user_fixture()
       game = game_fixture()
       assert {:ok, %Round{} = round} = Games.create_round(game.id, @valid_attrs)
       assert round.game_state == %{"hello" => "world"}
@@ -105,11 +107,13 @@ defmodule FungusToast.GamesTest do
     end
 
     test "create_round/2 with invalid data returns error changeset" do
+      user_fixture()
       game = game_fixture()
       assert {:error, %Ecto.Changeset{}} = Games.create_round(game.id, @invalid_attrs)
     end
 
     test "list_rounds_for_game/1 returns rounds for the specified game" do
+      user_fixture()
       game1 = game_fixture()
       game1 = game1 |> FungusToast.Repo.preload(:rounds)
       game2 = game_fixture()
@@ -122,6 +126,7 @@ defmodule FungusToast.GamesTest do
     end
 
     test "get_round_for_game!/2 returns the round with the given round number for the specified game" do
+      user_fixture()
       game = game_fixture()
       round2 = round_fixture(game.id, %{game_state: %{"hello" => "world"}, state_change: %{"hello" => "world"}, number: 2})
 
