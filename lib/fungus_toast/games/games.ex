@@ -8,6 +8,7 @@ defmodule FungusToast.Games do
   alias FungusToast.Repo
 
   alias FungusToast.Accounts
+  alias FungusToast.Accounts.User
   alias FungusToast.Players
   alias FungusToast.Games.{Game, Round}
 
@@ -54,20 +55,25 @@ defmodule FungusToast.Games do
   """
   def create_game(attrs \\ %{}) do
     changeset = %Game{} |> Game.changeset(attrs)
+    user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
+    create_game_for_user(changeset, user_name)
+  end
+
+  def create_game_for_user(changeset, %User{} = user) do
     with {:ok, game} <- Repo.insert(changeset) do
-      # TODO: handle the case where a user_name is not passed in
-      user = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
+      # Handle the case where a round is not created
       create_round(game, %{number: 1})
-      game = add_player_to_game(game, user)
+      game |> Players.create_player(user, %{human: true, name: user.user_name})
 
       {:ok, game}
     end
   end
-
-  defp add_player_to_game(%Game{} = game, user_name) do
+  def create_game_for_user(changeset, user_name) when is_binary(user_name) do
     user = Accounts.get_user_for_name(user_name)
-    game |> Players.create_player(user, %{human: true, name: user_name})
-    game
+    create_game_for_user(changeset, user)
+  end
+  def create_game_for_user(_, _) do
+    {:error, :bad_request}
   end
 
   @doc """
