@@ -14,6 +14,17 @@ defmodule FungusToast.Games do
   alias FungusToast.Rounds
   alias FungusToast.Skills
 
+  # TODO: Move this to a PlayerSkill helper
+  alias FungusToast.Games.Player
+  alias FungusToast.Games.Skill
+  alias FungusToast.Games.PlayerSkill
+  def create_player_skill(%Player{} = player, %Skill{} = skill, attrs \\ %{}) do
+    %PlayerSkill{player_id: player.id, skill_id: skill.id}
+    |> PlayerSkill.changeset(attrs)
+    |> Repo.insert()
+  end
+
+
   @doc """
   Returns the list of games.
 
