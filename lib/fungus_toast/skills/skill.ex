@@ -12,7 +12,7 @@ defmodule FungusToast.Skills.Skill do
 
   schema "skills" do
     field :description, :string, size: 512
-    field :increase_per_point, :decimal
+    field :increase_per_point, :float
     field :name, :string, size: 64
     field :up_is_good, :boolean
 
