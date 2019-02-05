@@ -9,7 +9,6 @@ defmodule FungusToast.Games do
 
   alias FungusToast.Accounts
   alias FungusToast.Players
-  alias FungusToast.Games
   alias FungusToast.Games.{Game, Round}
 
   @doc """
