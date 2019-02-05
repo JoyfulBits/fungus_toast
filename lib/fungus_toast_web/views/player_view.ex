@@ -10,10 +10,5 @@ defmodule FungusToastWeb.PlayerView do
     render_one(player, PlayerView, "player.json")
   end
 
-  def render("player.json", %{player: player}) do
-    # TODO: Move this into a helper that accepts a struct
-    Map.from_struct(player)
-    |> Map.pop(:__meta__)
-    |> elem(1)
-  end
+  def render("player.json", %{player: player}), do: map_from(player)
 end

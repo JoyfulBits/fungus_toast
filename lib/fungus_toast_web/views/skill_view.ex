@@ -10,10 +10,5 @@ defmodule FungusToastWeb.SkillView do
     render_one(skill, SkillView, "skill.json")
   end
 
-  def render("skill.json", %{skill: skill}) do
-    # TODO: Move this into a helper that accepts a struct
-    Map.from_struct(skill)
-    |> Map.pop(:__meta__)
-    |> elem(1)
-  end
+  def render("skill.json", %{skill: skill}), do: map_from(skill)
 end
