@@ -9,7 +9,7 @@ defmodule FungusToast.Games do
 
   alias FungusToast.Accounts
   alias FungusToast.Players
-  alias FungusToast.Players.Player
+  alias FungusToast.Games
   alias FungusToast.Games.{Game, Round}
 
   @doc """
@@ -57,8 +57,8 @@ defmodule FungusToast.Games do
     changeset = %Game{} |> Game.changeset(attrs)
     with {:ok, game} <- Repo.insert(changeset) do
       # TODO: handle the case where a user_name is not passed in
-      user = attrs |> Map.get("user_name")
-      create_round_for_game(game, 1, %{}, %{})
+      user = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
+      create_round(game, %{number: 1})
       game = add_player_to_game(game, user)
 
       {:ok, game}
@@ -66,21 +66,8 @@ defmodule FungusToast.Games do
   end
 
   defp add_player_to_game(%Game{} = game, user_name) do
-    {:ok, player} = Accounts.get_user_for_name(user_name)
-                    |> Players.create_player(%{human: true})
-    player = player |> Repo.preload(:games)
-    game = game |> Repo.preload(:players)
-    add_player_to_game(game, player, Enum.member?(game.players, player))
-  end
-  defp add_player_to_game(%Game{} = game, %Player{} = player, false) do
-    new_players = game.players ++ [player]
-                  |> Enum.map(&Ecto.Changeset.change/1)
-    game
-    |> Ecto.Changeset.change()
-    |> Ecto.Changeset.put_assoc(:players, new_players)
-    |> Repo.update!()
-  end
-  defp add_player_to_game(%Game{} = game, _, true) do
+    user = Accounts.get_user_for_name(user_name)
+    game |> Players.create_player(user, %{human: true, name: user_name})
     game
   end
 
@@ -218,9 +205,5 @@ defmodule FungusToast.Games do
     %Round{game_id: game_id}
     |> Round.changeset(attrs)
     |> Repo.insert()
-  end
-
-  def create_round_for_game(%Game{} = game, number, state, change) do
-    create_round(game, %{number: number, game_state: state, state_change: change})
   end
 end

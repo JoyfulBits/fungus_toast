@@ -12,7 +12,7 @@ defmodule FungusToastWeb.GameController do
 
   def create(conn, game) do
     with {:ok, game} <- Games.create_game(game) do
-      game = game |> FungusToast.Repo.preload(:rounds)
+      game = game |> FungusToast.Repo.preload(:rounds) |> FungusToast.Repo.preload(:players)
       conn
       |> put_status(:created)
       |> render("show.json", game: game)
