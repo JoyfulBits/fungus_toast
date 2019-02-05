@@ -26,5 +26,6 @@ defmodule FungusToast.Skills.Skill do
     |> validate_required([:name, :description, :increase_per_point])
     |> validate_length(:name, max: 64)
     |> validate_length(:description, max: 512)
+    |> unqiue_constraint(:name)
   end
 end
