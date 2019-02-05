@@ -11,9 +11,9 @@ defmodule FungusToastWeb.PlayerController do
   #   render(conn, "index.json", players: players)
   # end
 
-  def create(conn, %{"user_id" => user_id, "player" => player_params}) do
-    with {:ok, %Player{} = player} <- Players.create_player(user_id, player_params) do
-      player = player |> FungusToast.Repo.preload(:user) |> FungusToast.Repo.preload(:games)
+  def create(conn, %{"game_id" => game_id, "user_id" => user_id, "player" => player_params}) do
+    with {:ok, %Player{} = player} <- Players.create_player(game_id, user_id, player_params) do
+      player = player |> FungusToast.Repo.preload(:user) |> FungusToast.Repo.preload(:game)
       conn
       |> put_status(:created)
       |> render("show.json", player: player)
@@ -22,7 +22,7 @@ defmodule FungusToastWeb.PlayerController do
 
   def show(conn, %{"id" => id}) do
     player = Players.get_player!(id)
-    player = player |> FungusToast.Repo.preload(:user) |> FungusToast.Repo.preload(:games)
+    player = player |> FungusToast.Repo.preload(:user) |> FungusToast.Repo.preload(:game)
     render(conn, "show.json", player: player)
   end
 end

@@ -2,15 +2,22 @@ defmodule FungusToastWeb.PlayerControllerTest do
   use FungusToastWeb.ConnCase
 
   alias FungusToast.Accounts
+  alias FungusToast.Games
   alias FungusToast.Players
 
   @create_attrs %{
-    human: true
+    human: true,
+    name: "testUser"
   }
   @invalid_attrs %{human: nil}
 
+  def fixture(:game) do
+    {:ok, game} = Games.create_game(%{user_name: "testUser", number_of_human_players: 1})
+    game
+  end
+
   def fixture(:user) do
-    {:ok, user} = Accounts.create_user(%{user_name: "some user_name", active: true})
+    {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
     user
   end
 
@@ -34,7 +41,8 @@ defmodule FungusToastWeb.PlayerControllerTest do
   describe "POST" do
     test "renders player when data is valid", %{conn: conn} do
       user = fixture(:user)
-      conn = post(conn, Routes.player_path(conn, :create), user_id: user.id, player: @create_attrs)
+      game = fixture(:game)
+      conn = post(conn, Routes.player_path(conn, :create), game_id: game.id, user_id: user.id, player: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)
 
       conn = get(conn, Routes.player_path(conn, :show, id))
@@ -47,7 +55,8 @@ defmodule FungusToastWeb.PlayerControllerTest do
 
     test "renders errors when data is invalid", %{conn: conn} do
       user = fixture(:user)
-      conn = post(conn, Routes.player_path(conn, :create), user_id: user.id, player: @invalid_attrs)
+      game = fixture(:game)
+      conn = post(conn, Routes.player_path(conn, :create), game_id: game.id, user_id: user.id, player: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end

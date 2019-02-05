@@ -25,9 +25,7 @@ defmodule FungusToast.Games.Game do
     field :number_of_ai_players, :integer, default: 0, null: false
 
     has_many :rounds, FungusToast.Games.Round, on_delete: :delete_all
-
-    many_to_many :players, FungusToast.Players.Player, join_through: "player_games",
-      unique: true, on_replace: :delete
+    has_many :players, FungusToast.Players.Player, on_delete: :delete_all
 
     timestamps()
   end
@@ -38,6 +36,5 @@ defmodule FungusToast.Games.Game do
     |> cast(attrs, @attrs)
     |> validate_required([:number_of_human_players])
     |> validate_inclusion(:status, [@default_status] ++ @statuses)
-    |> unique_constraint(:unique_player_games_index)
   end
 end

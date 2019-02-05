@@ -51,10 +51,8 @@ defmodule FungusToast.Players.Player do
     field :regeneration_chance, :decimal, default: 0.0, null: false
     field :mycotoxin_fungicide_chance, :decimal, default: 0.0, null: false
 
-    belongs_to :user, FungusToast.Accounts.User, foreign_key: :user_id
-
-    many_to_many :games, FungusToast.Games.Game, join_through: "player_games",
-      unique: true, on_replace: :delete
+    belongs_to :user, FungusToast.Accounts.User
+    belongs_to :game, FungusToast.Games.Game
 
     timestamps()
   end

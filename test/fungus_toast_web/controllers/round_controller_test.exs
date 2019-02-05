@@ -11,9 +11,13 @@ defmodule FungusToastWeb.RoundControllerTest do
   }
   @invalid_attrs %{game_state: nil, state_change: nil}
 
+  def fixture(:user) do
+    {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
+    user
+  end
+
   def fixture(:game) do
-    {:ok, _} = Accounts.create_user(%{user_name: "testUser"})
-    {:ok, game} = Games.create_game(%{"user_name" => "testUser", "number_of_human_players" => 2})
+    {:ok, game} = Games.create_game(%{user_name: "testUser", number_of_human_players: 2})
     game
   end
 
@@ -23,6 +27,7 @@ defmodule FungusToastWeb.RoundControllerTest do
   end
 
   defp create_round(_) do
+    fixture(:user)
     game = fixture(:game)
     round = fixture(:round, game)
     {:ok, game: game, round: round}
@@ -43,6 +48,7 @@ defmodule FungusToastWeb.RoundControllerTest do
 
   describe "POST" do
     test "renders errors when data is invalid", %{conn: conn} do
+      fixture(:user)
       game = fixture(:game)
       conn = post(conn, Routes.game_round_path(conn, :create, game.id), round: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}

@@ -2,19 +2,29 @@ defmodule FungusToast.PlayersTest do
   use FungusToast.DataCase
 
   alias FungusToast.Accounts
+  alias FungusToast.Games
   alias FungusToast.Players
 
   describe "players" do
     alias FungusToast.Players.Player
 
-    @valid_attrs %{human: true}
+    @valid_attrs %{human: true, name: "testUser"}
     @update_attrs %{human: false}
     @invalid_attrs %{human: nil}
+
+    def game_fixture(attrs \\ %{}) do
+      {:ok, game} =
+        attrs
+        |> Enum.into(%{user_name: "testUser", number_of_human_players: 1})
+        |> Games.create_game()
+
+      game
+    end
 
     def user_fixture(attrs \\ %{}) do
       {:ok, user} =
         attrs
-        |> Enum.into(%{active: true, user_name: "some user_name"})
+        |> Enum.into(%{active: true, user_name: "testUser"})
         |> Accounts.create_user()
 
       user
@@ -22,10 +32,11 @@ defmodule FungusToast.PlayersTest do
 
     def player_fixture(attrs \\ %{}) do
       user = user_fixture()
+      game = game_fixture()
       adjusted_attrs = attrs
                        |> Enum.into(@valid_attrs)
 
-      {:ok, player} = Players.create_player(user, adjusted_attrs)
+      {:ok, player} = Players.create_player(game, user, adjusted_attrs)
       player
     end
 
@@ -39,17 +50,19 @@ defmodule FungusToast.PlayersTest do
       assert Players.get_player!(player.id) == player
     end
 
-    test "create_player/1 with valid data and a %User{} creates a player" do
+    test "create_player/1 with valid data and a %Game{} and %User{} creates a player" do
       user = user_fixture()
-      assert {:ok, %Player{} = player} = Players.create_player(user, @valid_attrs)
+      game = game_fixture()
+      assert {:ok, %Player{} = player} = Players.create_player(game, user, @valid_attrs)
       player = player |> Repo.preload(:user)
       assert player.human == true
       assert player.user == user
     end
 
-    test "create_player/1 with valid data and a user ID creates a player" do
+    test "create_player/1 with valid data and a game ID and user ID creates a player" do
       user = user_fixture()
-      assert {:ok, %Player{} = player} = Players.create_player(user.id, @valid_attrs)
+      game = game_fixture()
+      assert {:ok, %Player{} = player} = Players.create_player(game.id, user.id, @valid_attrs)
       # TODO: find a better place to do this
       player = player |> FungusToast.Repo.preload(:user)
       assert player.human == true
@@ -58,7 +71,8 @@ defmodule FungusToast.PlayersTest do
 
     test "create_player/1 with invalid data returns error changeset" do
       user = user_fixture()
-      assert {:error, %Ecto.Changeset{}} = Players.create_player(user, @invalid_attrs)
+      game = game_fixture()
+      assert {:error, %Ecto.Changeset{}} = Players.create_player(game, user, @invalid_attrs)
     end
 
     test "update_player/2 with valid data updates the player" do

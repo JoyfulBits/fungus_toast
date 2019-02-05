@@ -5,13 +5,18 @@ defmodule FungusToastWeb.GameControllerTest do
   alias FungusToast.Games
   alias FungusToast.Games.Game
 
+  def fixture(:user) do
+    {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
+    user
+  end
+
   def fixture(:game) do
-    {:ok, _} = Accounts.create_user(%{user_name: "testUser"})
-    {:ok, game} = Games.create_game(%{"user_name" => "testUser", "number_of_human_players" => 2})
+    {:ok, game} = Games.create_game(%{user_name: "testUser", number_of_human_players: 2})
     game
   end
 
   defp create_game(_) do
+    fixture(:user)
     game = fixture(:game)
     {:ok, game: game}
   end
@@ -42,6 +47,7 @@ defmodule FungusToastWeb.GameControllerTest do
     end
 
     test "valid params", %{conn: conn} do
+      fixture(:user)
       conn = post(conn, Routes.game_path(conn, :create), game_params())
 
       assert %{"id" => _} = json_response(conn, 201)
@@ -54,6 +60,8 @@ defmodule FungusToastWeb.GameControllerTest do
     end
 
     test "case transformation", %{conn: conn} do
+      fixture(:user)
+
       params = %{
         "userName" => "testUser",
         "numberOfHumanPlayers" => 2
