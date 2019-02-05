@@ -24,7 +24,7 @@ defmodule FungusToast.Games.Player do
     :mycotoxin_fungicide_chance
   ]
 
-  @derive {Jason.Encoder, only: [:id] ++ @attrs}
+  @derive {Jason.Encoder, only: [:id, :player_skills] ++ @attrs}
 
   schema "players" do
     field :name, :string, null: false
