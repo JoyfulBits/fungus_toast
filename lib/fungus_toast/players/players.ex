@@ -6,6 +6,7 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
+  alias FungusToast.Accounts
   alias FungusToast.Accounts.User
   alias FungusToast.Players.Player
 
@@ -77,9 +78,19 @@ defmodule FungusToast.Players do
   """
   def create_player(user, attrs \\ %{})
   def create_player(%User{} = user, attrs) when is_map(attrs) do
+    attrs =
+      attrs |> Map.put(:name, user.user_name)
     create_player(user.id, attrs)
   end
   def create_player(user_id, attrs) when is_map(attrs) do
+    #TODO: Find a better way to do this check
+    attrs = if Map.has_key?(attrs, :name) do
+              attrs
+            else
+              user = Accounts.get_user!(user_id)
+              Map.put(attrs, :name, user.user_name)
+            end
+
     %Player{user_id: user_id}
     |> Player.changeset(attrs)
     |> Repo.insert()
