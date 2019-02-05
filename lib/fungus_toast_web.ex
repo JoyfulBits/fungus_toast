@@ -42,6 +42,12 @@ defmodule FungusToastWeb do
       import FungusToastWeb.ErrorHelpers
       import FungusToastWeb.Gettext
       alias FungusToastWeb.Router.Helpers, as: Routes
+
+      def map_from(%{__meta__: _} = struct) do
+        Map.from_struct(struct)
+        |> Map.pop(:__meta__)
+        |> elem(1)
+      end
     end
   end
 
