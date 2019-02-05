@@ -6,7 +6,6 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Accounts
   alias FungusToast.Accounts.User
   alias FungusToast.Games.Game
   alias FungusToast.Players.Player
