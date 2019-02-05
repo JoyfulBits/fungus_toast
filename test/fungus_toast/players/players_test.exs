@@ -41,8 +41,10 @@ defmodule FungusToast.PlayersTest do
     end
 
     test "list_players/0 returns all players" do
-      player = player_fixture()
-      assert Players.list_players() == [player]
+      # Creating a game always creates a player from the supplied user
+      user_fixture()
+      game = game_fixture() |> FungusToast.Repo.preload(:players)
+      assert Players.list_players() == game.players
     end
 
     test "get_player!/1 returns the player with given id" do
