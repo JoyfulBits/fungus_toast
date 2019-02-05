@@ -11,9 +11,9 @@ defmodule FungusToast.Skills.Skill do
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "skills" do
-    field :description, :string
+    field :description, :string, size: 512
     field :increase_per_point, :decimal
-    field :name, :string
+    field :name, :string, size: 64
     field :up_is_good, :boolean
 
     timestamps()
@@ -24,5 +24,7 @@ defmodule FungusToast.Skills.Skill do
     skill
     |> cast(attrs, [:name, :description, :increase_per_point, :up_is_good])
     |> validate_required([:name, :description, :increase_per_point])
+    |> validate_length(:name, max: 64)
+    |> validate_length(:description, max: 512)
   end
 end
