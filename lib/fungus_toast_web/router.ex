@@ -24,12 +24,12 @@ defmodule FungusToastWeb.Router do
     pipe_through :api
 
     resources "/games", GameController, only: [:show, :create] do
+      resources "/players", PlayerController, except: [:new, :edit] do
+        resources "/skills", SkillController, except: [:new, :edit]
+      end
       resources "/rounds", RoundController, only: [:show, :create]
     end
 
     resources "/users", UserController, except: [:new, :edit]
-    #TODO: add a UserPlayersController to list players for a given user
-    resources "/players", PlayerController, except: [:new, :edit]
-    resources "/skills", SkillController, except: [:new, :edit]
   end
 end

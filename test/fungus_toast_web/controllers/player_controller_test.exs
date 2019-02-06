@@ -3,10 +3,12 @@ defmodule FungusToastWeb.PlayerControllerTest do
 
   alias FungusToast.Accounts
   alias FungusToast.Games
+  alias FungusToast.Games.{Game, Player}
 
   @create_attrs %{
     human: true,
-    name: "testUser"
+    name: "testUser",
+    user_name: "testUser"
   }
   @invalid_attrs %{human: nil}
 
@@ -20,31 +22,54 @@ defmodule FungusToastWeb.PlayerControllerTest do
     user
   end
 
-  def fixture(:player, user) do
-    {:ok, player} = Games.create_player(user, @create_attrs)
+  def fixture(:player, game) do
+    {:ok, player} = Games.create_player(game, @create_attrs)
     player
+  end
+
+  defp create_game(_) do
+    fixture(:user)
+    game = fixture(:game)
+    {:ok, game: game}
+  end
+
+  defp create_player(_) do
+    fixture(:user)
+    game = fixture(:game)
+    player = fixture(:player, game)
+    {:ok, game: game, player: player}
   end
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  # TODO: scope /players to list all players, /user/:user_id/players to get all players for user
-  # describe "GET" do
-  #   test "lists all players", %{conn: conn} do
-  #     conn = get(conn, Routes.player_path(conn, :index))
-  #     assert json_response(conn, 200)
-  #   end
-  # end
+  describe "GET" do
+    setup [:create_player]
+
+    test "lists all players", %{conn: conn, game: %Game{id: game_id}} do
+      conn = get(conn, Routes.game_player_path(conn, :index, game_id))
+      assert json_response(conn, 200)
+    end
+
+    test "lists players for the specified game", %{conn: conn, game: %Game{id: game_id}, player: %Player{id: id}} do
+      conn = get(conn, Routes.game_player_path(conn, :show, game_id, id))
+      assert %{
+                "id" => id,
+                "name" => "testUser",
+                "human" => true
+              } = json_response(conn, 200)
+      end
+  end
 
   describe "POST" do
-    test "renders player when data is valid", %{conn: conn} do
-      user = fixture(:user)
-      game = fixture(:game)
-      conn = post(conn, Routes.player_path(conn, :create), game_id: game.id, user_id: user.id, player: @create_attrs)
+    setup [:create_game]
+
+    test "renders player when data is valid", %{conn: conn, game: %Game{id: game_id}} do
+      conn = post(conn, Routes.game_player_path(conn, :create, game_id), player: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)
 
-      conn = get(conn, Routes.player_path(conn, :show, id))
+      conn = get(conn, Routes.game_player_path(conn, :show, game_id, id))
 
       assert %{
                "id" => id,
@@ -52,11 +77,9 @@ defmodule FungusToastWeb.PlayerControllerTest do
              } = json_response(conn, 200)
     end
 
-    test "renders errors when data is invalid", %{conn: conn} do
-      user = fixture(:user)
-      game = fixture(:game)
-      conn = post(conn, Routes.player_path(conn, :create), game_id: game.id, user_id: user.id, player: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
+    test "renders errors when data is invalid", %{conn: conn, game: %Game{id: game_id}} do
+      conn = post(conn, Routes.game_player_path(conn, :create, game_id), player: @invalid_attrs)
+      assert "Bad Request" = json_response(conn, 400)
     end
   end
 end

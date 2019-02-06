@@ -26,6 +26,12 @@ defmodule FungusToastWeb.RoundControllerTest do
     round
   end
 
+  defp create_game(_) do
+    fixture(:user)
+    game = fixture(:game)
+    {:ok, game: game}
+  end
+
   defp create_round(_) do
     fixture(:user)
     game = fixture(:game)
@@ -47,10 +53,24 @@ defmodule FungusToastWeb.RoundControllerTest do
   end
 
   describe "POST" do
-    test "renders errors when data is invalid", %{conn: conn} do
-      fixture(:user)
-      game = fixture(:game)
-      conn = post(conn, Routes.game_round_path(conn, :create, game.id), round: @invalid_attrs)
+    setup [:create_game]
+
+    test "renders round when data is valid", %{conn: conn, game: %Game{id: game_id}} do
+      conn = post(conn, Routes.game_round_path(conn, :create, game_id), round: @create_attrs)
+      assert %{"id" => id} = json_response(conn, 201)
+
+      conn = get(conn, Routes.game_round_path(conn, :show, game_id, id))
+
+      assert %{
+                "id" => id,
+                "gameId" => game_id,
+                "gameState" => %{},
+                "stateChange" => %{}
+              } = json_response(conn, 200)
+    end
+
+    test "renders errors when data is invalid", %{conn: conn, game: %Game{id: game_id}} do
+      conn = post(conn, Routes.game_round_path(conn, :create, game_id), round: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end

@@ -1,12 +1,14 @@
 defmodule FungusToast.Players do
   @moduledoc """
-  The Games.context.
+  The Games context.
   """
 
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
+  alias FungusToast.Accounts
   alias FungusToast.Accounts.User
+  alias FungusToast.Games
   alias FungusToast.Games.{Game, Player}
 
   @doc """
@@ -76,29 +78,52 @@ defmodule FungusToast.Players do
   """
   def get_player!(id), do: Repo.get!(Player, id)
 
+  #TODO: Document this
+  def get_player_for_game(%Game{} = game, id) do
+    get_player_for_game(game.id, id)
+  end
+  def get_player_for_game(game_id, id) do
+    from(p in Player, where: p.id == ^id and p.game_id == ^game_id) |> Repo.one()
+  end
+
   @doc """
   Creates a player.
 
   ## Examples
 
-      iex> create_player(game, user, %{field: value})
+      iex> create_player(game, %{field: value})
       {:ok, %Player{}}
 
-      iex> create_player(game, user, %{field: bad_value})
+      iex> create_player(game, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
-      iex> create_player(1, 1, %{field: value})
+      iex> create_player(1, %{field: value})
       {:ok, %Player{}}
 
-      iex> create_player(1, 1, %{field: bad_value})
+      iex> create_player(1, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_player(game, user, attrs \\ %{})
-  def create_player(%Game{} = game, %User{} = user, attrs) when is_map(attrs) do
-    create_player(game.id, user.id, attrs)
+  def create_player(game, attrs \\ %{})
+  def create_player(%Game{} = game, attrs) when is_map(attrs) do
+    create_player(game.id, attrs)
   end
-  def create_player(game_id, user_id, attrs) when is_map(attrs) do
+  def create_player(game_id, attrs) when is_binary(game_id) do
+    game = Games.get_game!(game_id)
+    create_player(game.id, attrs)
+  end
+  def create_player(game_id, attrs) when is_map(attrs) do
+    user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
+    create_player_for_user(game_id, user_name, attrs)
+  end
+
+  defp create_player_for_user(nil, _, _), do: {:error, :bad_request}
+  defp create_player_for_user(_, nil, _), do: {:error, :bad_request}
+  defp create_player_for_user(game_id, user_name, attrs) when is_binary(user_name) do
+    user = Accounts.get_user_for_name(user_name)
+    create_player_for_user(game_id, user.id, attrs)
+  end
+  defp create_player_for_user(game_id, user_id, attrs) do
     %Player{game_id: game_id, user_id: user_id}
     |> Player.changeset(attrs)
     |> Repo.insert()

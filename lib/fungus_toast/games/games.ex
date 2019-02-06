@@ -76,7 +76,7 @@ defmodule FungusToast.Games do
     with {:ok, game} <- Repo.insert(changeset) do
       # Handle the case where a round is not created
       create_round(game, %{number: 1})
-      game |> Players.create_player(user, %{human: true, name: user.user_name})
+      game |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
 
       {:ok, game}
     end
@@ -145,8 +145,9 @@ defmodule FungusToast.Games do
   defdelegate list_players, to: Players
   defdelegate list_players_for_user(user), to: Players
   defdelegate list_players_for_game(game), to: Players
+  defdelegate get_player_for_game(game_id, id), to: Players
   defdelegate get_player!(id), to: Players
-  defdelegate create_player(game, user, attrs), to: Players
+  defdelegate create_player(game, attrs), to: Players
   defdelegate update_player(player, attrs), to: Players
   defdelegate change_player(player), to: Players
 
