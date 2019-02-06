@@ -59,11 +59,14 @@ defmodule FungusToast.PlayerSkills do
       |> Map.pop(skill)
       |> elem(0)
 
-    player_skill = get_player_skill(player, skill_id)
-
     # TODO: convert this into a list that we can return
-    update_player_skill(player_skill, %{skill_level: player_skill.skill_level + points_spent})
-    update_player_skills(player, attrs |> Map.pop(skill) |> elem(1))
+    case player_skill = get_player_skill(player, skill_id) do
+      nil ->
+        create_player_skill(player.id, skill_id, %{skill_level: points_spent})
+      _ ->
+        update_player_skill(player_skill, %{skill_level: player_skill.skill_level + points_spent})
+        update_player_skills(player, attrs |> Map.pop(skill) |> elem(1))
+    end
   end
   def update_player_skills(%Player{} = player, %{}) do
     nil
