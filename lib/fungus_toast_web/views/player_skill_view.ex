@@ -6,8 +6,8 @@ defmodule FungusToastWeb.PlayerSkillView do
     render_many(player_skills, PlayerSkillView, "player_skill.json")
   end
 
-  def render("show.json", %{player_skill: player_skill}) do
-    render_one(player_skill, PlayerSkillView, "player_skill.json")
+  def render("show.json", %{player_skills: player_skills}) do
+    render_many(player_skills, PlayerSkillView, "player_skill.json")
   end
 
   def render("player_skill.json", %{player_skill: player_skill}), do: map_from(player_skill)

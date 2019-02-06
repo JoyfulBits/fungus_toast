@@ -10,11 +10,12 @@ defmodule FungusToastWeb.PlayerSkillController do
     render(conn, "index.json", player_skills: player_skills)
   end
 
-  def update(conn, %{"player_id" => player_id, "skillExpenditure" => skill_params}) do
-    Game.update_player_skills(player_id, skill_params)
-    # with {:ok, player_skill} <- Games.update_player_skill(skill, skill_params) do
-    # player_skill = player_skill |> FungusToast.Repo.preload([[player: [skills: :skill]], :skill])
-    # render(conn, "show.json", player_skill: player_skill)
-    #end
+  def update(conn, params) do
+    player_id = Map.get(params, "player_id")
+    skill_params = Map.pop(params, "player_id") |> elem(1) |> Map.pop("game_id") |> elem(1)
+
+    Games.update_player_skills(player_id, skill_params)
+    player_skills = Games.get_player_skills(player_id) |> FungusToast.Repo.preload([[player: [skills: :skill]], :skill])
+    render(conn, "show.json", player_skills: player_skills)
   end
 end
