@@ -1,6 +1,6 @@
 defmodule FungusToast.Players do
   @moduledoc """
-  The Games context.
+  The Players helper for the Games context.
   """
 
   import Ecto.Query, warn: false
@@ -48,16 +48,10 @@ defmodule FungusToast.Players do
 
   ## Examples
 
-      iex> list_players_for_game(%Game{})
-      [%Player{}, ...]
-
       iex> list_players_for_game(1)
       [%Player{}, ...]
 
   """
-  def list_players_for_game(%Game{} = game) do
-    list_players_for_game(game.id)
-  end
   def list_players_for_game(game_id) do
     from(p in Player, where: p.game_id == ^game_id) |> Repo.all()
   end

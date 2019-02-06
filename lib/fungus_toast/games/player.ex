@@ -51,8 +51,6 @@ defmodule FungusToast.Games.Player do
     field :regeneration_chance, :float, default: 0.0, null: false
     field :mycotoxin_fungicide_chance, :float, default: 0.0, null: false
 
-    # many_to_many :skills, FungusToast.Games.Skill, join_through: "player_skills",
-    #   unique: true, on_replace: :delete
     has_many :skills, FungusToast.Games.PlayerSkill
 
     belongs_to :user, FungusToast.Accounts.User

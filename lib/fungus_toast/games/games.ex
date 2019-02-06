@@ -7,23 +7,9 @@ defmodule FungusToast.Games do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Accounts
+  alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.Game
-  alias FungusToast.Players
-  alias FungusToast.Rounds
-  alias FungusToast.Skills
-
-  # TODO: Move this to a PlayerSkill helper
-  alias FungusToast.Games.Player
-  alias FungusToast.Games.Skill
-  alias FungusToast.Games.PlayerSkill
-  def create_player_skill(%Player{} = player, %Skill{} = skill, attrs \\ %{}) do
-    %PlayerSkill{player_id: player.id, skill_id: skill.id}
-    |> PlayerSkill.changeset(attrs)
-    |> Repo.insert()
-  end
-
 
   @doc """
   Returns the list of games.
@@ -150,6 +136,11 @@ defmodule FungusToast.Games do
   defdelegate create_player(game, attrs), to: Players
   defdelegate update_player(player, attrs), to: Players
   defdelegate change_player(player), to: Players
+
+  defdelegate get_player_skill!(id), to: PlayerSkills
+  defdelegate get_player_skills(player), to: PlayerSkills
+  defdelegate create_player_skill(player, skill, attrs), to: PlayerSkills
+  defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
 
   defdelegate list_skills, to: Skills
   defdelegate get_skill!(id), to: Skills
