@@ -137,9 +137,10 @@ defmodule FungusToast.Games do
   defdelegate update_player(player, attrs), to: Players
   defdelegate change_player(player), to: Players
 
-  defdelegate get_player_skill!(id), to: PlayerSkills
+  defdelegate get_player_skill(player, skill_id), to: PlayerSkills
   defdelegate get_player_skills(player), to: PlayerSkills
   defdelegate create_player_skill(player, skill, attrs), to: PlayerSkills
+  defdelegate update_player_skills(player, attrs), to: PlayerSkills
   defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
 
   defdelegate list_skills, to: Skills
