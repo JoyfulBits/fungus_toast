@@ -6,7 +6,7 @@ defmodule FungusToast.PlayerSkills do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Games.{Game, Player, PlayerSkill, Skill}
+  alias FungusToast.Games.{Player, PlayerSkill, Skill}
 
   def get_player_skill!(id), do: Repo.get!(PlayerSkill, id)
 
