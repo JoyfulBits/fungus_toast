@@ -64,18 +64,18 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
   end
 
   describe "POST" do
-    setup [:create_player_skill]
+    setup [:create_game_player]
+    @skill_leveling_params %{
+                              "hypermutationPoints" => 1
+                            }
 
-    test "renders skill when data is valid", %{conn: conn, game: game, player: player, player_skill: %PlayerSkill{id: id} = skill} do
-      conn = put(conn, Routes.game_player_skill_path(conn, :update, game, player, skill), player_skill: @update_attrs)
-      assert %{
-               "id" => ^id,
-               "skillLevel" => 3
-             } = json_response(conn, 200)
+    test "renders skill when data is valid", %{conn: conn, game: game, player: player} do
+      conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), @skill_leveling_params)
+      IO.inspect(json_response(conn, 200))
     end
 
-    test "renders errors when data is invalid", %{conn: conn, game: game, player: player, player_skill: skill} do
-      conn = put(conn, Routes.game_player_skill_path(conn, :update, game, player, skill), player_skill: @invalid_attrs)
+    test "renders errors when data is invalid", %{conn: conn, game: game, player: player} do
+      conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), %{"someOtherSkill" => 0})
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
