@@ -50,15 +50,20 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
 
   describe "POST" do
     setup [:create_game_player]
-    @skill_leveling_params %{
-      "skill_upgrades" => [
-        %{"id" => 1, "points_spent" => 1}
-      ]
-    }
 
-    test "renders skill when data is valid", %{conn: conn, game: game, player: player} do
-      conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), @skill_leveling_params)
-      IO.inspect(json_response(conn, 200))
+    test "renders player skills when data is valid", %{conn: conn, game: game, player: player} do
+      skill_id = fixture(:skill).id
+      skill_params = %{
+                        "skill_upgrades" => [
+                          %{"id" => skill_id, "points_spent" => 1}
+                        ]
+                      }
+      conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), skill_params)
+      player_skill = List.first(json_response(conn, 200))
+      assert %{
+        "skillId" => skill_id,
+        "skillLevel" => 1
+      } = player_skill
     end
 
     test "renders errors when data is invalid", %{conn: conn, game: game, player: player} do
