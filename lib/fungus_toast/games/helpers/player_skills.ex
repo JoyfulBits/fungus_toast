@@ -34,26 +34,30 @@ defmodule FungusToast.PlayerSkills do
   end
 
   def update_player_skills(%Player{} = player, skill_upgrades) when is_list(skill_upgrades) do
-    update_player_skills(%Player{} = player, skill_upgrades, [])
+    valid_request = is_valid_request?(player, skill_upgrades)
+    update_player_skills(%Player{} = player, skill_upgrades, [], valid_request)
   end
   def update_player_skills(player_id, skill_upgrades) when is_list(skill_upgrades) do
     player = Games.get_player!(player_id) |> Repo.preload(:skills)
     update_player_skills(player, skill_upgrades)
   end
-  def update_player_skills(%Player{} = player, [head | tail], accum) do
+  def update_player_skills(%Player{} = player, [head | tail], accum, true) do
     skill_id = head |> Map.get("id")
     points_spent = head |> Map.get("points_spent")
 
     player_skill = get_player_skill(player, skill_id)
     case create_or_update_player_skill(player, player_skill, skill_id, points_spent) do
       {:ok, updated_player_skill} ->
-        update_player_skills(player, tail, [updated_player_skill | accum])
+        update_player_skills(player, tail, [updated_player_skill | accum], true)
       {:error, _} ->
         {:error, :bad_request}
     end
   end
-  def update_player_skills(_, [], accum) do
+  def update_player_skills(_, [], accum, true) do
     {:ok, Enum.reverse(accum)}
+  end
+  def update_player_skills(_, _, _, false) do
+    {:error, :bad_request}
   end
 
   defp create_or_update_player_skill(%Player{} = player, nil, skill_id, points_spent) when points_spent >= 0 do
@@ -64,6 +68,18 @@ defmodule FungusToast.PlayerSkills do
   end
   defp create_or_update_player_skill(_, _, _, _) do
     {:error, :bad_request}
+  end
+
+  def is_valid_request?(%Player{} = player, skill_upgrades) do
+    points_spent = sum_skill_upgrades(skill_upgrades, 0)
+    player.mutation_points >= points_spent
+  end
+
+  defp sum_skill_upgrades([head | tail], accum) do
+    sum_skill_upgrades(tail, accum + Map.get(head, "points_spent"))
+  end
+  defp sum_skill_upgrades([], accum) do
+    accum
   end
 
   def update_player_skill(%PlayerSkill{} = player_skill, attrs) do

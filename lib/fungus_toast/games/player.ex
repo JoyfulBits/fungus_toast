@@ -30,7 +30,7 @@ defmodule FungusToast.Games.Player do
     field :name, :string, null: false
     field :human, :boolean, default: false, null: false
 
-    field :mutation_points, :integer, default: 0, null: false
+    field :mutation_points, :integer, default: 5, null: false
 
     field :top_left_growth_chance, :float, default: 0.0, null: false
     field :top_growth_chance, :float, default: 0.0, null: false
