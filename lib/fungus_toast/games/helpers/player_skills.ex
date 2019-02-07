@@ -45,22 +45,22 @@ defmodule FungusToast.PlayerSkills do
     points_spent = head |> Map.get("points_spent")
 
     player_skill = get_player_skill(player, skill_id)
-    updated_player_skill  = create_or_update_player_skill(player, player_skill, skill_id, points_spent)
-
-    update_player_skills(player, tail, [updated_player_skill | accum])
+    case create_or_update_player_skill(player, player_skill, skill_id, points_spent) do
+      {:ok, updated_player_skill} ->
+        update_player_skills(player, tail, [updated_player_skill | accum])
+      {:error, _} ->
+        {:error, :bad_request}
+    end
   end
   def update_player_skills(_, [], accum) do
-    IO.inspect(accum)
     {:ok, Enum.reverse(accum)}
   end
 
   defp create_or_update_player_skill(%Player{} = player, nil, skill_id, points_spent) when points_spent >= 0 do
-    {:ok, player_skill} = create_player_skill(player.id, skill_id, %{skill_level: points_spent})
-    player_skill
+    create_player_skill(player.id, skill_id, %{skill_level: points_spent})
   end
   defp create_or_update_player_skill(%Player{} = _, player_skill, _,  points_spent) when points_spent >= 0 do
-    {:ok, updated_skill} = update_player_skill(player_skill, %{skill_level: player_skill.skill_level + points_spent})
-    updated_skill
+    update_player_skill(player_skill, %{skill_level: player_skill.skill_level + points_spent})
   end
   defp create_or_update_player_skill(_, _, _, _) do
     {:error, :bad_request}

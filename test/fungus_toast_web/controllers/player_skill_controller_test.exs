@@ -2,15 +2,10 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
   use FungusToastWeb.ConnCase
 
   alias FungusToast.{Accounts, Games}
-  alias FungusToast.Games.PlayerSkill
 
   @create_attrs %{
     skill_level: 1
   }
-  @update_attrs %{
-    skill_level: 3
-  }
-  @invalid_attrs %{skill_level: nil}
 
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
@@ -40,16 +35,6 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
     {:ok, game: game, player: player}
   end
 
-  defp create_player_skill(_) do
-    fixture(:user)
-    game = fixture(:game) |> FungusToast.Repo.preload(:players)
-    skill = fixture(:skill)
-    player = List.first(game.players)
-    player_skill = fixture(:player_skill, player, skill)
-
-    {:ok, game: game, player: player, player_skill: player_skill}
-  end
-
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
@@ -66,8 +51,10 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
   describe "POST" do
     setup [:create_game_player]
     @skill_leveling_params %{
-                              "hypermutationPoints" => 1
-                            }
+      "skill_upgrades" => [
+        %{"id" => 1, "points_spent" => 1}
+      ]
+    }
 
     test "renders skill when data is valid", %{conn: conn, game: game, player: player} do
       conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), @skill_leveling_params)
@@ -75,8 +62,14 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn, game: game, player: player} do
-      conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), %{"someOtherSkill" => 0})
-      assert json_response(conn, 422)["errors"] != %{}
+      bad_attrs = %{
+        "skill_upgrades" => [
+          %{"id" => 3, "points_spent" => -1}
+        ]
+      }
+
+      conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), bad_attrs)
+      assert "Bad Request" = json_response(conn, 400)
     end
   end
 end
