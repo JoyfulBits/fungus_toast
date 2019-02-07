@@ -27,6 +27,14 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
     player_skill
   end
 
+  def fixture(:skill_params, skill, points_spent) do
+      %{
+         "skill_upgrades" => [
+           %{"id" => skill.id, "points_spent" => points_spent}
+         ]
+       }
+  end
+
   defp create_game_player(_) do
     fixture(:user)
     game = fixture(:game) |> FungusToast.Repo.preload(:players)
@@ -51,23 +59,18 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
   describe "POST" do
     setup [:create_game_player]
 
-    test "renders player skills when data is valid", %{conn: conn, game: game, player: player} do
-      old_mutation_points = player.mutation_points
-      skill_id = fixture(:skill).id
-      skill_params = %{
-                        "skill_upgrades" => [
-                          %{"id" => skill_id, "points_spent" => 1}
-                        ]
-                      }
+    test "next round not available if mutation points remain", %{conn: conn, game: game, player: player} do
+      skill = fixture(:skill)
+      skill_params = fixture(:skill_params, skill, 1)
       conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), skill_params)
-      player_skill = List.first(json_response(conn, 200))
-      assert %{
-        "skillId" => skill_id,
-        "skillLevel" => 1
-      } = player_skill
+      assert %{"nextRoundAvailable" => false} = json_response(conn, 200)
+    end
 
-      player = Games.get_player!(player.id)
-      assert player.mutation_points == old_mutation_points - 1
+    test "next round available if no mutation points remain", %{conn: conn, game: game, player: player} do
+      skill = fixture(:skill)
+      skill_params = fixture(:skill_params, skill, 5)
+      conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), skill_params)
+      assert %{"nextRoundAvailable" => true} = json_response(conn, 200)
     end
 
     test "renders errors when data is invalid", %{conn: conn, game: game, player: player} do
