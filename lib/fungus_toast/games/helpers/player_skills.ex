@@ -127,8 +127,8 @@ defmodule FungusToast.PlayerSkills do
     {:error, :bad_request}
   end
 
-  defp is_valid_request?(%Player{} = player, skill_upgrades) do
-    points_spent = sum_skill_upgrades(skill_upgrades, 0)
+  def is_valid_request?(%Player{} = player, skill_upgrades) do
+    points_spent = sum_skill_upgrades(skill_upgrades)
     player.mutation_points >= points_spent
   end
 
@@ -136,11 +136,10 @@ defmodule FungusToast.PlayerSkills do
   Returns how many mutation points are required for all of the requested skill upgrades
 
   """
-  def sum_skill_upgrades([head | tail], accum) do
-    sum_skill_upgrades(tail, accum + Map.get(head, "points_spent"))
-  end
-  def sum_skill_upgrades([], accum) do
-    accum
+  def sum_skill_upgrades(skill_upgrades) do
+    skill_upgrades
+    |> Enum.map(fn su -> su |> Map.get("points_spent") end)
+    |> Enum.sum
   end
 
   @doc """
