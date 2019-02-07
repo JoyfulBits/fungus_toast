@@ -52,6 +52,7 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
     setup [:create_game_player]
 
     test "renders player skills when data is valid", %{conn: conn, game: game, player: player} do
+      old_mutation_points = player.mutation_points
       skill_id = fixture(:skill).id
       skill_params = %{
                         "skill_upgrades" => [
@@ -64,6 +65,9 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
         "skillId" => skill_id,
         "skillLevel" => 1
       } = player_skill
+
+      player = Games.get_player!(player.id)
+      assert player.mutation_points == old_mutation_points - 1
     end
 
     test "renders errors when data is invalid", %{conn: conn, game: game, player: player} do

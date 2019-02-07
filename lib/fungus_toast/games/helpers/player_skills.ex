@@ -75,10 +75,10 @@ defmodule FungusToast.PlayerSkills do
     player.mutation_points >= points_spent
   end
 
-  defp sum_skill_upgrades([head | tail], accum) do
+  def sum_skill_upgrades([head | tail], accum) do
     sum_skill_upgrades(tail, accum + Map.get(head, "points_spent"))
   end
-  defp sum_skill_upgrades([], accum) do
+  def sum_skill_upgrades([], accum) do
     accum
   end
 
