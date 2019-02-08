@@ -33,6 +33,7 @@ defmodule FungusToastWeb.GameController do
 
   defp active?("1"), do: true
   defp active?("true"), do: true
+  defp active?("0"), do: false
   defp active?("false"), do: false
   defp active?(_), do: :error
 end
