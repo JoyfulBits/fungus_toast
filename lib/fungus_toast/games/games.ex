@@ -25,6 +25,28 @@ defmodule FungusToast.Games do
   end
 
   @doc """
+  Returns a list of games for a given user. The "active" parameter determines which games are returned
+  """
+  def list_games_for_user(%User{} = user), do: list_games_for_user(user, ["Started", "Not Started"])
+  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, ["Started"])
+  def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
+  def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
+  def list_games_for_user(%User{} = user, statuses) when is_list(statuses) do
+    user = user |> Repo.preload(players: :game)
+    games = user.players
+            |> Enum.map(fn p -> p.game end)
+            |> Enum.filter(fn g -> Enum.member?(statuses, g.status) end)
+    {:ok, games}
+  end
+  def list_games_for_user(user_id, active) when is_boolean(active) do
+    user = Accounts.get_user!(user_id)
+    list_games_for_user(user, active)
+  end
+  def list_games_for_user(_, _) do
+    {:error, :bad_request}
+  end
+
+  @doc """
   Gets a single game.
 
   Raises `Ecto.NoResultsError` if the Active game does not exist.
