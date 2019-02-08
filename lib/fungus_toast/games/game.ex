@@ -3,7 +3,7 @@ defmodule FungusToast.Games.Game do
   import Ecto.Changeset
 
   @default_status "Not Started"
-  @statuses ["In Progress", "Finished", "Abandoned", "Archived"]
+  @statuses ["Started", "Finished", "Abandoned", "Archived"]
 
   @attrs [
     :number_of_human_players,
