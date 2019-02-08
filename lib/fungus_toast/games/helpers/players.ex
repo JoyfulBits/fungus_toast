@@ -91,7 +91,11 @@ defmodule FungusToast.Players do
     :ok
   end
   def create_ai_players(game, ai_players) when is_number(ai_players) do
-    create_player(game, %{human: false, user_name: "Fungusmotron", name: "Fungal Mutation #{get_ai_player_count() + 1}"})
+    # Do we have a better way to do this?
+    # Should we just tag users as human/ai and then pass that on to their players?
+    # That way we could just look up the non-human player and not care about name
+    ai_user = Accounts.get_user_for_name("Fungusmotron")
+    create_player(game, %{human: false, user_name: ai_user.user_name, name: "Fungal Mutation #{get_ai_player_count() + 1}"})
     create_ai_players(game, ai_players - 1)
   end
 

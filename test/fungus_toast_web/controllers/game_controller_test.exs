@@ -5,6 +5,10 @@ defmodule FungusToastWeb.GameControllerTest do
   alias FungusToast.Games
   alias FungusToast.Games.Game
 
+  def fixture(:ai_user) do
+    Accounts.create_user(%{user_name: "Fungusmotron", active: true})
+  end
+
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
     user
@@ -48,6 +52,7 @@ defmodule FungusToastWeb.GameControllerTest do
 
     test "valid params", %{conn: conn} do
       fixture(:user)
+      fixture(:ai_user)
       conn = post(conn, Routes.game_path(conn, :create), game_params())
 
       assert %{"id" => _} = json_response(conn, 201)

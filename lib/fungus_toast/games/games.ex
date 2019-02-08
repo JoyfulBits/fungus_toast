@@ -64,10 +64,9 @@ defmodule FungusToast.Games do
 
       game
         |> Players.create_ai_players(ai_player_count)
+
       game
         |> set_new_game_status(human_player_count)
-
-      {:ok, game}
     end
   end
 
@@ -96,7 +95,7 @@ defmodule FungusToast.Games do
     update_game(game, %{status: "Started"})
   end
   defp set_new_game_status(game, human_player_count) when human_player_count > 0 do
-    game
+    {:ok, game}
   end
   defp set_new_game_status(_, _) do
     {:error, :bad_request}

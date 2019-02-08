@@ -42,17 +42,19 @@ defmodule FungusToast.GamesTest do
     end
 
     test "create_game/1 with valid data creates a game" do
+      user_fixture(%{user_name: "Fungusmotron"})
       user_fixture()
       assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
       game = game |> FungusToast.Repo.preload(:players)
-      assert length(game.players) == 1
+      assert length(game.players) == 3
     end
 
     test "create_game/1 with valid data creates the correct number of AI players" do
+      user_fixture(%{user_name: "Fungusmotron"})
       user_fixture()
       assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
       game = game |> FungusToast.Repo.preload(:players)
-      assert game.players |> Map.filter(fn p -> Map.get(p, :human) == false) |> length() == 2
+      assert game.players |> Enum.filter(fn p -> Map.get(p, :human) == false end) |> length() == 2
     end
 
     test "create_game/1 with invalid data does not create a game" do
