@@ -55,23 +55,41 @@ defmodule FungusToast.Games do
   def create_game(attrs \\ %{}) do
     changeset = %Game{} |> Game.changeset(attrs)
     user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
-    create_game_for_user(changeset, user_name)
-  end
 
-  def create_game_for_user(changeset, %User{} = user) do
-    with {:ok, game} <- Repo.insert(changeset) do
-      # Handle the case where a round is not created
-      create_round(game, %{number: 1})
-      game |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
+    with {:ok, game} <- create_game_for_user(changeset, user_name) do
+      human_player_count =
+        Map.get(attrs, :number_of_human_players) || Map.get(attrs, "number_of_human_players")
+      ai_player_count =
+        Map.get(attrs, :number_of_ai_players) || Map.get(attrs, "number_of_ai_players") || 0
+
+      game
+        |> Players.create_ai_players(ai_player_count)
+      game
+        |> set_new_game_status(human_player_count)
 
       {:ok, game}
     end
   end
-  def create_game_for_user(changeset, user_name) when is_binary(user_name) do
+
+  def create_game_for_user(_, "Fungusmotron") do
+    {:error, :bad_request}
+  end
+  def create_game_for_user(changeset, %User{} = user, ai_player_count) do
+    with {:ok, game} <- Repo.insert(changeset) do
+      # Handle the case where a round is not created
+      create_round(game, %{number: 1})
+      game
+        |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
+        |> Players.create_ai_players(ai_player_count)
+
+      {:ok, game}
+    end
+  end
+  def create_game_for_user(changeset, user_name, ai_player_count) when is_binary(user_name) do
     user = Accounts.get_user_for_name(user_name)
     create_game_for_user(changeset, user)
   end
-  def create_game_for_user(_, _) do
+  def create_game_for_user(_, _, _) do
     {:error, :bad_request}
   end
 

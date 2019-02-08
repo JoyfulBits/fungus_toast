@@ -80,6 +80,21 @@ defmodule FungusToast.Players do
     from(p in Player, where: p.id == ^id and p.game_id == ^game_id) |> Repo.one()
   end
 
+  defp get_ai_player_count() do
+    from(p in Player, where: p.human == false, select: count(p.id)) |> Repo.one()
+  end
+
+  @doc """
+  Creates the requested number of AI players for the given game
+  """
+  def create_ai_players(_, 0) do
+    :ok
+  end
+  def create_ai_players(game, ai_players) when is_number(ai_players) do
+    create_player(game, %{human: false, user_name: "Fungusmotron", name: "Fungal Mutation #{get_ai_player_count() + 1}"})
+    create_ai_players(game, ai_players - 1)
+  end
+
   @doc """
   Creates a player.
 

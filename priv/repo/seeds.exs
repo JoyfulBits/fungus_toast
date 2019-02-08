@@ -11,7 +11,9 @@
 # and so on) as they will fail if something goes wrong.
 alias FungusToast.{Accounts, Games}
 
+Accounts.create_user(%{user_name: "Fungusmotron"})
 Accounts.create_user(%{user_name: "Fungus Amungus"})
+
 Games.create_game(%{user_name: "Fungus Amungus", number_of_human_players: 1})
 
 Games.create_skill(%{name: "Hypermutation", description: "Increases the chance that you will generate a bonus mutation point during each growth cycle.", increase_per_point: 1, up_is_good: true})

@@ -26,7 +26,7 @@ defmodule FungusToast.GamesTest do
     alias FungusToast.Games.Game
 
     # TODO: Evaluate if this is the best way to do this
-    @valid_attrs %{user_name: "testUser", number_of_human_players: 1}
+    @valid_attrs %{user_name: "testUser", number_of_human_players: 1, number_of_ai_players: 2}
     @update_attrs %{active: true}
 
     test "list_games/0 returns all games" do
@@ -46,6 +46,13 @@ defmodule FungusToast.GamesTest do
       assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
       game = game |> FungusToast.Repo.preload(:players)
       assert length(game.players) == 1
+    end
+
+    test "create_game/1 with valid data creates the correct number of AI players" do
+      user_fixture()
+      assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
+      game = game |> FungusToast.Repo.preload(:players)
+      assert game.players |> Map.filter(fn p -> Map.get(p, :human) == false) |> length() == 2
     end
 
     test "create_game/1 with invalid data does not create a game" do
