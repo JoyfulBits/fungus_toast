@@ -18,7 +18,7 @@ defmodule FungusToast.PlayerSkills do
       %PlayerSkill{}
 
       iex> get_player_skill(1, 1)
-      %Player{}
+      %PlayerSkill{}
 
   """
   def get_player_skill(%Player{} = player, skill_id) do
@@ -37,7 +37,7 @@ defmodule FungusToast.PlayerSkills do
       [%PlayerSkill{}, ...]
 
       iex> get_player_skills(1)
-      [%Player{}, ...]
+      [%PlayerSkill{}, ...]
 
   """
   def get_player_skills(%Player{} = player) do
