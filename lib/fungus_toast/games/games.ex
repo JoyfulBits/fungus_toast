@@ -75,7 +75,7 @@ defmodule FungusToast.Games do
   end
   def create_game_for_user(changeset, %User{} = user) do
     with {:ok, game} <- Repo.insert(changeset) do
-      # Handle the case where a round is not created
+      # TODO: Handle the case where a round is not created
       create_round(game, %{number: 1})
       game
         |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
