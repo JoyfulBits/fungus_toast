@@ -70,6 +70,10 @@ defmodule FungusToast.Games do
     end
   end
 
+  # This is a special case to avoid creating human players with our AI user.
+  # AI users should also just not be able to create games in general.
+  # If we move the "human" flag to User, we could do away with this and use
+  # the user's value on line 85, but I don't expect us to need multipl AI users yet
   def create_game_for_user(_, "Fungusmotron") do
     {:error, :bad_request}
   end
