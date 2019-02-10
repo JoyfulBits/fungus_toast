@@ -1,15 +1,26 @@
 defmodule FungusToastWeb.GameControllerTest do
   use FungusToastWeb.ConnCase
 
+  alias FungusToast.Accounts
   alias FungusToast.Games
   alias FungusToast.Games.Game
 
+  def fixture(:ai_user) do
+    Accounts.create_user(%{user_name: "Fungusmotron", active: true})
+  end
+
+  def fixture(:user) do
+    {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
+    user
+  end
+
   def fixture(:game) do
-    {:ok, game} = Games.create_game(%{number_of_human_players: 2})
+    {:ok, game} = Games.create_game(%{user_name: "testUser", number_of_human_players: 2})
     game
   end
 
   defp create_game(_) do
+    fixture(:user)
     game = fixture(:game)
     {:ok, game: game}
   end
@@ -31,6 +42,7 @@ defmodule FungusToastWeb.GameControllerTest do
   describe "POST" do
     def game_params() do
       %{
+        "user_name" => "testUser",
         "number_of_human_players" => 2,
         "number_of_ai_players" => 2,
         "number_of_columns" => 100,
@@ -39,6 +51,8 @@ defmodule FungusToastWeb.GameControllerTest do
     end
 
     test "valid params", %{conn: conn} do
+      fixture(:user)
+      fixture(:ai_user)
       conn = post(conn, Routes.game_path(conn, :create), game_params())
 
       assert %{"id" => _} = json_response(conn, 201)
@@ -47,25 +61,24 @@ defmodule FungusToastWeb.GameControllerTest do
     test "invalid params", %{conn: conn} do
       conn = post(conn, Routes.game_path(conn, :create), %{"bad" => "params"})
 
-      assert %{"errors" => _} = json_response(conn, 422)
+      assert "Bad Request" = json_response(conn, 400)
     end
 
     test "case transformation", %{conn: conn} do
+      fixture(:user)
+
       params = %{
-        "numberOfHumanPlayers" => 2,
-        "gameState" => %{"camelCased" => %{"shouldBe" => [%{"snakeCased" => "value"}]}}
+        "userName" => "testUser",
+        "numberOfHumanPlayers" => 2
       }
 
       conn = post(conn, Routes.game_path(conn, :create), params)
 
       assert %{
-               "id" => id,
-               "gameState" => %{"camelCased" => %{"shouldBe" => [%{"snakeCased" => "value"}]}}
+               "id" => id
              } = json_response(conn, 201)
 
-      transformed_game_state = %{"camel_cased" => %{"should_be" => [%{"snake_cased" => "value"}]}}
-
-      assert %Games.Game{id: id, game_state: ^transformed_game_state, number_of_human_players: 2} =
+      assert %Games.Game{id: id, number_of_human_players: 2} =
                Games.get_game!(id)
     end
   end

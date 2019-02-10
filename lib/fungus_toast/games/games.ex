@@ -1,4 +1,5 @@
 defmodule FungusToast.Games do
+
   @moduledoc """
   The Games context.
   """
@@ -6,6 +7,8 @@ defmodule FungusToast.Games do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
+  alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
+  alias FungusToast.Accounts.User
   alias FungusToast.Games.Game
 
   @doc """
@@ -50,9 +53,56 @@ defmodule FungusToast.Games do
 
   """
   def create_game(attrs \\ %{}) do
-    %Game{}
-    |> Game.changeset(attrs)
-    |> Repo.insert()
+    changeset = %Game{} |> Game.changeset(attrs)
+    user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
+
+    with {:ok, game} <- create_game_for_user(changeset, user_name) do
+      human_player_count =
+        Map.get(attrs, :number_of_human_players) || Map.get(attrs, "number_of_human_players")
+      ai_player_count =
+        Map.get(attrs, :number_of_ai_players) || Map.get(attrs, "number_of_ai_players") || 0
+
+      game
+        |> Players.create_ai_players(ai_player_count)
+
+      game
+        |> set_new_game_status(human_player_count)
+    end
+  end
+
+  # This is a special case to avoid creating human players with our AI user.
+  # AI users should also just not be able to create games in general.
+  # If we move the "human" flag to User, we could do away with this and use
+  # the user's value on line 85, but I don't expect us to need multipl AI users yet
+  def create_game_for_user(_, "Fungusmotron") do
+    {:error, :bad_request}
+  end
+  def create_game_for_user(changeset, %User{} = user) do
+    with {:ok, game} <- Repo.insert(changeset) do
+      # TODO: Handle the case where a round is not created
+      create_round(game, %{number: 1})
+      game
+        |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
+
+      {:ok, game}
+    end
+  end
+  def create_game_for_user(changeset, user_name) when is_binary(user_name) do
+    user = Accounts.get_user_for_name(user_name)
+    create_game_for_user(changeset, user)
+  end
+  def create_game_for_user(_, _) do
+    {:error, :bad_request}
+  end
+
+  defp set_new_game_status(game, 1) do
+    update_game(game, %{status: "Started"})
+  end
+  defp set_new_game_status(game, human_player_count) when human_player_count > 0 do
+    {:ok, game}
+  end
+  defp set_new_game_status(_, _) do
+    {:error, :bad_request}
   end
 
   @doc """
@@ -101,4 +151,33 @@ defmodule FungusToast.Games do
   def change_game(%Game{} = game) do
     Game.changeset(game, %{})
   end
+
+  defdelegate list_rounds_for_game(game), to: Rounds
+  defdelegate get_round_for_game!(game_id, round_number), to: Rounds
+  defdelegate get_latest_round_for_game(game), to: Rounds
+  defdelegate get_round!(id), to: Rounds
+  defdelegate create_round(game, attrs), to: Rounds
+
+  defdelegate list_players, to: Players
+  defdelegate list_players_for_user(user), to: Players
+  defdelegate list_players_for_game(game), to: Players
+  defdelegate get_player_for_game(game_id, id), to: Players
+  defdelegate get_player!(id), to: Players
+  defdelegate create_player(game, attrs), to: Players
+  defdelegate update_player(player, attrs), to: Players
+  defdelegate change_player(player), to: Players
+
+  defdelegate get_player_skill(player, skill_id), to: PlayerSkills
+  defdelegate get_player_skills(player), to: PlayerSkills
+  defdelegate create_player_skill(player, skill, attrs), to: PlayerSkills
+  defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
+  defdelegate update_player_skills(player, attrs), to: PlayerSkills
+  defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
+
+  defdelegate list_skills, to: Skills
+  defdelegate get_skill!(id), to: Skills
+  defdelegate create_skill(attrs), to: Skills
+  defdelegate update_skill(skill, attrs), to: Skills
+  defdelegate delete_skill(skill), to: Skills
+  defdelegate change_skill(skill), to: Skills
 end

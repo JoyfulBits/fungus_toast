@@ -19,4 +19,11 @@ defmodule FungusToastWeb.FallbackController do
     |> put_view(FungusToastWeb.ErrorView)
     |> render(:"404")
   end
+
+  def call(conn, {:error, :bad_request}) do
+    conn
+    |> put_status(:bad_request)
+    |> put_view(FungusToastWeb.ErrorView)
+    |> render(:"400")
+  end
 end
