@@ -3,8 +3,9 @@ defmodule FungusToast.GamesTest do
 
   alias FungusToast.Accounts
   alias FungusToast.Games
+  alias FungusToast.Players
 
-  def user_fixture(attrs \\ %{}) do
+  defp user_fixture(attrs \\ %{}) do
     {:ok, user} =
       attrs
       |> Enum.into(%{user_name: "testUser"})
@@ -13,13 +14,42 @@ defmodule FungusToast.GamesTest do
     user
   end
 
-  def game_fixture(attrs \\ %{}) do
+  defp game_fixture(attrs \\ %{}) do
     {:ok, game} =
       attrs
       |> Enum.into(%{user_name: "testUser", number_of_human_players: 1})
       |> Games.create_game()
 
     game
+  end
+
+  defp player_fixture(user, game, attrs \\ %{}) do
+    updated_attrs =
+      attrs
+      |> Enum.into(%{human: true, user_name: user.user_name, name: user.user_name})
+    {:ok, player} =
+      Players.create_player(game, updated_attrs)
+
+    player
+  end
+
+  defp create_users(count), do: create_users(count, [])
+  defp create_users(count, accum) when count > 0 do
+    user = user_fixture(%{user_name: "testUsers #{count}"})
+    create_users(count - 1, [user | accum])
+  end
+  defp create_users(0, accum) do
+    accum
+  end
+
+  defp create_players(users, game) when is_list(users), do: create_players(users, game, [])
+  defp create_players(users, game) when not is_nil(users), do: create_players([users], game, [])
+  defp create_players([head | tail], game, accum) do
+    player = player_fixture(head, game)
+    create_players(tail, game, [player | accum])
+  end
+  defp create_players([], _, accum) do
+    accum
   end
 
   describe "games" do
@@ -140,6 +170,70 @@ defmodule FungusToast.GamesTest do
       round2 = round_fixture(game.id, %{game_state: %{"hello" => "world"}, state_change: %{"hello" => "world"}, number: 2})
 
       assert Games.get_round_for_game!(game.id, 2) == round2
+    end
+  end
+
+  describe "next round" do
+    setup do
+      user_fixture(%{user_name: "Fungusmotron"})
+      user_fixture()
+      :ok
+    end
+
+    test "next_round_available/1 returns false if there is one human player and they have points to spend" do
+      game = game_fixture(%{number_of_ai_players: Enum.random(1..3)})
+             |> Games.preload_for_games()
+      refute Games.next_round_available?(game)
+    end
+
+    test "next_round_available/1 returns true if there is one human player and they have spent their points" do
+      game = game_fixture(%{number_of_ai_players: Enum.random(1..3)})
+             |> Games.preload_for_games()
+
+      {:ok, _player} = game.players
+                       |> Enum.filter(fn p -> p.human end)
+                       |> List.first()
+                       |> Games.update_player(%{mutation_points: 0})
+
+      game = Games.get_game!(game.id)
+             |> Games.preload_for_games()
+      assert Games.next_round_available?(game)
+    end
+
+    test "next_round_available/1 returns false if at least one human player has unspent points" do
+      user = user_fixture(%{user_name: "someOtherUser"})
+      game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: Enum.random(1..2)})
+      player_fixture(user, game)
+      game = Games.get_game!(game.id) |> Games.preload_for_games()
+
+      {:ok, _player} = game.players
+                       |> Enum.filter(fn p -> p.human end)
+                       |> List.first()
+                       |> Games.update_player(%{mutation_points: 0})
+
+      game = Games.get_game!(game.id)
+             |> Games.preload_for_games()
+      refute Games.next_round_available?(game)
+    end
+
+    test "next_round_available/1 returns true if all human players have spent their points" do
+      # Generate 1-3 more players alongside the existing testUser
+      human_players = Enum.random(1..3)
+      # Fill the game with up to 2 more AI players
+      ai_players = Enum.random(0..(3 - human_players))
+
+      users = create_users(human_players)
+      game =
+        game_fixture(%{number_of_human_players: human_players, number_of_ai_players: ai_players})
+      create_players(users, game)
+      game = Games.get_game!(game.id) |> Games.preload_for_games()
+      game.players
+      |> Enum.filter(fn p -> p.human end)
+      |> Enum.map(fn p -> p |> Games.update_player(%{mutation_points: 0}) end)
+
+      game = Games.get_game!(game.id)
+              |> Games.preload_for_games()
+      assert Games.next_round_available?(game)
     end
   end
 end
