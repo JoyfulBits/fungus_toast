@@ -25,6 +25,28 @@ defmodule FungusToast.Games do
   end
 
   @doc """
+  Returns a list of games for a given user. The "active" parameter determines which games are returned
+  """
+  def list_games_for_user(%User{} = user), do: list_games_for_user(user, ["Started", "Not Started"])
+  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, ["Started"])
+  def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
+  def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
+  def list_games_for_user(%User{} = user, statuses) when is_list(statuses) do
+    user = user |> Repo.preload(players: :game)
+    games = user.players
+            |> Enum.map(fn p -> p.game end)
+            |> Enum.filter(fn g -> Enum.member?(statuses, g.status) end)
+    {:ok, games}
+  end
+  def list_games_for_user(user_id, active) when is_boolean(active) do
+    user = Accounts.get_user!(user_id)
+    list_games_for_user(user, active)
+  end
+  def list_games_for_user(_, _) do
+    {:error, :bad_request}
+  end
+
+  @doc """
   Gets a single game.
 
   Raises `Ecto.NoResultsError` if the Active game does not exist.
@@ -152,11 +174,47 @@ defmodule FungusToast.Games do
     Game.changeset(game, %{})
   end
 
+  @doc """
+  Preloads the necessary data for games
+  """
+  def preload_for_games(games) do
+    games |> Repo.preload([:rounds, players: [skills: :skill]])
+  end
+
+  @doc """
+  Adds any extra fields necessary for representing games
+  """
+  def decorate_games(%Game{} = game), do: decorate_game(game)
+  def decorate_games(games) when is_list(games) do
+    decorate_games(games, [])
+  end
+  def decorate_games([head | tail], accum) do
+    decorated_game = head |> decorate_game()
+    decorate_games(tail, [decorated_game | accum])
+  end
+  def decorate_games([], accum) do
+    Enum.reverse(accum)
+  end
+
+  defp decorate_game(%Game{} = game) do
+    game |> Map.put(:next_round_available, next_round_available?(game))
+  end
+
+  @doc """
+  Returns whether or not all human players have spent their mutation points
+  """
+  def next_round_available?(%Game{} = game) do
+    game.players
+    |> Enum.filter(fn p -> Map.get(p, :human) end)
+    |> Enum.all?(fn p -> Map.get(p, :mutation_points) == 0 end)
+  end
+
   defdelegate list_rounds_for_game(game), to: Rounds
   defdelegate get_round_for_game!(game_id, round_number), to: Rounds
   defdelegate get_latest_round_for_game(game), to: Rounds
   defdelegate get_round!(id), to: Rounds
   defdelegate create_round(game, attrs), to: Rounds
+  # defdelegate decorate_rounds(round), to: Rounds
 
   defdelegate list_players, to: Players
   defdelegate list_players_for_user(user), to: Players
@@ -166,6 +224,7 @@ defmodule FungusToast.Games do
   defdelegate create_player(game, attrs), to: Players
   defdelegate update_player(player, attrs), to: Players
   defdelegate change_player(player), to: Players
+  # defdelegate decorate_players(player), to: Players
 
   defdelegate get_player_skill(player, skill_id), to: PlayerSkills
   defdelegate get_player_skills(player), to: PlayerSkills
@@ -173,6 +232,7 @@ defmodule FungusToast.Games do
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
   defdelegate update_player_skills(player, attrs), to: PlayerSkills
   defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
+  # defdelegate decorate_player_skills(player_skills), to: PlayerSkills
 
   defdelegate list_skills, to: Skills
   defdelegate get_skill!(id), to: Skills

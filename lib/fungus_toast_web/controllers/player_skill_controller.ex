@@ -18,11 +18,7 @@ defmodule FungusToastWeb.PlayerSkillController do
       |> Games.update_player(%{mutation_points: player.mutation_points - spent_points})
 
       game = Games.get_game!(game_id) |> FungusToast.Repo.preload(:players)
-      new_round =
-        game.players
-        |> Enum.filter(fn p -> Map.get(p, :human) end)
-        |> Enum.all?(fn p -> Map.get(p, :mutation_points) == 0 end)
-
+      new_round = Games.next_round_available?(game)
       # How can we do this with Jason? It wants a struct and we don't have one here
       json(conn, %{nextRoundAvailable: new_round})
     end
