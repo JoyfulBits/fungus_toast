@@ -30,8 +30,9 @@ defmodule FungusToast.PlayersTest do
     end
 
     def player_fixture(game, attrs \\ %{}) do
-      adjusted_attrs = attrs
-                       |> Enum.into(@valid_attrs)
+      adjusted_attrs =
+        attrs
+        |> Enum.into(@valid_attrs)
 
       {:ok, player} = Games.create_player(game, adjusted_attrs)
       player

@@ -6,8 +6,18 @@ defmodule FungusToast.SkillsTest do
   describe "skills" do
     alias FungusToast.Games.Skill
 
-    @valid_attrs %{description: "some description", increase_per_point: "120.5", name: "some name", up_is_good: true}
-    @update_attrs %{description: "some updated description", increase_per_point: "456.7", name: "some updated name", up_is_good: false}
+    @valid_attrs %{
+      description: "some description",
+      increase_per_point: "120.5",
+      name: "some name",
+      up_is_good: true
+    }
+    @update_attrs %{
+      description: "some updated description",
+      increase_per_point: "456.7",
+      name: "some updated name",
+      up_is_good: false
+    }
     @invalid_attrs %{description: nil, increase_per_point: nil, name: nil, up_is_good: nil}
 
     def skill_fixture(attrs \\ %{}) do

@@ -46,9 +46,15 @@ defmodule FungusToastWeb.RoundControllerTest do
   describe "GET" do
     setup [:create_round]
 
-    test "renders round when data is valid", %{conn: conn, game: %Game{id: game_id}, round: %Round{id: id}} do
+    test "renders round when data is valid", %{
+      conn: conn,
+      game: %Game{id: game_id},
+      round: %Round{id: id}
+    } do
       conn = get(conn, Routes.game_round_path(conn, :show, game_id, id))
-      assert %{"id" => id, "gameId" => game_id, "gameState" => %{}, "stateChange" => %{}} = json_response(conn, 200)
+
+      assert %{"id" => id, "gameId" => game_id, "gameState" => %{}, "stateChange" => %{}} =
+               json_response(conn, 200)
     end
   end
 
@@ -62,11 +68,11 @@ defmodule FungusToastWeb.RoundControllerTest do
       conn = get(conn, Routes.game_round_path(conn, :show, game_id, id))
 
       assert %{
-                "id" => id,
-                "gameId" => game_id,
-                "gameState" => %{},
-                "stateChange" => %{}
-              } = json_response(conn, 200)
+               "id" => id,
+               "gameId" => game_id,
+               "gameState" => %{},
+               "stateChange" => %{}
+             } = json_response(conn, 200)
     end
 
     test "renders errors when data is invalid", %{conn: conn, game: %Game{id: game_id}} do
@@ -74,5 +80,4 @@ defmodule FungusToastWeb.RoundControllerTest do
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
-
 end

@@ -62,7 +62,10 @@ defmodule FungusToast.PlayerSkillsTest do
       game = game_fixture()
       skill = skill_fixture()
       player = List.first(game.players)
-      assert {:ok, %PlayerSkill{} = player_skill} = Games.create_player_skill(player, skill, @valid_attrs)
+
+      assert {:ok, %PlayerSkill{} = player_skill} =
+               Games.create_player_skill(player, skill, @valid_attrs)
+
       assert player_skill.skill_level == 1
     end
 
@@ -71,7 +74,9 @@ defmodule FungusToast.PlayerSkillsTest do
       game = game_fixture()
       skill = skill_fixture()
       player = List.first(game.players)
-      assert {:error, %Ecto.Changeset{}} = Games.create_player_skill(player, skill, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Games.create_player_skill(player, skill, @invalid_attrs)
     end
 
     test "update_player_skill/2 with valid data updates the skill" do
@@ -79,7 +84,10 @@ defmodule FungusToast.PlayerSkillsTest do
       game = game_fixture()
       skill = skill_fixture()
       player_skill = player_skill_fixture(game, skill)
-      assert {:ok, %PlayerSkill{} = player_skill} = Games.update_player_skill(player_skill, @update_attrs)
+
+      assert {:ok, %PlayerSkill{} = player_skill} =
+               Games.update_player_skill(player_skill, @update_attrs)
+
       assert player_skill.skill_level == 3
     end
 

@@ -9,6 +9,7 @@ defmodule FungusToastWeb.RoundController do
   def create(conn, %{"game_id" => game_id, "round" => round_params}) do
     with {:ok, %Round{} = round} <- Games.create_round(game_id, round_params) do
       round = round |> FungusToast.Repo.preload(:game)
+
       conn
       |> put_status(:created)
       |> render("show.json", round: round)

@@ -39,6 +39,7 @@ defmodule FungusToast.Players do
   def list_players_for_user(%User{} = user) do
     list_players_for_user(user.id)
   end
+
   def list_players_for_user(user_id) do
     from(p in Player, where: p.user_id == ^user_id) |> Repo.all()
   end
@@ -72,10 +73,11 @@ defmodule FungusToast.Players do
   """
   def get_player!(id), do: Repo.get!(Player, id)
 
-  #TODO: Document this
+  # TODO: Document this
   def get_player_for_game(%Game{} = game, id) do
     get_player_for_game(game.id, id)
   end
+
   def get_player_for_game(game_id, id) do
     from(p in Player, where: p.id == ^id and p.game_id == ^game_id) |> Repo.one()
   end
@@ -90,12 +92,19 @@ defmodule FungusToast.Players do
   def create_ai_players(_, 0) do
     :ok
   end
+
   def create_ai_players(game, ai_players) when is_number(ai_players) do
     # Do we have a better way to do this?
     # Should we just tag users as human/ai and then pass that on to their players?
     # That way we could just look up the non-human player and not care about name
     ai_user = Accounts.get_user_for_name("Fungusmotron")
-    create_player(game, %{human: false, user_name: ai_user.user_name, name: "Fungal Mutation #{get_ai_player_count() + 1}"})
+
+    create_player(game, %{
+      human: false,
+      user_name: ai_user.user_name,
+      name: "Fungal Mutation #{get_ai_player_count() + 1}"
+    })
+
     create_ai_players(game, ai_players - 1)
   end
 
@@ -118,13 +127,16 @@ defmodule FungusToast.Players do
 
   """
   def create_player(game, attrs \\ %{})
+
   def create_player(%Game{} = game, attrs) when is_map(attrs) do
     create_player(game.id, attrs)
   end
+
   def create_player(game_id, attrs) when is_binary(game_id) do
     game = Games.get_game!(game_id)
     create_player(game.id, attrs)
   end
+
   def create_player(game_id, attrs) when is_map(attrs) do
     user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
     create_player_for_user(game_id, user_name, attrs)
@@ -132,10 +144,12 @@ defmodule FungusToast.Players do
 
   defp create_player_for_user(nil, _, _), do: {:error, :bad_request}
   defp create_player_for_user(_, nil, _), do: {:error, :bad_request}
+
   defp create_player_for_user(game_id, user_name, attrs) when is_binary(user_name) do
     user = Accounts.get_user_for_name(user_name)
     create_player_for_user(game_id, user.id, attrs)
   end
+
   defp create_player_for_user(game_id, user_id, attrs) do
     %Player{game_id: game_id, user_id: user_id}
     |> Player.changeset(attrs)

@@ -1,5 +1,4 @@
 defmodule FungusToast.Rounds do
-
   @moduledoc """
     A helper for Round management
   """
@@ -24,6 +23,7 @@ defmodule FungusToast.Rounds do
   def list_rounds_for_game(%Game{} = game) do
     list_rounds_for_game(game.id)
   end
+
   def list_rounds_for_game(game_id) do
     from(r in Round, where: r.game_id == ^game_id) |> Repo.all()
   end
@@ -56,8 +56,10 @@ defmodule FungusToast.Rounds do
   def get_latest_round_for_game(%Game{} = game) do
     get_latest_round_for_game(game.id)
   end
+
   def get_latest_round_for_game(game_id) do
-    from(r in Round, where: r.game_id == ^game_id, order_by: [desc: r.number], limit: 1) |> Repo.one()
+    from(r in Round, where: r.game_id == ^game_id, order_by: [desc: r.number], limit: 1)
+    |> Repo.one()
   end
 
   @doc """
@@ -95,17 +97,19 @@ defmodule FungusToast.Rounds do
 
   """
   def create_round(game, attrs \\ %{})
+
   def create_round(%Game{} = game, attrs) when is_map(attrs) do
     create_round(game.id, attrs)
   end
+
   def create_round(game_id, attrs) when is_binary(game_id) do
     game = Games.get_game!(game_id)
     create_round(game.id, attrs)
   end
+
   def create_round(game_id, attrs) when is_map(attrs) do
     %Round{game_id: game_id}
     |> Round.changeset(attrs)
     |> Repo.insert()
   end
-
 end
