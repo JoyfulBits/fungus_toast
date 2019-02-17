@@ -1,21 +1,8 @@
 defmodule FungusToast.Games.Grid do
-  alias FungusToast.Games.GridCell
+    alias FungusToast.Games.GridCell
 
-  @doc ~S"""
-
-  Create a map of index to GridCell with starting cells for each player
-
-   ## Examples
-   iex> Grid.create_starting_grid(2, 2, [10, 20])
-   [
-     [ %{}, %{} ],
-     [ %{}, %{} ]
-   ]
-  """
-
-  def create_starting_grid(number_of_rows, number_of_columns, player_ids) do
-    initial_grid_cells_map =
-      map_of_player_id_to_random_grid_index(number_of_rows, number_of_columns, player_ids)
+def create_starting_grid(number_of_rows, number_of_columns, player_ids) do
+    initial_grid_cells_map = map_of_player_id_to_random_grid_index(number_of_rows, number_of_columns, player_ids)
 
     Enum.reduce(initial_grid_cells_map, %{}, fn {player_id, position}, map ->
       Map.put(map, position, %GridCell{
@@ -41,4 +28,5 @@ defmodule FungusToast.Games.Grid do
        )}
     )
   end
+
 end
