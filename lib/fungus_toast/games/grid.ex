@@ -22,7 +22,7 @@ def create_starting_grid(number_of_rows, number_of_columns, player_ids) do
       %{},
       &{Enum.at(player_ids, &1),
        Enum.random(
-         Kernel.trunc((&1) * (number_of_cells_to_choose_from))..Kernel.trunc(
+         trunc((&1) * (number_of_cells_to_choose_from))..trunc(
            (&1 + 1) * (number_of_cells_to_choose_from) - 1
          )
        )}
