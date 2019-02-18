@@ -10,9 +10,9 @@ defmodule FungusToast.Games.GridTest do
     end
 
     defp assert_index_between(grid, player_id, start_value_inclusive, end_value_exclusive) do
-      tuple = Enum.find(grid, fn {k, v} -> v.player_id == player_id end)
+      tuple = Enum.find(grid, fn {_, v} -> v.player_id == player_id end)
       grid_cell = elem(tuple, 1)
-      assert (grid_cell.index >= start_value_inclusive)
+      assert(grid_cell.index >= start_value_inclusive)
       assert(grid_cell.index < end_value_exclusive)
     end
 
@@ -25,21 +25,21 @@ defmodule FungusToast.Games.GridTest do
 
       new_grid = Grid.create_starting_grid(10, 10, [player1Id, player2Id, player3Id, player4Id, player5Id])
 
-      assert_index_between(new_grid, player1Id, 0, 20)
-      assert_index_between(new_grid, player2Id, 21, 40)
-      assert_index_between(new_grid, player3Id, 41, 60)
-      assert_index_between(new_grid, player4Id, 61, 80)
-      assert_index_between(new_grid, player5Id, 81, 100)
-      
-      # Enum.each(new_grid, fn {k, v} -> case k.player_id do
-      #   ^player1 -> assert v < 20
-      #   ^player2 -> assert v > 20 and v < 40
-      #   ^player3 -> assert v > 40 and v < 60
-      #   ^player4 -> assert v > 60 and v < 80
-      #   ^player5 -> assert v > 80 and v < 100
-      #   end
-      # end
-      # )
+      assert_index_between(new_grid, player1Id, 0, 19)
+      assert_index_between(new_grid, player2Id, 20, 39)
+      assert_index_between(new_grid, player3Id, 40, 59)
+      assert_index_between(new_grid, player4Id, 60, 79)
+      assert_index_between(new_grid, player5Id, 80, 99)
     end
+
+    # test "that a starting cell is not empty, is alive, and is assigned to the player" do
+    #   player1Id = 1
+
+    #   new_grid = Grid.create_starting_grid(10, 10, [player1Id])
+
+    #   grid_cell = new_grid[player1Id]
+
+    #   assert (grid_cell.empty == false)
+    # end
   end
 end
