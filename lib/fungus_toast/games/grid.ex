@@ -16,14 +16,14 @@ def create_starting_grid(number_of_rows, number_of_columns, player_ids) do
 
   defp map_of_player_id_to_random_grid_index(number_of_rows, number_of_columns, player_ids) do
     number_of_players = length(player_ids)
-
+    number_of_cells_to_choose_from = number_of_columns * number_of_rows / number_of_players
     Enum.into(
-      1..number_of_players,
+      0..number_of_players - 1,
       %{},
-      &{Enum.at(player_ids, &1 - 1),
+      &{Enum.at(player_ids, &1),
        Enum.random(
-         Kernel.trunc((&1 - 1) * (number_of_columns * number_of_rows / number_of_players))..Kernel.trunc(
-           &1 * (number_of_columns * number_of_rows / number_of_players)
+         Kernel.trunc((&1) * (number_of_cells_to_choose_from))..Kernel.trunc(
+           (&1 + 1) * (number_of_cells_to_choose_from) - 1
          )
        )}
     )
