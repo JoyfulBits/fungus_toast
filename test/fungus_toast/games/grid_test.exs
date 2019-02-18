@@ -9,9 +9,13 @@ defmodule FungusToast.Games.GridTest do
       assert Enum.count(new_grid) == 3
     end
 
-    defp assert_index_between(grid, player_id, start_value_inclusive, end_value_exclusive) do
+    defp find_grid_cell_for_player(grid, player_id) do
       tuple = Enum.find(grid, fn {_, v} -> v.player_id == player_id end)
-      grid_cell = elem(tuple, 1)
+      elem(tuple, 1)
+    end
+
+    defp assert_index_between(grid, player_id, start_value_inclusive, end_value_exclusive) do
+      grid_cell = find_grid_cell_for_player(grid, player_id)
       assert(grid_cell.index >= start_value_inclusive)
       assert(grid_cell.index < end_value_exclusive)
     end
@@ -32,14 +36,20 @@ defmodule FungusToast.Games.GridTest do
       assert_index_between(new_grid, player5Id, 80, 99)
     end
 
-    # test "that a starting cell is not empty, is alive, and is assigned to the player" do
-    #   player1Id = 1
+    test "that a starting cell is not empty, is alive, and is assigned to the player" do
+      player1Id = 1
 
-    #   new_grid = Grid.create_starting_grid(10, 10, [player1Id])
+      new_grid = Grid.create_starting_grid(10, 10, [player1Id])
 
-    #   grid_cell = new_grid[player1Id]
+      player_cell = find_grid_cell_for_player(new_grid, player1Id)
 
-    #   assert (grid_cell.empty == false)
-    # end
+      assert (player_cell.empty == false)
+      assert (player_cell.live == true)
+      assert (player_cell.player_id == player1Id)
+      #make sure the map key is the same as the cell index
+      start_index = hd(Map.keys(new_grid))
+      assert (player_cell.index == start_index)
+      refute (player_cell.previous_player_id)
+    end
   end
 end
