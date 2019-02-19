@@ -29,11 +29,11 @@ defmodule FungusToast.Games.GridTest do
 
       new_grid = Grid.create_starting_grid(10, 10, [player1Id, player2Id, player3Id, player4Id, player5Id])
 
-      assert_index_between(new_grid, player1Id, 0, 19)
-      assert_index_between(new_grid, player2Id, 20, 39)
-      assert_index_between(new_grid, player3Id, 40, 59)
-      assert_index_between(new_grid, player4Id, 60, 79)
-      assert_index_between(new_grid, player5Id, 80, 99)
+      assert_index_between(new_grid, player1Id, 0, 20)
+      assert_index_between(new_grid, player2Id, 20, 40)
+      assert_index_between(new_grid, player3Id, 40, 60)
+      assert_index_between(new_grid, player4Id, 60, 80)
+      assert_index_between(new_grid, player5Id, 80, 100)
     end
 
     test "that a starting cell is not empty, is alive, and is assigned to the player" do
