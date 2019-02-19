@@ -4,7 +4,7 @@ defmodule FungusToast.Games.GridTest do
 
   describe "create_starting_grid/3" do
     test "that each player gets a new cell" do
-      new_grid = Grid.create_starting_grid(20, 20, [10, 20, 30])
+      new_grid = Grid.create_starting_grid(20, [10, 20, 30])
 
       assert Enum.count(new_grid) == 3
     end
@@ -20,26 +20,22 @@ defmodule FungusToast.Games.GridTest do
       assert(grid_cell.index < end_value_exclusive)
     end
 
-    test "that each player's designated cell is in the correct section of the grid" do
+    test "that each player is roughly equidistant around a circle centered on the grid" do
       player1Id = 1
       player2Id = 2
       player3Id = 3
       player4Id = 4
       player5Id = 5
 
-      new_grid = Grid.create_starting_grid(10, 10, [player1Id, player2Id, player3Id, player4Id, player5Id])
+      new_grid = Grid.create_starting_grid(10, [player1Id, player2Id, player3Id, player4Id, player5Id])
 
-      assert_index_between(new_grid, player1Id, 0, 20)
-      assert_index_between(new_grid, player2Id, 20, 40)
-      assert_index_between(new_grid, player3Id, 40, 60)
-      assert_index_between(new_grid, player4Id, 60, 80)
-      assert_index_between(new_grid, player5Id, 80, 100)
+      #TODO finish
     end
 
     test "that a starting cell is not empty, is alive, and is assigned to the player" do
       player1Id = 1
 
-      new_grid = Grid.create_starting_grid(10, 10, [player1Id])
+      new_grid = Grid.create_starting_grid(10, [player1Id])
 
       player_cell = find_grid_cell_for_player(new_grid, player1Id)
 
