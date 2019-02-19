@@ -15,6 +15,7 @@ defmodule FungusToastWeb.UserController do
     with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
       # Should this be handled in Accounts?
       user = user |> FungusToast.Repo.preload(:players)
+
       conn
       |> put_status(:created)
       |> render("show.json", user: user)

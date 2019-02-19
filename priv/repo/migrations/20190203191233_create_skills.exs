@@ -10,6 +10,5 @@ defmodule FungusToast.Repo.Migrations.CreateSkills do
 
       timestamps()
     end
-
   end
 end

@@ -52,14 +52,19 @@ defmodule FungusToastWeb.PlayerControllerTest do
       assert json_response(conn, 200)
     end
 
-    test "lists players for the specified game", %{conn: conn, game: %Game{id: game_id}, player: %Player{id: id}} do
+    test "lists players for the specified game", %{
+      conn: conn,
+      game: %Game{id: game_id},
+      player: %Player{id: id}
+    } do
       conn = get(conn, Routes.game_player_path(conn, :show, game_id, id))
+
       assert %{
-                "id" => id,
-                "name" => "testUser",
-                "human" => true
-              } = json_response(conn, 200)
-      end
+               "id" => id,
+               "name" => "testUser",
+               "human" => true
+             } = json_response(conn, 200)
+    end
   end
 
   describe "POST" do

@@ -78,8 +78,7 @@ defmodule FungusToastWeb.GameControllerTest do
                "id" => id
              } = json_response(conn, 201)
 
-      assert %Games.Game{id: id, number_of_human_players: 2} =
-               Games.get_game!(id)
+      assert %Games.Game{id: id, number_of_human_players: 2} = Games.get_game!(id)
     end
   end
 end

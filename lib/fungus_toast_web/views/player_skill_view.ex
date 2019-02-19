@@ -8,4 +8,3 @@ defmodule FungusToastWeb.PlayerSkillView do
 
   def render("player_skill.json", %{player_skill: player_skill}), do: map_from(player_skill)
 end
-

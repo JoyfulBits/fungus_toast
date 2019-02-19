@@ -9,6 +9,5 @@ defmodule FungusToast.Repo.Migrations.CreatePlayers do
 
       timestamps()
     end
-
   end
 end

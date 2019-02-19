@@ -27,27 +27,31 @@ defmodule FungusToast.GamesTest do
     updated_attrs =
       attrs
       |> Enum.into(%{human: true, user_name: user.user_name, name: user.user_name})
-    {:ok, player} =
-      Players.create_player(game, updated_attrs)
+
+    {:ok, player} = Players.create_player(game, updated_attrs)
 
     player
   end
 
   defp create_users(count), do: create_users(count, [])
+
   defp create_users(count, accum) when count > 0 do
     user = user_fixture(%{user_name: "testUsers #{count}"})
     create_users(count - 1, [user | accum])
   end
+
   defp create_users(0, accum) do
     accum
   end
 
   defp create_players(users, game) when is_list(users), do: create_players(users, game, [])
   defp create_players(users, game) when not is_nil(users), do: create_players([users], game, [])
+
   defp create_players([head | tail], game, accum) do
     player = player_fixture(head, game)
     create_players(tail, game, [player | accum])
   end
+
   defp create_players([], _, accum) do
     accum
   end
@@ -123,8 +127,10 @@ defmodule FungusToast.GamesTest do
     @invalid_attrs %{game_state: nil, state_change: nil}
 
     def round_fixture(game_id, attrs \\ %{}) do
-      adjusted_attrs = attrs
-                       |> Enum.into(@valid_attrs)
+      adjusted_attrs =
+        attrs
+        |> Enum.into(@valid_attrs)
+
       {:ok, round} = Games.create_round(game_id, adjusted_attrs)
 
       round
@@ -158,7 +164,10 @@ defmodule FungusToast.GamesTest do
       game2 = game_fixture()
 
       rounds = game1.rounds
-      round2 = round_fixture(game1.id, %{number: 2, game_state: %{"hello" => "world"}, state_change: %{}})
+
+      round2 =
+        round_fixture(game1.id, %{number: 2, game_state: %{"hello" => "world"}, state_change: %{}})
+
       _round3 = round_fixture(game2.id, %{number: 3, game_state: %{}, state_change: %{}})
 
       assert Games.list_rounds_for_game(game1.id) == rounds ++ [round2]
@@ -167,7 +176,13 @@ defmodule FungusToast.GamesTest do
     test "get_round_for_game!/2 returns the round with the given round number for the specified game" do
       user_fixture()
       game = game_fixture()
-      round2 = round_fixture(game.id, %{game_state: %{"hello" => "world"}, state_change: %{"hello" => "world"}, number: 2})
+
+      round2 =
+        round_fixture(game.id, %{
+          game_state: %{"hello" => "world"},
+          state_change: %{"hello" => "world"},
+          number: 2
+        })
 
       assert Games.get_round_for_game!(game.id, 2) == round2
     end
@@ -181,22 +196,28 @@ defmodule FungusToast.GamesTest do
     end
 
     test "next_round_available/1 returns false if there is one human player and they have points to spend" do
-      game = game_fixture(%{number_of_ai_players: Enum.random(1..3)})
-             |> Games.preload_for_games()
+      game =
+        game_fixture(%{number_of_ai_players: Enum.random(1..3)})
+        |> Games.preload_for_games()
+
       refute Games.next_round_available?(game)
     end
 
     test "next_round_available/1 returns true if there is one human player and they have spent their points" do
-      game = game_fixture(%{number_of_ai_players: Enum.random(1..3)})
-             |> Games.preload_for_games()
+      game =
+        game_fixture(%{number_of_ai_players: Enum.random(1..3)})
+        |> Games.preload_for_games()
 
-      {:ok, _player} = game.players
-                       |> Enum.filter(fn p -> p.human end)
-                       |> List.first()
-                       |> Games.update_player(%{mutation_points: 0})
+      {:ok, _player} =
+        game.players
+        |> Enum.filter(fn p -> p.human end)
+        |> List.first()
+        |> Games.update_player(%{mutation_points: 0})
 
-      game = Games.get_game!(game.id)
-             |> Games.preload_for_games()
+      game =
+        Games.get_game!(game.id)
+        |> Games.preload_for_games()
+
       assert Games.next_round_available?(game)
     end
 
@@ -206,13 +227,16 @@ defmodule FungusToast.GamesTest do
       player_fixture(user, game)
       game = Games.get_game!(game.id) |> Games.preload_for_games()
 
-      {:ok, _player} = game.players
-                       |> Enum.filter(fn p -> p.human end)
-                       |> List.first()
-                       |> Games.update_player(%{mutation_points: 0})
+      {:ok, _player} =
+        game.players
+        |> Enum.filter(fn p -> p.human end)
+        |> List.first()
+        |> Games.update_player(%{mutation_points: 0})
 
-      game = Games.get_game!(game.id)
-             |> Games.preload_for_games()
+      game =
+        Games.get_game!(game.id)
+        |> Games.preload_for_games()
+
       refute Games.next_round_available?(game)
     end
 
@@ -223,16 +247,21 @@ defmodule FungusToast.GamesTest do
       ai_players = Enum.random(0..(3 - human_players))
 
       users = create_users(human_players)
+
       game =
         game_fixture(%{number_of_human_players: human_players, number_of_ai_players: ai_players})
+
       create_players(users, game)
       game = Games.get_game!(game.id) |> Games.preload_for_games()
+
       game.players
       |> Enum.filter(fn p -> p.human end)
       |> Enum.map(fn p -> p |> Games.update_player(%{mutation_points: 0}) end)
 
-      game = Games.get_game!(game.id)
-              |> Games.preload_for_games()
+      game =
+        Games.get_game!(game.id)
+        |> Games.preload_for_games()
+
       assert Games.next_round_available?(game)
     end
   end

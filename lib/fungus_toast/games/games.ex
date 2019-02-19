@@ -1,5 +1,4 @@
 defmodule FungusToast.Games do
-
   @moduledoc """
   The Games context.
   """
@@ -27,21 +26,29 @@ defmodule FungusToast.Games do
   @doc """
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
-  def list_games_for_user(%User{} = user), do: list_games_for_user(user, ["Started", "Not Started"])
+  def list_games_for_user(%User{} = user),
+    do: list_games_for_user(user, ["Started", "Not Started"])
+
   def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, ["Started"])
   def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
   def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
+
   def list_games_for_user(%User{} = user, statuses) when is_list(statuses) do
     user = user |> Repo.preload(players: :game)
-    games = user.players
-            |> Enum.map(fn p -> p.game end)
-            |> Enum.filter(fn g -> Enum.member?(statuses, g.status) end)
+
+    games =
+      user.players
+      |> Enum.map(fn p -> p.game end)
+      |> Enum.filter(fn g -> Enum.member?(statuses, g.status) end)
+
     {:ok, games}
   end
+
   def list_games_for_user(user_id, active) when is_boolean(active) do
     user = Accounts.get_user!(user_id)
     list_games_for_user(user, active)
   end
+
   def list_games_for_user(_, _) do
     {:error, :bad_request}
   end
@@ -81,14 +88,15 @@ defmodule FungusToast.Games do
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
       human_player_count =
         Map.get(attrs, :number_of_human_players) || Map.get(attrs, "number_of_human_players")
+
       ai_player_count =
         Map.get(attrs, :number_of_ai_players) || Map.get(attrs, "number_of_ai_players") || 0
 
       game
-        |> Players.create_ai_players(ai_player_count)
+      |> Players.create_ai_players(ai_player_count)
 
       game
-        |> set_new_game_status(human_player_count)
+      |> set_new_game_status(human_player_count)
     end
   end
 
@@ -99,20 +107,24 @@ defmodule FungusToast.Games do
   def create_game_for_user(_, "Fungusmotron") do
     {:error, :bad_request}
   end
+
   def create_game_for_user(changeset, %User{} = user) do
     with {:ok, game} <- Repo.insert(changeset) do
       # TODO: Handle the case where a round is not created
       create_round(game, %{number: 1})
+
       game
-        |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
+      |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
 
       {:ok, game}
     end
   end
+
   def create_game_for_user(changeset, user_name) when is_binary(user_name) do
     user = Accounts.get_user_for_name(user_name)
     create_game_for_user(changeset, user)
   end
+
   def create_game_for_user(_, _) do
     {:error, :bad_request}
   end
@@ -120,9 +132,11 @@ defmodule FungusToast.Games do
   defp set_new_game_status(game, 1) do
     update_game(game, %{status: "Started"})
   end
+
   defp set_new_game_status(game, human_player_count) when human_player_count > 0 do
     {:ok, game}
   end
+
   defp set_new_game_status(_, _) do
     {:error, :bad_request}
   end
@@ -185,13 +199,16 @@ defmodule FungusToast.Games do
   Adds any extra fields necessary for representing games
   """
   def decorate_games(%Game{} = game), do: decorate_game(game)
+
   def decorate_games(games) when is_list(games) do
     decorate_games(games, [])
   end
+
   def decorate_games([head | tail], accum) do
     decorated_game = head |> decorate_game()
     decorate_games(tail, [decorated_game | accum])
   end
+
   def decorate_games([], accum) do
     Enum.reverse(accum)
   end

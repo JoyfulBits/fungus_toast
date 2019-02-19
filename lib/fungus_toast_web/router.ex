@@ -28,6 +28,7 @@ defmodule FungusToastWeb.Router do
         resources "/skills", PlayerSkillController, only: [:index], as: :skill
         post "/skills", PlayerSkillController, :update, as: :skill
       end
+
       resources "/rounds", RoundController, only: [:show, :create]
     end
 
