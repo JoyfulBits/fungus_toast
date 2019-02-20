@@ -96,12 +96,12 @@ defmodule FungusToast.Games do
       game
       |> Players.create_ai_players(ai_player_count)
       
-      if(human_player_count == 1) do
-        grid_size = Map.get(attrs, :grid_size)
-        player_ids = Enum.map(game.players, fn(x) -> x.id end)
-        starting_cells = FungusToast.Games.GridCell.create_starting_grid(grid_size, player_ids)
-        #TODO add the starting cells to the first rounds' growth cycle. Need help!
-      end
+      # if(human_player_count == 1) do
+      #   grid_size = Map.get(attrs, :grid_size)
+      #   player_ids = Enum.map(game.players, fn(x) -> x.id end)
+      #   starting_cells = FungusToast.Games.GridCell.create_starting_grid(grid_size, player_ids)
+      #   #TODO add the starting cells to the first rounds' growth cycle. Need help!
+      # end
 
       game
       |> set_new_game_status(human_player_count)
