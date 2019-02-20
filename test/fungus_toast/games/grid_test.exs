@@ -14,22 +14,20 @@ defmodule FungusToast.Games.GridTest do
       elem(tuple, 1)
     end
 
-    defp assert_index_between(grid, player_id, start_value_inclusive, end_value_exclusive) do
-      grid_cell = find_grid_cell_for_player(grid, player_id)
-      assert(grid_cell.index >= start_value_inclusive)
-      assert(grid_cell.index < end_value_exclusive)
+    test "that a large enough grid adequeqtly places the number of players" do
+      player_ids = [1,2,3,4,5]
+      grid = Grid.create_starting_grid(10, player_ids)
+
+      assert Map.size(grid) == length(player_ids)
     end
 
-    test "that each player is roughly equidistant around a circle centered on the grid" do
-      player1Id = 1
-      player2Id = 2
-      player3Id = 3
-      player4Id = 4
-      player5Id = 5
+    test "that an error is returned if too many players are added to the grid" do
+      player_ids = [1,2,3,4,5]
 
-      new_grid = Grid.create_starting_grid(10, [player1Id, player2Id, player3Id, player4Id, player5Id])
+      error =
+        Grid.create_starting_grid(2, player_ids)
 
-      #TODO finish
+      assert {:error, "5 players is too many players for grid size of 2x2"} = error
     end
 
     test "that a starting cell is not empty, is alive, and is assigned to the player" do
@@ -39,13 +37,13 @@ defmodule FungusToast.Games.GridTest do
 
       player_cell = find_grid_cell_for_player(new_grid, player1Id)
 
-      assert (player_cell.empty == false)
-      assert (player_cell.live == true)
-      assert (player_cell.player_id == player1Id)
-      #make sure the map key is the same as the cell index
+      assert player_cell.empty == false
+      assert player_cell.live == true
+      assert player_cell.player_id == player1Id
+      # make sure the map key is the same as the cell index
       start_index = hd(Map.keys(new_grid))
-      assert (player_cell.index == start_index)
-      refute (player_cell.previous_player_id)
+      assert player_cell.index == start_index
+      refute player_cell.previous_player_id
     end
   end
 end
