@@ -48,4 +48,17 @@ defmodule FungusToast.Games.Grid do
 
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
+
+  def generate_growth_cycles(starting_grid, player_id_to_player_map, number_of_growth_cycles)
+    live_cells = :maps.filter(fn _, v -> v.live end, v)
+    Enum.each(live_cells, fn(x, y) -> calculate_cell_growth(starting_grid, y) end)
+  end
+
+  def calculate_cell_growth(starting_grid, grid_cell) do
+    surrounding_cells = get_surrounding_cells(starting_grid, grid_cell.index)
+    empty_surrounding_cells = :maps.filter(fn _, v -> v.empty)
+    #get list of newly generated cells
+
+    #check if the cell dies from apoptosis, starvation, or mycotoxins
+  end
 end

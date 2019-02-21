@@ -9,6 +9,7 @@ defmodule FungusToast.Games do
   alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.Game
+  alias FungusToast.Games.Grid
 
   @doc """
   Returns the list of games.
@@ -101,6 +102,7 @@ defmodule FungusToast.Games do
       #   player_ids = Enum.map(game.players, fn(x) -> x.id end)
       #   starting_cells = FungusToast.Games.GridCell.create_starting_grid(grid_size, player_ids)
       #   #TODO add the starting cells to the first rounds' growth cycle. Need help!
+          first_round = %Round{number: 1, game_state: }
       # end
 
       game
@@ -232,6 +234,18 @@ defmodule FungusToast.Games do
     game.players
     |> Enum.filter(fn p -> Map.get(p, :human) end)
     |> Enum.all?(fn p -> Map.get(p, :mutation_points) == 0 end)
+  end
+
+  @doc """
+  Executes a full round of growth cycles and creates a new round for this game
+  """
+  def trigger_next_round(game_id) do
+    latest_round = get_latest_round_for_game(game_id)
+    current_game_state = latest_round.game_state
+    players = Players.list_players_for_game(game_id)
+    player_id_to_player_map = players 
+      |> Map.new(fn x -> {x.id, x} end)
+    growth_cycles = Grid.generate_growth_cycles(current_game_state, player_id_to_player_map, 5)
   end
 
   defdelegate list_rounds_for_game(game), to: Rounds
