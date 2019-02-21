@@ -45,8 +45,7 @@ defmodule FungusToastWeb.GameControllerTest do
         "user_name" => "testUser",
         "number_of_human_players" => 2,
         "number_of_ai_players" => 2,
-        "number_of_columns" => 100,
-        "number_of_rows" => 100
+        "grid_size" => 50
       }
     end
 

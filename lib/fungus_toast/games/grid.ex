@@ -3,14 +3,14 @@ defmodule FungusToast.Games.Grid do
   import :math
 
   @spec create_starting_grid(any(), [any()]) :: any()
-  def create_starting_grid(number_of_rows_and_columns, player_ids) do
+  def create_starting_grid(grid_size, player_ids) do
     number_of_players = length(player_ids)
 
-    if(number_of_rows_and_columns < 10) do
+    if(grid_size < 10) do
       {:error,
-      "A grid size of #{number_of_rows_and_columns}x#{number_of_rows_and_columns} is too small. The minimum grid size is 10x10."}
+      "A grid size of #{grid_size}x#{grid_size} is too small. The minimum grid size is 10x10."}
     else
-      number_of_empty_cells_after_placing_start_cells = number_of_rows_and_columns * number_of_rows_and_columns - number_of_players
+      number_of_empty_cells_after_placing_start_cells = grid_size * grid_size - number_of_players
       if(number_of_empty_cells_after_placing_start_cells < 100) do
         {:error,
         "There needs to be at least 100 cells left over after placing starting cells, but there was only #{number_of_empty_cells_after_placing_start_cells}."}
@@ -19,18 +19,17 @@ defmodule FungusToast.Games.Grid do
         Enum.into(
           1..number_of_players,
           %{},
-          &{&1, get_start_cell_index(number_of_rows_and_columns, number_of_players, &1)}
+          &{&1, get_start_cell_index(grid_size, number_of_players, &1)}
         )
 
-        starting_grid =
-          Enum.reduce(initial_grid_cells_map, %{}, fn {player_id, position}, map ->
-            Map.put(map, position, %GridCell{
-              index: position,
-              player_id: player_id,
-              live: true,
-              empty: false
-            })
-          end)
+        Enum.reduce(initial_grid_cells_map, %{}, fn {player_id, position}, map ->
+          Map.put(map, position, %GridCell{
+            index: position,
+            player_id: player_id,
+            live: true,
+            empty: false
+          })
+        end)
       end
     end
   end

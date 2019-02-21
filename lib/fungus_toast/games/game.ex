@@ -8,19 +8,16 @@ defmodule FungusToast.Games.Game do
   @attrs [
     :number_of_human_players,
     :number_of_ai_players,
-    :number_of_rows,
-    :number_of_columns,
+    :grid_size,
     :status
   ]
 
-  @default_rows 50
-  @default_columns 50
+  @default_grid_size 50
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "games" do
     field :status, :string, default: @default_status
-    field :number_of_columns, :integer, default: @default_columns, null: false
-    field :number_of_rows, :integer, default: @default_rows, null: false
+    field :grid_size, :integer, default: @default_grid_size, null: false
     field :number_of_human_players, :integer, null: false
     field :number_of_ai_players, :integer, default: 0, null: false
 
