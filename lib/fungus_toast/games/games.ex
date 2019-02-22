@@ -226,12 +226,8 @@ defmodule FungusToast.Games do
     |> Enum.all?(fn p -> Map.get(p, :mutation_points) == 0 end)
   end
 
-  defdelegate list_rounds_for_game(game), to: Rounds
-  defdelegate get_round_for_game!(game_id, round_number), to: Rounds
-  defdelegate get_latest_round_for_game(game), to: Rounds
   defdelegate get_round!(id), to: Rounds
   defdelegate create_round(game, attrs), to: Rounds
-  # defdelegate decorate_rounds(round), to: Rounds
 
   defdelegate list_players, to: Players
   defdelegate list_players_for_user(user), to: Players
@@ -241,7 +237,6 @@ defmodule FungusToast.Games do
   defdelegate create_player(game, attrs), to: Players
   defdelegate update_player(player, attrs), to: Players
   defdelegate change_player(player), to: Players
-  # defdelegate decorate_players(player), to: Players
 
   defdelegate get_player_skill(player, skill_id), to: PlayerSkills
   defdelegate get_player_skills(player), to: PlayerSkills
@@ -249,7 +244,6 @@ defmodule FungusToast.Games do
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
   defdelegate update_player_skills(player, attrs), to: PlayerSkills
   defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
-  # defdelegate decorate_player_skills(player_skills), to: PlayerSkills
 
   defdelegate list_skills, to: Skills
   defdelegate get_skill!(id), to: Skills

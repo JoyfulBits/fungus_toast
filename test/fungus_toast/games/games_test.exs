@@ -156,36 +156,6 @@ defmodule FungusToast.GamesTest do
       game = game_fixture()
       assert {:error, %Ecto.Changeset{}} = Games.create_round(game.id, @invalid_attrs)
     end
-
-    test "list_rounds_for_game/1 returns rounds for the specified game" do
-      user_fixture()
-      game1 = game_fixture()
-      game1 = game1 |> FungusToast.Repo.preload(:rounds)
-      game2 = game_fixture()
-
-      rounds = game1.rounds
-
-      round2 =
-        round_fixture(game1.id, %{number: 2, game_state: %{"hello" => "world"}, state_change: %{}})
-
-      _round3 = round_fixture(game2.id, %{number: 3, game_state: %{}, state_change: %{}})
-
-      assert Games.list_rounds_for_game(game1.id) == rounds ++ [round2]
-    end
-
-    test "get_round_for_game!/2 returns the round with the given round number for the specified game" do
-      user_fixture()
-      game = game_fixture()
-
-      round2 =
-        round_fixture(game.id, %{
-          game_state: %{"hello" => "world"},
-          state_change: %{"hello" => "world"},
-          number: 2
-        })
-
-      assert Games.get_round_for_game!(game.id, 2) == round2
-    end
   end
 
   describe "next round" do
