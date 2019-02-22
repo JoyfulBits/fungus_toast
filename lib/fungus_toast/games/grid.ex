@@ -49,16 +49,32 @@ defmodule FungusToast.Games.Grid do
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
-  def generate_growth_cycles(starting_grid, player_id_to_player_map, number_of_growth_cycles)
-    live_cells = :maps.filter(fn _, v -> v.live end, v)
-    Enum.each(live_cells, fn(x, y) -> calculate_cell_growth(starting_grid, y) end)
+  def generate_growth_cycles(starting_grid, player_id_to_player_map, number_of_growth_cycles) do
+    #TODO get the live cells
+    #live_cells = :maps.filter fn _, v -> v.live end, v
+
+    #TODO return a map of index => %GridCell{} 
+    #Enum.each(live_cells, fn(x, y) -> {calculate_cell_growth(starting_grid, player_id_to_player_map, y) end)
   end
 
-  def calculate_cell_growth(starting_grid, grid_cell) do
-    surrounding_cells = get_surrounding_cells(starting_grid, grid_cell.index)
-    empty_surrounding_cells = :maps.filter(fn _, v -> v.empty)
-    #get list of newly generated cells
+  def calculate_cell_growth(starting_grid, player_id_to_player_map, grid_cell) do
+    #TODO get ALL surrounding cells (we'll need empty and live, dead, and empty ones)
+    #surrounding_cells = get_surrounding_cells(starting_grid, grid_cell.index)
+
+    #empty_surrounding_cells = :maps.filter(fn (_, v) -> v.empty end)
+
+    #iterate over empty cells and calculate generate cells according ot the corresponding probabilities on player.*growth_chance. 
+    #Return a list of newly generated GridCells
+
+    #iterate over adjacent dead cells to calculate whether the cell is regenerated according to player.regeneration_chance
 
     #check if the cell dies from apoptosis, starvation, or mycotoxins
+    #check_for_cell_death(grid_cell, surrounding_cells)
+
+    #return a tuple which includes new split cells and regenerated cells, and and an indicator of whether the current cell died
+  end
+
+  def get_surrounding_cells(grid, cell_index) do
+    #TODO
   end
 end
