@@ -53,7 +53,7 @@ defmodule FungusToast.Games.Grid do
     #TODO get the live cells
     #live_cells = :maps.filter fn _, v -> v.live end, v
 
-    #TODO return a map of index => %GridCell{} 
+    #TODO return a map of index => %GridCell{} for newly grown and newly perished cells ONLY (i.e. changes only)
     #Enum.each(live_cells, fn(x, y) -> {calculate_cell_growth(starting_grid, player_id_to_player_map, y) end)
   end
 
@@ -67,6 +67,8 @@ defmodule FungusToast.Games.Grid do
     #Return a list of newly generated GridCells
 
     #iterate over adjacent dead cells to calculate whether the cell is regenerated according to player.regeneration_chance
+    #add to the map of live cells if the cell was regenerated
+    #dead_surrounding_cells = :maps.filter(fn (_, v) -> !v.live end)
 
     #check if the cell dies from apoptosis, starvation, or mycotoxins
     #check_for_cell_death(grid_cell, surrounding_cells)

@@ -9,7 +9,8 @@ defmodule FungusToast.Games.Game do
     :number_of_human_players,
     :number_of_ai_players,
     :grid_size,
-    :status
+    :status,
+    :latest_round
   ]
 
   @default_grid_size 50

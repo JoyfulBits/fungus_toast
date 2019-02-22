@@ -111,7 +111,9 @@ defmodule FungusToast.Games do
       #   player_ids = Enum.map(game.players, fn(x) -> x.id end)
       #   starting_cells = FungusToast.Games.GridCell.create_starting_grid(grid_size, player_ids)
       #   #TODO add the starting cells to the first rounds' growth cycle. Need help!
-      #first_round = %Round{number: 1, game_state: }
+      #first_round = %Round{number: 0, game_state: %GameState{cells: starting_cells, round_number: 0, generation_number: 0}}
+      #save the Round to the database
+      #transform the game + the first_round to be a game_view
       # end
   end
 
