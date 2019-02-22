@@ -229,26 +229,16 @@ defmodule FungusToast.Games do
   defdelegate get_round!(id), to: Rounds
   defdelegate create_round(game, attrs), to: Rounds
 
-  defdelegate list_players, to: Players
-  defdelegate list_players_for_user(user), to: Players
   defdelegate list_players_for_game(game), to: Players
   defdelegate get_player_for_game(game_id, id), to: Players
   defdelegate get_player!(id), to: Players
   defdelegate create_player(game, attrs), to: Players
   defdelegate update_player(player, attrs), to: Players
-  defdelegate change_player(player), to: Players
 
-  defdelegate get_player_skill(player, skill_id), to: PlayerSkills
   defdelegate get_player_skills(player), to: PlayerSkills
-  defdelegate create_player_skill(player, skill, attrs), to: PlayerSkills
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
   defdelegate update_player_skills(player, attrs), to: PlayerSkills
   defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
 
-  defdelegate list_skills, to: Skills
-  defdelegate get_skill!(id), to: Skills
   defdelegate create_skill(attrs), to: Skills
-  defdelegate update_skill(skill, attrs), to: Skills
-  defdelegate delete_skill(skill), to: Skills
-  defdelegate change_skill(skill), to: Skills
 end
