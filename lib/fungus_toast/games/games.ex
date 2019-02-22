@@ -226,7 +226,11 @@ defmodule FungusToast.Games do
     |> Enum.all?(fn p -> Map.get(p, :mutation_points) == 0 end)
   end
 
-  defdelegate get_round!(id), to: Rounds
+  def get_round!(id) do
+    alias FungusToast.Games.Round
+    Repo.get!(Round, id) |> Repo.preload(:game)
+  end
+
   defdelegate create_round(game, attrs), to: Rounds
 
   defdelegate list_players_for_game(game), to: Players
