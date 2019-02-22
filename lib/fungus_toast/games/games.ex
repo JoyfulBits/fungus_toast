@@ -97,17 +97,22 @@ defmodule FungusToast.Games do
       game
       |> Players.create_ai_players(ai_player_count)
       
+      grid_size = Map.get(attrs, :grid_size)
+      start_game(game, grid_size)
+
+      game
+      |> set_new_game_status(human_player_count)
+    end
+  end
+
+  def start_game(game, grid_size, human_player_count) do
       # if(human_player_count == 1) do
       #   grid_size = Map.get(attrs, :grid_size)
       #   player_ids = Enum.map(game.players, fn(x) -> x.id end)
       #   starting_cells = FungusToast.Games.GridCell.create_starting_grid(grid_size, player_ids)
       #   #TODO add the starting cells to the first rounds' growth cycle. Need help!
-          first_round = %Round{number: 1, game_state: }
+      #first_round = %Round{number: 1, game_state: }
       # end
-
-      game
-      |> set_new_game_status(human_player_count)
-    end
   end
 
   # This is a special case to avoid creating human players with our AI user.
