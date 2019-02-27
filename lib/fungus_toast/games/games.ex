@@ -96,7 +96,7 @@ defmodule FungusToast.Games do
 
       game
       |> Players.create_ai_players(ai_player_count)
-      
+
       grid_size = Map.get(attrs, :grid_size)
       start_game(game, grid_size, human_player_count)
 
@@ -250,42 +250,32 @@ defmodule FungusToast.Games do
     latest_round = get_latest_round_for_game(game_id)
     current_game_state = latest_round.game_state
     players = Players.list_players_for_game(game_id)
-    player_id_to_player_map = players 
+    player_id_to_player_map = players
       |> Map.new(fn x -> {x.id, x} end)
     #TODO shouldn't hard-code number of growth cycles
     number_of_growth_cycles_to_run = 5
     growth_cycles = Grid.generate_growth_cycles(current_game_state, grid_size, player_id_to_player_map, number_of_growth_cycles_to_run)
   end
 
-  defdelegate list_rounds_for_game(game), to: Rounds
-  defdelegate get_round_for_game!(game_id, round_number), to: Rounds
   defdelegate get_latest_round_for_game(game), to: Rounds
-  defdelegate get_round!(id), to: Rounds
-  defdelegate create_round(game, attrs), to: Rounds
-  # defdelegate decorate_rounds(round), to: Rounds
 
-  defdelegate list_players, to: Players
-  defdelegate list_players_for_user(user), to: Players
+  def get_round!(id) do
+    alias FungusToast.Games.Round
+    Repo.get!(Round, id) |> Repo.preload(:game)
+  end
+
+  defdelegate create_round(game, attrs), to: Rounds
+
   defdelegate list_players_for_game(game), to: Players
   defdelegate get_player_for_game(game_id, id), to: Players
   defdelegate get_player!(id), to: Players
   defdelegate create_player(game, attrs), to: Players
   defdelegate update_player(player, attrs), to: Players
-  defdelegate change_player(player), to: Players
-  # defdelegate decorate_players(player), to: Players
 
-  defdelegate get_player_skill(player, skill_id), to: PlayerSkills
   defdelegate get_player_skills(player), to: PlayerSkills
-  defdelegate create_player_skill(player, skill, attrs), to: PlayerSkills
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
   defdelegate update_player_skills(player, attrs), to: PlayerSkills
   defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
-  # defdelegate decorate_player_skills(player_skills), to: PlayerSkills
 
-  defdelegate list_skills, to: Skills
-  defdelegate get_skill!(id), to: Skills
   defdelegate create_skill(attrs), to: Skills
-  defdelegate update_skill(skill, attrs), to: Skills
-  defdelegate delete_skill(skill), to: Skills
-  defdelegate change_skill(skill), to: Skills
 end
