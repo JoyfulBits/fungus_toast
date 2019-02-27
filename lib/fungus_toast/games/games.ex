@@ -98,7 +98,7 @@ defmodule FungusToast.Games do
       |> Players.create_ai_players(ai_player_count)
       
       grid_size = Map.get(attrs, :grid_size)
-      start_game(game, grid_size)
+      start_game(game, grid_size, human_player_count)
 
       game
       |> set_new_game_status(human_player_count)
@@ -246,13 +246,15 @@ defmodule FungusToast.Games do
   @doc """
   Executes a full round of growth cycles and creates a new round for this game
   """
-  def trigger_next_round(game_id) do
+  def trigger_next_round(game_id, grid_size) do
     latest_round = get_latest_round_for_game(game_id)
     current_game_state = latest_round.game_state
     players = Players.list_players_for_game(game_id)
     player_id_to_player_map = players 
       |> Map.new(fn x -> {x.id, x} end)
-    growth_cycles = Grid.generate_growth_cycles(current_game_state, player_id_to_player_map, 5)
+    #TODO shouldn't hard-code number of growth cycles
+    number_of_growth_cycles_to_run = 5
+    growth_cycles = Grid.generate_growth_cycles(current_game_state, grid_size, player_id_to_player_map, number_of_growth_cycles_to_run)
   end
 
   defdelegate list_rounds_for_game(game), to: Rounds

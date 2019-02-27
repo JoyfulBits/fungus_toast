@@ -1,5 +1,6 @@
 defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GridCell
+  alias FungusToast.Games.SurroundingCells
   import :math
 
   @spec create_starting_grid(any(), [any()]) :: any()
@@ -49,17 +50,16 @@ defmodule FungusToast.Games.Grid do
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
-  def generate_growth_cycles(starting_grid, player_id_to_player_map, number_of_growth_cycles) do
-    #TODO get the live cells
-    #live_cells = :maps.filter fn _, v -> v.live end, v
+  def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, number_of_growth_cycles) do
+    live_cells = :maps.filter(fn _, grid_cell -> grid_cell.live end, starting_grid)
 
     #TODO return a map of index => %GridCell{} for newly grown and newly perished cells ONLY (i.e. changes only)
-    #Enum.each(live_cells, fn(x, y) -> {calculate_cell_growth(starting_grid, player_id_to_player_map, y) end)
+    Enum.map(live_cells, fn{x, y} -> {x, calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, y)} end)
   end
 
-  def calculate_cell_growth(starting_grid, player_id_to_player_map, grid_cell) do
+  def calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     #TODO get ALL surrounding cells (we'll need empty and live, dead, and empty ones)
-    #surrounding_cells = get_surrounding_cells(starting_grid, grid_cell.index)
+    #surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
     #empty_surrounding_cells = :maps.filter(fn (_, v) -> v.empty end)
 
@@ -76,7 +76,220 @@ defmodule FungusToast.Games.Grid do
     #return a tuple which includes new split cells and regenerated cells, and and an indicator of whether the current cell died
   end
 
-  def get_surrounding_cells(grid, cell_index) do
-    #TODO
+  def get_surrounding_cells(grid, grid_size, cell_index) do
+    check_left = true
+    check_top = true
+    check_right = true
+    check_bottom = true
+
+    top_left_cell = nil
+    top_cell = nil
+    top_right_cell = nil
+    right_cell = nil
+    bottom_right_cell = nil
+    bottom_cell = nil
+    bottom_left_cell = nil
+    left_cell = nil
+
+    if(on_left_column(cell_index, grid_size)) do
+      top_left_cell = make_empty_grid_cell(cell_index)
+      bottom_left_cell = make_empty_grid_cell(cell_index)
+      left_cell = make_empty_grid_cell(cell_index)
+      check_left = false
+    else
+      if(on_right_column(cell_index, grid_size)) do
+        top_right_cell = make_empty_grid_cell(cell_index)
+        right_cell = make_empty_grid_cell(cell_index)
+        bottom_right_cell = make_empty_grid_cell(cell_index)
+        check_right = false
+      end
+    end
+
+    if(on_top_row(cell_index, grid_size)) do
+      top_left_cell = make_empty_grid_cell(cell_index)
+      top_cell = make_empty_grid_cell(cell_index)
+      top_right_cell = make_empty_grid_cell(cell_index)
+      check_top = false
+    else
+      if(on_bottom_row(cell_index, grid_size)) do
+        bottom_left_cell = make_empty_grid_cell(cell_index)
+        bottom_cell = make_empty_grid_cell(cell_index)
+        bottom_right_cell = make_empty_grid_cell(cell_index)
+        check_bottom = false
+      end
+    end
+
+    if(check_left) do
+      if(check_bottom) do
+        bottom_left_cell = get_bottom_left_cell(grid, grid_size, cell_index)
+      end
+
+      left_cell = get_left_cell(grid, grid_size, cell_index)
+
+      if(check_top) do
+        top_left_cell = get_top_left_cell(grid, grid_size, cell_index)
+      end
+    end
+
+    if(check_top) do
+      #skip top left cell as it's already been set or out of grid
+
+      top_cell = get_top_cell(grid, grid_size, cell_index)
+
+      if(check_right) do
+        top_right_cell = get_top_right_cell(grid, grid_size, cell_index)
+      end
+    end
+
+    if(check_right) do
+      #skip top right cell as it's already been set or out of grid
+
+      right_cell = get_right_cell(grid, grid_size, cell_index)
+
+      if(check_bottom) do
+        bottom_right_cell = get_bottom_right_cell(grid, grid_size, cell_index)
+      end
+    end
+
+    if(check_bottom) do
+      #skip bottom right cell as it's already been set or out of grid
+
+      bottom_cell = get_bottom_cell(grid, grid_size, cell_index)
+
+      #skip bottom left as it's already been set or out of grid
+    end
+
+    %SurroundingCells{top_left_cell: top_left_cell, top_cell: top_cell, top_right_cell: top_right_cell, right_cell: right_cell, bottom_right_cell: bottom_right_cell, bottom_cell: bottom_cell, bottom_left_cell: bottom_left_cell, left_cell: left_cell}
+  end
+
+  @doc ~S"""
+  Returns true if the given cell_index is on the top row of the grid
+
+  ## Examples
+
+    iex> Grid.on_top_row(0, 50)
+    true
+
+    iex> Grid.on_top_row(49, 50)
+    true
+
+    iex> Grid.on_top_row(50, 50)
+    false
+  
+  """
+  def on_top_row(cell_index, grid_size) do
+    cell_index in 0..(grid_size - 1)
+  end
+
+ @doc ~S"""
+  Returns true if the given cell_index is on the right column of the grid
+
+  ## Examples
+
+    iex> Grid.on_right_column(49, 50)
+    true
+
+    iex> Grid.on_right_column(99, 50)
+    false
+
+    iex> Grid.on_right_column(98, 50)
+    false
+  
+  """
+  def on_right_column(cell_index, grid_size) do
+    rem(grid_size, cell_index) == 1
+  end
+
+ @doc ~S"""
+  Returns true if the given cell_index is on the bottom row of the grid
+
+  ## Examples
+
+    iex> Grid.on_bottom_row(2450, 50)
+    true
+
+    iex> Grid.on_bottom_row(2499, 50)
+    true
+    
+    iex> Grid.on_bottom_row(2449, 50)
+    false
+  
+  """
+  def on_bottom_row(cell_index, grid_size) do
+    cell_index >= grid_size*grid_size - grid_size
+  end
+
+  @doc ~S"""
+  Returns true if the given cell_index is on the left column of the grid
+
+  ## Examples
+
+    iex> Grid.on_left_column(0, 50)
+    true
+
+    iex> Grid.on_left_column(2450, 50)
+    true
+    
+    iex> Grid.on_left_column(1, 50)
+    false
+  
+  """
+  def on_left_column(cell_index, grid_size) do
+    rem(cell_index, grid_size) == 0
+  end
+
+  def get_top_left_cell(grid, grid_size, cell_index) do
+
+  end
+
+  def get_top_cell(grid, grid_size, cell_index) do
+
+  end
+
+  def get_top_right_cell(grid, grid_size, cell_index) do
+
+  end
+
+  def get_right_cell(grid, grid_size, cell_index) do
+
+  end
+
+  def get_bottom_right_cell(grid, grid_size, cell_index) do
+
+  end
+
+  def get_bottom_cell(grid, grid_size, cell_index) do
+
+  end
+
+  def get_bottom_left_cell(grid, grid_size, cell_index) do
+    target_cell_index = cell_index + grid_size - 1
+    if(Map.has_key?(grid, target_cell_index)) do
+      Map.get(grid, target_cell_index)
+    end
+  end
+
+  def get_left_cell(grid, grid_size, cell_index) do
+
+  end
+
+  # def get_cell_at_index(grid, grid_size, cell_index) do
+  #   case cell_index do
+  #     x when x < 0 -> make_out_of_grid_cell(cell_index)
+  #     x when x > grid_size*grid_size -> make_out_of_grid_cell(cell_index)
+  #     #
+  #     x when rem(x, grid_size) == 0 -> make_out_of_grid_cell(cell_index)
+  #     x when rem(x, grid_size) == grid_size - 1 -> make_out_of_grid_cell(cell_index)
+  #     x when map.has_key?(grid, cell_index) - map.get(grid, cell_index)
+  #     _ -> make_empty_grid_cell(cell_index)
+  #   end
+  # end
+
+  def make_out_of_grid_cell(cell_index) do
+    %GridCell{index: cell_index, live: false, empty: false, out_of_grid: true}
+  end
+
+  def make_empty_grid_cell(cell_index) do
+    %GridCell{index: cell_index, live: false, empty: true, out_of_grid: false}
   end
 end

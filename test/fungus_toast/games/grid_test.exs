@@ -1,6 +1,7 @@
 defmodule FungusToast.Games.GridTest do
   use ExUnit.Case, async: true
   alias FungusToast.Games.Grid
+  doctest FungusToast.Games.Grid 
 
   describe "create_starting_grid/3" do
     test "that each player gets a new cell" do
@@ -54,4 +55,5 @@ defmodule FungusToast.Games.GridTest do
       elem(tuple, 1)
     end
   end
+
 end
