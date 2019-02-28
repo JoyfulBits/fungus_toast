@@ -82,15 +82,6 @@ defmodule FungusToast.Games.Grid do
     check_right = true
     check_bottom = true
 
-    top_left_cell = nil
-    top_cell = nil
-    top_right_cell = nil
-    right_cell = nil
-    bottom_right_cell = nil
-    bottom_cell = nil
-    bottom_left_cell = nil
-    left_cell = nil
-
     if(on_left_column(cell_index, grid_size)) do
       top_left_cell = make_empty_grid_cell(cell_index)
       bottom_left_cell = make_empty_grid_cell(cell_index)
@@ -150,16 +141,14 @@ defmodule FungusToast.Games.Grid do
         bottom_right_cell = get_bottom_right_cell(grid, grid_size, cell_index)
       end
     end
-
-    if(check_bottom) do
-      #skip bottom right cell as it's already been set or out of grid
-
-      bottom_cell = get_bottom_cell(grid, grid_size, cell_index)
-
-      #skip bottom left as it's already been set or out of grid
-    end
-
-    %SurroundingCells{top_left_cell: top_left_cell, top_cell: top_cell, top_right_cell: top_right_cell, right_cell: right_cell, bottom_right_cell: bottom_right_cell, bottom_cell: bottom_cell, bottom_left_cell: bottom_left_cell, left_cell: left_cell}
+    %SurroundingCells{top_left_cell: get_top_left_cell(grid, grid_size, cell_index), 
+      top_cell: get_top_cell(grid, grid_size, cell_index), 
+      top_right_cell: get_top_right_cell(grid, grid_size, cell_index), 
+      right_cell: get_right_cell(grid, grid_size, cell_index), 
+      bottom_right_cell: get_bottom_right_cell(grid, grid_size, cell_index), 
+      bottom_cell: get_bottom_cell(grid, grid_size, cell_index), 
+      bottom_left_cell: get_bottom_left_cell(grid, grid_size, cell_index), 
+      left_cell: get_left_cell(grid, grid_size, cell_index)}
   end
 
   @doc ~S"""
@@ -267,6 +256,28 @@ defmodule FungusToast.Games.Grid do
 
   ## Examples
 
+    #it returns an out of grid cell when on the left column
+    iex> Grid.get_bottom_left_cell(%{}, 50, 0)
+    %FungusToast.Games.GridCell{
+      empty: false,
+      index: nil,
+      live: false,
+      out_of_grid: true,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns an out of grid cell when on the bottom row
+    iex> Grid.get_bottom_left_cell(%{}, 50, 2499)
+    %FungusToast.Games.GridCell{
+      empty: false,
+      index: nil,
+      live: false,
+      out_of_grid: true,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
     iex> Grid.get_bottom_left_cell(%{}, 50, 1)
     %FungusToast.Games.GridCell{
       empty: true,
@@ -290,10 +301,14 @@ defmodule FungusToast.Games.Grid do
   """
   def get_bottom_left_cell(grid, grid_size, cell_index) do
     target_cell_index = cell_index + grid_size - 1
-    if(Map.has_key?(grid, target_cell_index)) do
-      Map.get(grid, target_cell_index)
+    if(on_bottom_row(cell_index, grid_size) or on_left_column(cell_index, grid_size)) do
+      make_out_of_grid_cell()
     else
-      make_empty_grid_cell(cell_index)
+      if(Map.has_key?(grid, target_cell_index)) do
+        Map.get(grid, target_cell_index)
+      else
+        make_empty_grid_cell(cell_index)
+      end
     end
   end
 
