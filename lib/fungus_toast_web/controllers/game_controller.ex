@@ -20,7 +20,9 @@ defmodule FungusToastWeb.GameController do
   end
 
   def show(conn, %{"id" => id}) do
-    game = Games.get_game!(id) |> Games.preload_for_games()
+    game = Games.get_game!(id) 
+      |> Games.preload_for_games()
+      |> Games.decorate_games()
     render(conn, "show.json", game: game)
   end
 

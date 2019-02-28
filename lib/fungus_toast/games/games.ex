@@ -231,7 +231,9 @@ defmodule FungusToast.Games do
   end
 
   defp decorate_game(%Game{} = game) do
-    game |> Map.put(:next_round_available, next_round_available?(game))
+    game 
+      |> Map.put(:next_round_available, next_round_available?(game))
+      |> Map.put(:latest_round, get_latest_round_for_game(game.id))
   end
 
   @doc """
