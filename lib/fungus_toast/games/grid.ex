@@ -335,8 +335,64 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
-  def get_top_right_cell(grid, grid_size, cell_index) do
+  @doc ~S"""
+  Returns a %GridCell{} for the position that is to the top right of the specified cell
 
+  ## Examples
+
+    #it returns an out of grid cell when on the top row
+    iex> Grid.get_top_right_cell(%{}, 50, 1)
+    %FungusToast.Games.GridCell{
+      empty: false,
+      index: nil,
+      live: false,
+      out_of_grid: true,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns an out of grid cell when on the right column
+    iex> Grid.get_top_right_cell(%{}, 50, 49)
+    %FungusToast.Games.GridCell{
+      empty: false,
+      index: nil,
+      live: false,
+      out_of_grid: true,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+
+    #it returns an empty cell if the cell is empty
+    iex> Grid.get_top_right_cell(%{}, 50, 50)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 1,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns the cell if the cell is occupied
+    iex> Grid.get_top_right_cell(%{1 => %FungusToast.Games.GridCell{index: 1}}, 50, 50)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 1,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+  
+  """
+  def get_top_right_cell(grid, grid_size, cell_index) do
+    if(on_top_row(cell_index, grid_size) or on_right_column(cell_index, grid_size)) do
+      make_out_of_grid_cell()
+    else
+      target_cell_index = cell_index - grid_size + 1
+      get_target_cell(grid, target_cell_index)
+    end
   end
 
   def get_right_cell(grid, grid_size, cell_index) do
@@ -414,9 +470,6 @@ defmodule FungusToast.Games.Grid do
 
   end
 
-  @doc ~S"""
-  Returns the cell at the specified index, or else and empty grid cell
-  """
   defp get_target_cell(grid, target_cell_index) do
     if(Map.has_key?(grid, target_cell_index)) do
       Map.get(grid, target_cell_index)
