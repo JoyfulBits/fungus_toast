@@ -262,10 +262,38 @@ defmodule FungusToast.Games.Grid do
 
   end
 
+    @doc ~S"""
+  Returns a %GridCell{} for the position that is to the bottom left of the specified cell
+
+  ## Examples
+
+    iex> Grid.get_bottom_left_cell(%{}, 50, 1)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 1,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    iex> Grid.get_bottom_left_cell(%{50 => %FungusToast.Games.GridCell{index: 50}}, 50, 1)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 50,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+  
+  """
   def get_bottom_left_cell(grid, grid_size, cell_index) do
     target_cell_index = cell_index + grid_size - 1
     if(Map.has_key?(grid, target_cell_index)) do
       Map.get(grid, target_cell_index)
+    else
+      make_empty_grid_cell(cell_index)
     end
   end
 
@@ -273,20 +301,8 @@ defmodule FungusToast.Games.Grid do
 
   end
 
-  # def get_cell_at_index(grid, grid_size, cell_index) do
-  #   case cell_index do
-  #     x when x < 0 -> make_out_of_grid_cell(cell_index)
-  #     x when x > grid_size*grid_size -> make_out_of_grid_cell(cell_index)
-  #     #
-  #     x when rem(x, grid_size) == 0 -> make_out_of_grid_cell(cell_index)
-  #     x when rem(x, grid_size) == grid_size - 1 -> make_out_of_grid_cell(cell_index)
-  #     x when map.has_key?(grid, cell_index) - map.get(grid, cell_index)
-  #     _ -> make_empty_grid_cell(cell_index)
-  #   end
-  # end
-
-  def make_out_of_grid_cell(cell_index) do
-    %GridCell{index: cell_index, live: false, empty: false, out_of_grid: true}
+  def make_out_of_grid_cell() do
+    %GridCell{live: false, empty: false, out_of_grid: true}
   end
 
   def make_empty_grid_cell(cell_index) do
