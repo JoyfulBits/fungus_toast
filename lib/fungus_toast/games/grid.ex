@@ -3,7 +3,7 @@ defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.SurroundingCells
   import :math
 
-  @spec create_starting_grid(any(), [any()]) :: any()
+  @spec create_starting_grid(integer(), [integer()]) :: map()
   def create_starting_grid(grid_size, player_ids) do
     number_of_players = length(player_ids)
 
@@ -35,6 +35,7 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
+  @spec get_start_cell_index(integer(), integer()) :: integer()
   def get_start_cell_index(grid_height_and_width, number_of_players, player_number) do
     grid_radius = grid_height_and_width / 2
     ten_percent_of_grid = grid_height_and_width / 10
@@ -50,6 +51,7 @@ defmodule FungusToast.Games.Grid do
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
+  @spec generate_growth_cycles(map(), integer(), map(), integer()) :: list(%GrowthCycle{})
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, number_of_growth_cycles) do
     live_cells = :maps.filter(fn _, grid_cell -> grid_cell.live end, starting_grid)
 
@@ -58,12 +60,11 @@ defmodule FungusToast.Games.Grid do
   end
 
   def calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
-    #TODO get ALL surrounding cells (we'll need empty and live, dead, and empty ones)
-    #surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
+    surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
     #empty_surrounding_cells = :maps.filter(fn (_, v) -> v.empty end)
 
-    #iterate over empty cells and calculate generate cells according ot the corresponding probabilities on player.*growth_chance. 
+    #iterate over empty cells and calculate generate cells according to the corresponding probabilities on player.*growth_chance.
     #Return a list of newly generated GridCells
 
     #iterate over adjacent dead cells to calculate whether the cell is regenerated according to player.regeneration_chance
@@ -85,7 +86,8 @@ defmodule FungusToast.Games.Grid do
       bottom_right_cell: get_bottom_right_cell(grid, grid_size, cell_index), 
       bottom_cell: get_bottom_cell(grid, grid_size, cell_index), 
       bottom_left_cell: get_bottom_left_cell(grid, grid_size, cell_index), 
-      left_cell: get_left_cell(grid, grid_size, cell_index)}
+      left_cell: get_left_cell(grid, grid_size, cell_index)
+    }
   end
 
   @doc ~S"""
@@ -597,7 +599,7 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
-  defp get_target_cell(grid, target_cell_index) do
+  def get_target_cell(grid, target_cell_index) do
     if(Map.has_key?(grid, target_cell_index)) do
       Map.get(grid, target_cell_index)
     else
