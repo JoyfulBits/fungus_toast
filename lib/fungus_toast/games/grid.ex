@@ -1,6 +1,7 @@
 defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GridCell
   alias FungusToast.Games.SurroundingCells
+  alias FungusToast.Games.GrowthCycle
   import :math
 
   @spec create_starting_grid(integer(), [integer()]) :: map()
@@ -35,7 +36,7 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
-  @spec get_start_cell_index(integer(), integer()) :: integer()
+  @spec get_start_cell_index(integer(), integer(), integer()) :: integer()
   def get_start_cell_index(grid_height_and_width, number_of_players, player_number) do
     grid_radius = grid_height_and_width / 2
     ten_percent_of_grid = grid_height_and_width / 10
@@ -51,7 +52,7 @@ defmodule FungusToast.Games.Grid do
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
-  @spec generate_growth_cycles(map(), integer(), map(), integer()) :: list(%GrowthCycle{})
+  @spec generate_growth_cycles(map(), integer(), map(), integer()) :: any()
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, number_of_growth_cycles) do
     live_cells = :maps.filter(fn _, grid_cell -> grid_cell.live end, starting_grid)
 
@@ -78,15 +79,15 @@ defmodule FungusToast.Games.Grid do
   end
 
   def get_surrounding_cells(grid, grid_size, cell_index) do
-    %SurroundingCells{
-      top_left_cell: get_top_left_cell(grid, grid_size, cell_index), 
-      top_cell: get_top_cell(grid, grid_size, cell_index), 
-      top_right_cell: get_top_right_cell(grid, grid_size, cell_index), 
-      right_cell: get_right_cell(grid, grid_size, cell_index), 
-      bottom_right_cell: get_bottom_right_cell(grid, grid_size, cell_index), 
-      bottom_cell: get_bottom_cell(grid, grid_size, cell_index), 
-      bottom_left_cell: get_bottom_left_cell(grid, grid_size, cell_index), 
-      left_cell: get_left_cell(grid, grid_size, cell_index)
+    %{
+      :top_left_cell => get_top_left_cell(grid, grid_size, cell_index), 
+      :top_cell => get_top_cell(grid, grid_size, cell_index), 
+      :top_right_cell => get_top_right_cell(grid, grid_size, cell_index), 
+      :right_cell => get_right_cell(grid, grid_size, cell_index), 
+      :bottom_right_cell => get_bottom_right_cell(grid, grid_size, cell_index), 
+      :bottom_cell => get_bottom_cell(grid, grid_size, cell_index), 
+      :bottom_left_cell => get_bottom_left_cell(grid, grid_size, cell_index), 
+      :left_cell => get_left_cell(grid, grid_size, cell_index)
     }
   end
 
