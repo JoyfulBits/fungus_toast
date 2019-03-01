@@ -77,71 +77,8 @@ defmodule FungusToast.Games.Grid do
   end
 
   def get_surrounding_cells(grid, grid_size, cell_index) do
-    check_left = true
-    check_top = true
-    check_right = true
-    check_bottom = true
-
-    if(on_left_column(cell_index, grid_size)) do
-      top_left_cell = make_empty_grid_cell(cell_index)
-      bottom_left_cell = make_empty_grid_cell(cell_index)
-      left_cell = make_empty_grid_cell(cell_index)
-      check_left = false
-    else
-      if(on_right_column(cell_index, grid_size)) do
-        top_right_cell = make_empty_grid_cell(cell_index)
-        right_cell = make_empty_grid_cell(cell_index)
-        bottom_right_cell = make_empty_grid_cell(cell_index)
-        check_right = false
-      end
-    end
-
-    if(on_top_row(cell_index, grid_size)) do
-      top_left_cell = make_empty_grid_cell(cell_index)
-      top_cell = make_empty_grid_cell(cell_index)
-      top_right_cell = make_empty_grid_cell(cell_index)
-      check_top = false
-    else
-      if(on_bottom_row(cell_index, grid_size)) do
-        bottom_left_cell = make_empty_grid_cell(cell_index)
-        bottom_cell = make_empty_grid_cell(cell_index)
-        bottom_right_cell = make_empty_grid_cell(cell_index)
-        check_bottom = false
-      end
-    end
-
-    if(check_left) do
-      if(check_bottom) do
-        bottom_left_cell = get_bottom_left_cell(grid, grid_size, cell_index)
-      end
-
-      left_cell = get_left_cell(grid, grid_size, cell_index)
-
-      if(check_top) do
-        top_left_cell = get_top_left_cell(grid, grid_size, cell_index)
-      end
-    end
-
-    if(check_top) do
-      #skip top left cell as it's already been set or out of grid
-
-      top_cell = get_top_cell(grid, grid_size, cell_index)
-
-      if(check_right) do
-        top_right_cell = get_top_right_cell(grid, grid_size, cell_index)
-      end
-    end
-
-    if(check_right) do
-      #skip top right cell as it's already been set or out of grid
-
-      right_cell = get_right_cell(grid, grid_size, cell_index)
-
-      if(check_bottom) do
-        bottom_right_cell = get_bottom_right_cell(grid, grid_size, cell_index)
-      end
-    end
-    %SurroundingCells{top_left_cell: get_top_left_cell(grid, grid_size, cell_index), 
+    %SurroundingCells{
+      top_left_cell: get_top_left_cell(grid, grid_size, cell_index), 
       top_cell: get_top_cell(grid, grid_size, cell_index), 
       top_right_cell: get_top_right_cell(grid, grid_size, cell_index), 
       right_cell: get_right_cell(grid, grid_size, cell_index), 
@@ -175,18 +112,21 @@ defmodule FungusToast.Games.Grid do
 
   ## Examples
 
+    #first row, last column
     iex> Grid.on_right_column(49, 50)
     true
 
+    #second row, last column
     iex> Grid.on_right_column(99, 50)
-    false
+    true
 
-    iex> Grid.on_right_column(98, 50)
+    #first row, 2nd to last column
+    iex> Grid.on_right_column(48, 50)
     false
   
   """
   def on_right_column(cell_index, grid_size) do
-    rem(grid_size, cell_index) == 1
+    rem(cell_index + 1, grid_size) == 0
   end
 
  @doc ~S"""
@@ -395,8 +335,52 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
-  def get_right_cell(grid, grid_size, cell_index) do
+@doc ~S"""
+  Returns a %GridCell{} for the position that is directly to the right of the specified cell
 
+  ## Examples
+
+    #it returns an out of grid cell when on the right column
+    iex> Grid.get_right_cell(%{}, 50, 49)
+    %FungusToast.Games.GridCell{
+      empty: false,
+      index: nil,
+      live: false,
+      out_of_grid: true,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns an empty cell if the cell is empty
+    iex> Grid.get_right_cell(%{}, 50, 0)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 1,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns the cell if the cell is occupied
+    iex> Grid.get_right_cell(%{1 => %FungusToast.Games.GridCell{index: 1}}, 50, 0)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 1,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+  
+  """
+  def get_right_cell(grid, grid_size, cell_index) do
+    if(on_right_column(cell_index, grid_size)) do
+      make_out_of_grid_cell()
+    else
+      target_cell_index = cell_index + 1
+      get_target_cell(grid, target_cell_index)
+    end
   end
 
   def get_bottom_right_cell(grid, grid_size, cell_index) do
