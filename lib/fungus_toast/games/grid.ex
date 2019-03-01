@@ -383,8 +383,63 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
-  def get_bottom_right_cell(grid, grid_size, cell_index) do
+  @doc ~S"""
+  Returns a %GridCell{} for the position that is to the bottom right of the specified cell
 
+  ## Examples
+
+    #it returns an out of grid cell when on the right column
+    iex> Grid.get_bottom_right_cell(%{}, 50, 49)
+    %FungusToast.Games.GridCell{
+      empty: false,
+      index: nil,
+      live: false,
+      out_of_grid: true,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns an out of grid cell when on the bottom row
+    iex> Grid.get_bottom_right_cell(%{}, 50, 2499)
+    %FungusToast.Games.GridCell{
+      empty: false,
+      index: nil,
+      live: false,
+      out_of_grid: true,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns an empty cell if the cell is empty
+    iex> Grid.get_bottom_right_cell(%{}, 50, 0)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 51,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+
+    #it returns the cell if the cell is occupied
+    iex> Grid.get_bottom_right_cell(%{51 => %FungusToast.Games.GridCell{index: 51}}, 50, 0)
+    %FungusToast.Games.GridCell{
+      empty: true,
+      index: 51,
+      live: false,
+      out_of_grid: false,
+      player_id: nil,
+      previous_player_id: nil
+    }
+  
+  """
+  def get_bottom_right_cell(grid, grid_size, cell_index) do
+    if(on_right_column(cell_index, grid_size) or on_bottom_row(cell_index, grid_size)) do
+      make_out_of_grid_cell()
+    else
+      target_cell_index = cell_index + grid_size + 1
+      get_target_cell(grid, target_cell_index)
+    end
   end
 
   def get_bottom_cell(grid, grid_size, cell_index) do
