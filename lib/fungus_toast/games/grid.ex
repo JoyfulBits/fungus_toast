@@ -1,6 +1,6 @@
 defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GridCell
-  alias FungusToast.Games.SurroundingCells
+  alias FungusToast.CellGrower
   alias FungusToast.Games.GrowthCycle
   import :math
 
@@ -63,7 +63,10 @@ defmodule FungusToast.Games.Grid do
   def calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
-    #empty_surrounding_cells = :maps.filter(fn (_, v) -> v.empty end)
+    empty_surrounding_cells = Enum.filter(surrounding_cells, fn {k, v} -> v.empty end)
+
+    player = player_id_to_player_map[grid_cell.player_id]
+    new_cells = CellGrower.grow_new_cells(grid_cell.index, empty_surrounding_cells, player)
 
     #iterate over empty cells and calculate generate cells according to the corresponding probabilities on player.*growth_chance.
     #Return a list of newly generated GridCells
@@ -223,7 +226,7 @@ defmodule FungusToast.Games.Grid do
   """
   def get_top_left_cell(grid, grid_size, cell_index) do
     if(on_top_row(cell_index, grid_size) or on_left_column(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       target_cell_index = cell_index - grid_size - 1
       get_target_cell(grid, target_cell_index)
@@ -271,7 +274,7 @@ defmodule FungusToast.Games.Grid do
   """
   def get_top_cell(grid, grid_size, cell_index) do
     if(on_top_row(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       target_cell_index = cell_index - grid_size
       get_target_cell(grid, target_cell_index)
@@ -331,7 +334,7 @@ defmodule FungusToast.Games.Grid do
   """
   def get_top_right_cell(grid, grid_size, cell_index) do
     if(on_top_row(cell_index, grid_size) or on_right_column(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       target_cell_index = cell_index - grid_size + 1
       get_target_cell(grid, target_cell_index)
@@ -379,7 +382,7 @@ defmodule FungusToast.Games.Grid do
   """
   def get_right_cell(grid, grid_size, cell_index) do
     if(on_right_column(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       target_cell_index = cell_index + 1
       get_target_cell(grid, target_cell_index)
@@ -438,7 +441,7 @@ defmodule FungusToast.Games.Grid do
   """
   def get_bottom_right_cell(grid, grid_size, cell_index) do
     if(on_right_column(cell_index, grid_size) or on_bottom_row(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       target_cell_index = cell_index + grid_size + 1
       get_target_cell(grid, target_cell_index)
@@ -486,7 +489,7 @@ defmodule FungusToast.Games.Grid do
   """
   def get_bottom_cell(grid, grid_size, cell_index) do
     if(on_bottom_row(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       target_cell_index = cell_index + grid_size
       get_target_cell(grid, target_cell_index)
@@ -546,7 +549,7 @@ defmodule FungusToast.Games.Grid do
   def get_bottom_left_cell(grid, grid_size, cell_index) do
     target_cell_index = cell_index + grid_size - 1
     if(on_bottom_row(cell_index, grid_size) or on_left_column(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       get_target_cell(grid, target_cell_index)
     end
@@ -593,7 +596,7 @@ defmodule FungusToast.Games.Grid do
   """
   def get_left_cell(grid, grid_size, cell_index) do
     if(on_left_column(cell_index, grid_size)) do
-      make_out_of_grid_cell()
+      CellGrower.make_out_of_grid_cell()
     else
       target_cell_index = cell_index - 1
       get_target_cell(grid, target_cell_index)
@@ -604,15 +607,7 @@ defmodule FungusToast.Games.Grid do
     if(Map.has_key?(grid, target_cell_index)) do
       Map.get(grid, target_cell_index)
     else
-      make_empty_grid_cell(target_cell_index)
+      CellGrower.make_empty_grid_cell(target_cell_index)
     end
-  end
-
-  def make_out_of_grid_cell() do
-    %GridCell{live: false, empty: false, out_of_grid: true}
-  end
-
-  def make_empty_grid_cell(cell_index) do
-    %GridCell{index: cell_index, live: false, empty: true, out_of_grid: false}
   end
 end
