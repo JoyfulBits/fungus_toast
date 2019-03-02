@@ -195,6 +195,7 @@ defmodule FungusToast.Games do
     games |> Repo.preload([:rounds, players: [skills: :skill]])
   end
 
+  # TODO: consider moving to Games.Logic?
   @doc """
   Adds any extra fields necessary for representing games
   """
