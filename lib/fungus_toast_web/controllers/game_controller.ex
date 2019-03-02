@@ -5,8 +5,7 @@ defmodule FungusToastWeb.GameController do
 
   action_fallback FungusToastWeb.FallbackController
 
-  def index(conn, params) do
-    user_id = Map.get(params, "user_id")
+  def index(conn, %{"user_id" => user_id} = params) do
     active? = Map.get(params, "active") in ["true"]
 
     # TODO: list_games_for_user should preload and decorate
