@@ -1,4 +1,4 @@
-defmodule FungusToast.CellGrower do
+defmodule FungusToast.Games.CellGrower do
   alias FungusToast.Random
   alias FungusToast.Games.GridCell
   alias FungusToast.Games.Player
@@ -28,12 +28,12 @@ defmodule FungusToast.CellGrower do
   end
 
   @doc ~S"""
-  Returns true if the given cell_index is on the top row of the grid
+  Returns a %GridCell{} if the growth chance corresponding to the cell position hits
 
   ## Examples
 
   #it generates a new live cell with that player's id if the growth percentage hits
-  iex> CellGrower.try_growing_cell(:right_cell, 0, %Player{right_growth_chance: 100, id: 1})
+  iex> CellGrower.try_growing_cell(:right_cell, 0, %FungusToast.Games.Player{right_growth_chance: 100, id: 1})
   %FungusToast.Games.GridCell{
     empty: false,
     index: 0,
@@ -44,7 +44,7 @@ defmodule FungusToast.CellGrower do
   }
 
   #it returns nil if the growth chance didn't hit
-  iex> CellGrower.try_growing_cell(:right_cell, 0, %Player{right_growth_chance: 0, id: 1})
+  iex> CellGrower.try_growing_cell(:right_cell, 0, %FungusToast.Games.Player{right_growth_chance: 0, id: 1})
   nil
   
   """
@@ -57,8 +57,33 @@ defmodule FungusToast.CellGrower do
     end
   end
 
-  def check_for_mycotoxin_murder(grid_cell, mycotoxin_fungicide_chance) do
-    if(Random.random_chance_hit(mycotoxin_fungicide_chance)) do
+  @doc ~S"""
+  Returns a murdered %GridCell{} if the target cell is an enemy's live cell and the mycotoxin fungicide chance hits
+
+  ## Examples
+
+  #it kills the cell if the target cell is an enemy's live cell and the mycotoxin fungicide chance hits
+  iex> CellGrower.check_for_mycotoxin_murder(%FungusToast.Games.GridCell{live: true, empty: false, index: 0, player_id: 1}, %FungusToast.Games.Player{mycotoxin_fungicide_chance: 100, id: 2})
+  %FungusToast.Games.GridCell{
+    empty: false,
+    index: 0,
+    live: false,
+    out_of_grid: false,
+    player_id: 1,
+    previous_player_id: nil
+  }
+
+    #it returns nil if the cell is the current player's cell
+    iex> CellGrower.check_for_mycotoxin_murder(%FungusToast.Games.GridCell{live: true, player_id: 1}, %FungusToast.Games.Player{mycotoxin_fungicide_chance: 100, id: 1})
+    nil
+
+    #it returns nil if the mycotoxin_fungicide_chance chance doesn't hit
+    iex> CellGrower.check_for_mycotoxin_murder(%FungusToast.Games.GridCell{live: true, player_id: 1}, %FungusToast.Games.Player{mycotoxin_fungicide_chance: 0, id: 2})
+    nil
+  
+  """
+  def check_for_mycotoxin_murder(grid_cell, player) do
+    if(grid_cell.player_id != player.id and Random.random_chance_hit(player.mycotoxin_fungicide_chance)) do
       %{grid_cell | live: false}
     end
   end

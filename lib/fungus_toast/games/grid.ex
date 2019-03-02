@@ -1,6 +1,6 @@
 defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GridCell
-  alias FungusToast.CellGrower
+  alias FungusToast.Games.CellGrower
   alias FungusToast.Games.GrowthCycle
   import :math
 
@@ -110,7 +110,7 @@ defmodule FungusToast.Games.Grid do
     cell_index in 0..(grid_size - 1)
   end
 
- @doc ~S"""
+  @doc ~S"""
   Returns true if the given cell_index is on the right column of the grid
 
   ## Examples
@@ -132,7 +132,7 @@ defmodule FungusToast.Games.Grid do
     rem(cell_index + 1, grid_size) == 0
   end
 
- @doc ~S"""
+  @doc ~S"""
   Returns true if the given cell_index is on the bottom row of the grid
 
   ## Examples
