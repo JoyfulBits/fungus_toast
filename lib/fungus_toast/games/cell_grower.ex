@@ -4,6 +4,8 @@ defmodule FungusToast.Games.CellGrower do
   alias FungusToast.Games.Player
   alias FungusToast.Games.GridCell
 
+  @starvation_death_chance 10.0
+
   @doc ~S"""
     Iterates over surrounding cells calculating new growths, regenerations, and deaths. Returns GridCells that changed
   """
@@ -113,6 +115,135 @@ defmodule FungusToast.Games.CellGrower do
     if(Random.random_chance_hit(player.regeneration_chance)) do
       %{grid_cell | live: true, previous_player_id: grid_cell.player_id, player_id: player.id}
     end
+  end
+
+  def check_for_cell_death(grid_cell, surrounding_cells, player) do
+    if(dies_from_starvation(surrounding_cells) or dies_from_apoptosis(player)) do
+      [%{grid_cell | live: false}]
+    else
+      []
+    end
+  end
+
+  @doc ~S"""
+  Returns true if the cell dies from starvation (when surrounding by live cells), false otherwise
+
+  ## Examples
+
+  #it dies if the cell is surrounded and the starvation chance hits
+  iex> surrounding_cells = 
+  ...>%{
+  ...>  bottom_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  bottom_left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  bottom_right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  top_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  },
+  ...>  top_left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  },
+  ...>  top_right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  }
+  ...>}
+  ...>CellGrower.dies_from_starvation(surrounding_cells, 100)
+  true
+
+  #it does not die if the starvation chance misses
+  iex> surrounding_cells = 
+  ...>%{
+  ...>  bottom_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  bottom_left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  bottom_right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  top_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  },
+  ...>  top_left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  },
+  ...>  top_right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  }
+  ...>}
+  ...>CellGrower.dies_from_starvation(surrounding_cells, 0)
+  false
+
+  #it does not die if not all of the surrounding cells are alive
+  iex> surrounding_cells = 
+  ...>%{
+  ...>  bottom_cell: %FungusToast.Games.GridCell{
+  ...>    live: false
+  ...>  },
+  ...>  bottom_left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  bottom_right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true
+  ...>  },
+  ...>  top_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  },
+  ...>  top_left_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  },
+  ...>  top_right_cell: %FungusToast.Games.GridCell{
+  ...>    live: true,
+  ...>  }
+  ...>}
+  ...>CellGrower.dies_from_starvation(surrounding_cells, 100)
+  false
+  
+  """
+  def dies_from_starvation(surrounding_cells, starvation_chance \\ @starvation_death_chance) do
+    Enum.all?(surrounding_cells, fn {k, v} -> v.live and Random.random_chance_hit(starvation_chance) end)
+  end
+
+  @doc ~S"""
+  Returns true if the cell dies from apoptosis, false otherwise
+
+  ## Examples
+
+  #it dies if the apoptosis chance hits
+  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 100})
+  true
+
+  #it does not die if the apoptosis chance misses
+  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 0})
+  false
+  
+  """
+  def dies_from_apoptosis(player) do
+    Random.random_chance_hit(player.apoptosis_chance)
   end
 
   def make_out_of_grid_cell() do

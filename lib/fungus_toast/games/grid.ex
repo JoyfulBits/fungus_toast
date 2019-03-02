@@ -63,17 +63,10 @@ defmodule FungusToast.Games.Grid do
   def calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
-    #empty_surrounding_cells = Enum.filter(surrounding_cells, fn {k, v} -> v.empty end)
-
     player = player_id_to_player_map[grid_cell.player_id]
-    new_cells = CellGrower.calculate_cell_growth(surrounding_cells, player)
-
-    #iterate over adjacent dead cells to calculate whether the cell is regenerated according to player.regeneration_chance
-    #add to the map of live cells if the cell was regenerated
-    #dead_surrounding_cells = :maps.filter(fn (_, v) -> !v.live end)
-
-    #check if the cell dies from apoptosis, starvation, or mycotoxins
-    #check_for_cell_death(grid_cell, surrounding_cells)
+    cell_changes = CellGrower.calculate_cell_growth(surrounding_cells, player)
+    #check if the cell dies from apoptosis or starvation
+    cell_changes ++ CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player)
 
     #return a tuple which includes new split cells and regenerated cells, and and an indicator of whether the current cell died
   end
