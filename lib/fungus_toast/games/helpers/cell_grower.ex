@@ -27,6 +27,27 @@ defmodule FungusToast.CellGrower do
     end
   end
 
+  @doc ~S"""
+  Returns true if the given cell_index is on the top row of the grid
+
+  ## Examples
+
+  #it generates a new live cell with that player's id if the growth percentage hits
+  iex> CellGrower.try_growing_cell(:right_cell, 0, %Player{right_growth_chance: 100, id: 1})
+  %FungusToast.Games.GridCell{
+    empty: false,
+    index: 0,
+    live: true,
+    out_of_grid: false,
+    player_id: 1,
+    previous_player_id: nil
+  }
+
+  #it returns nil if the growth chance didn't hit
+  iex> CellGrower.try_growing_cell(:right_cell, 0, %Player{right_growth_chance: 0, id: 1})
+  nil
+  
+  """
   @spec try_growing_cell(atom(), integer(), %Player{}) :: [%GridCell{}]
   def try_growing_cell(position, cell_index, player) do
     {:ok, growth_attribute} = Map.fetch(Player.position_to_attribute_map, position)
