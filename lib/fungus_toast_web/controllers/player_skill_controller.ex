@@ -30,7 +30,7 @@ defmodule FungusToastWeb.PlayerSkillController do
       new_round = Games.next_round_available?(game)
 
       if(new_round) do
-        Games.trigger_next_round(game_id, game.grid_size)
+        Games.trigger_next_round(game)
       end
       
       # How can we do this with Jason? It wants a struct and we don't have one here

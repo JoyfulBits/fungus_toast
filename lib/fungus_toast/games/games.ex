@@ -12,6 +12,8 @@ defmodule FungusToast.Games do
   alias FungusToast.Games.Grid
   alias FungusToast.Games.Round
 
+  @number_of_growth_cycles_per_round 5
+
   @doc """
   Returns the list of games.
 
@@ -249,17 +251,20 @@ defmodule FungusToast.Games do
   @doc """
   Executes a full round of growth cycles and creates a new round for this game
   """
-  def trigger_next_round(game_id, grid_size) do
-    latest_round = get_latest_round_for_game(game_id)
+  def trigger_next_round(game) do
+    latest_round = get_latest_round_for_game(game.id)
     #TODO added this until we get to the point where every started game has a Round
     if(latest_round != nil) do
       current_game_state = latest_round.game_state
-      players = Players.list_players_for_game(game_id)
+      players = game.players
       player_id_to_player_map = players
         |> Map.new(fn x -> {x.id, x} end)
-      #TODO shouldn't hard-code number of growth cycles
-      number_of_growth_cycles_to_run = 5
-      growth_cycles = Grid.generate_growth_cycles(current_game_state, grid_size, player_id_to_player_map, number_of_growth_cycles_to_run)    end
+
+      number_of_growth_cycles_to_run = @number_of_growth_cycles_per_round
+      growth_cycles = Grid.generate_growth_cycles(current_game_state, game.grid_size, player_id_to_player_map, number_of_growth_cycles_to_run)
+      #TODO generate mutation points
+      #todo save the round
+    end
   end
 
   defdelegate get_latest_round_for_game(game), to: Rounds
