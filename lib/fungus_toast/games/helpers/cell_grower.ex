@@ -24,21 +24,13 @@ defmodule FungusToast.CellGrower do
       try_growing_cell(position, grid_cell.index, player)
     else
       if(grid_cell.live) do
-        check_for_mycotoxin_murder(grid_cell, player)
+        check_for_mycotoxin_murder(grid_cell, player.mycotoxin_fungicide_chance)
       else
         if(!grid_cell.out_of_grid) do
           check_for_regeneration(grid_cell, player)
         end
       end
     end
-  end
-
-  def check_for_mycotoxin_murder(grid_cell, attacking_player) do
-
-  end
-
-  def check_for_regeneration(grid_cell, player) do
-
   end
 
   @spec try_growing_cell(atom(), integer(), %Player{}) :: [%GridCell{}]
@@ -49,6 +41,16 @@ defmodule FungusToast.CellGrower do
     if(Random.random_chance_hit(growth_chance)) do
       %GridCell{index: cell_index, live: true, empty: false, out_of_grid: false, player_id: player.id}
     end
+  end
+
+  def check_for_mycotoxin_murder(grid_cell, mycotoxin_fungicide_chance) do
+    if(Random.random_chance_hit(mycotoxin_fungicide_chance)) do
+      %{grid_cell | live: false}
+    end
+  end
+
+  def check_for_regeneration(grid_cell, player) do
+
   end
 
   def make_out_of_grid_cell() do
