@@ -3,14 +3,14 @@ defmodule FungusToast.Games.Player do
   import Ecto.Changeset
 
   @position_to_attribute_map %{
-    :top_left => :top_left_growth_chance,
-    :top => :top_growth_chance,
-    :top_right => :top_right_growth_chance,
-    :right => :right_growth_chance,
-    :bottom_right => :bottom_right_growth_chance,
-    :bottom => :bottom_growth_chance,
-    :bottom_left => :bottom_left_growth_chance,
-    :left => :left_growth_chance,
+    :top_left_cell => :top_left_growth_chance,
+    :top_cell => :top_growth_chance,
+    :top_right_cell => :top_right_growth_chance,
+    :right_cell => :right_growth_chance,
+    :bottom_right_cell => :bottom_right_growth_chance,
+    :bottom_cell => :bottom_growth_chance,
+    :bottom_left_cell => :bottom_left_growth_chance,
+    :left_cell => :left_growth_chance
   }
 
   def position_to_attribute_map, do: @position_to_attribute_map

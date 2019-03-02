@@ -63,13 +63,10 @@ defmodule FungusToast.Games.Grid do
   def calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
-    empty_surrounding_cells = Enum.filter(surrounding_cells, fn {k, v} -> v.empty end)
+    #empty_surrounding_cells = Enum.filter(surrounding_cells, fn {k, v} -> v.empty end)
 
     player = player_id_to_player_map[grid_cell.player_id]
-    new_cells = CellGrower.grow_new_cells(grid_cell.index, empty_surrounding_cells, player)
-
-    #iterate over empty cells and calculate generate cells according to the corresponding probabilities on player.*growth_chance.
-    #Return a list of newly generated GridCells
+    new_cells = CellGrower.calculate_cell_growth(surrounding_cells, player)
 
     #iterate over adjacent dead cells to calculate whether the cell is regenerated according to player.regeneration_chance
     #add to the map of live cells if the cell was regenerated
