@@ -5,11 +5,11 @@ defmodule FungusToastWeb.GameController do
 
   action_fallback FungusToastWeb.FallbackController
 
-  def index(conn, params) do
-    user_id = Map.get(params, "user_id")
-    active = Map.get(params, "active", "false") |> active?()
+  def index(conn, %{"user_id" => user_id} = params) do
+    active? = Map.get(params, "active") in ["true"]
 
-    with {:ok, games} <- Games.list_games_for_user(user_id, active) do
+    # TODO: list_games_for_user should preload and decorate
+    with {:ok, games} <- Games.list_games_for_user(user_id, active?) do
       games =
         games
         |> Games.preload_for_games()
@@ -33,10 +33,4 @@ defmodule FungusToastWeb.GameController do
       |> render("show.json", game: game)
     end
   end
-
-  defp active?("1"), do: true
-  defp active?("true"), do: true
-  defp active?("0"), do: false
-  defp active?("false"), do: false
-  defp active?(_), do: :error
 end
