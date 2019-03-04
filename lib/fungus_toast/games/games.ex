@@ -262,7 +262,6 @@ defmodule FungusToast.Games do
 
       number_of_growth_cycles_to_run = @number_of_growth_cycles_per_round
       growth_cycles = Grid.generate_growth_cycles(current_game_state, game.grid_size, player_id_to_player_map, number_of_growth_cycles_to_run)
-      #TODO generate mutation points
       #todo save the round
     end
   end
