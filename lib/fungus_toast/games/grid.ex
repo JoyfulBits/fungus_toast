@@ -2,6 +2,7 @@ defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GridCell
   alias FungusToast.Games.CellGrower
   alias FungusToast.Games.GrowthCycle
+  alias FungusToast.Random
   import :math
 
   @spec create_starting_grid(integer(), [integer()]) :: map()
@@ -54,21 +55,39 @@ defmodule FungusToast.Games.Grid do
 
   @spec generate_growth_cycles(map(), integer(), map(), integer()) :: any()
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, number_of_growth_cycles) do
-    live_cells = :maps.filter(fn _, grid_cell -> grid_cell.live end, starting_grid)
+    live_cells = Enum.filter(starting_grid, fn {_, grid_cell} -> grid_cell.live end)
 
-    #TODO return a map of index => %GridCell{} for newly grown and newly perished cells ONLY (i.e. changes only)
-    Enum.map(live_cells, fn{x, y} -> {x, calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, y)} end)
+    Enum.map(live_cells, fn{x, y} -> generate_growth_cycle(starting_grid, grid_size, player_id_to_player_map, y) end)
   end
 
-  def calculate_cell_growth(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
+  def generate_growth_cycle(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
     player = player_id_to_player_map[grid_cell.player_id]
     cell_changes = CellGrower.calculate_cell_growth(surrounding_cells, player)
     #check if the cell dies from apoptosis or starvation
-    cell_changes ++ CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player)
+    toast_changes = cell_changes ++ CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player)
+    mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
+    %GrowthCycle{mutation_points_earned: mutation_points_earned, toast_changes: toast_changes}
+  end
 
-    #return a tuple which includes new split cells and regenerated cells, and and an indicator of whether the current cell died
+  @doc ~S"""
+  Returns the number of mutation points earned by the player during this growth cycle based on the player's mutation_chance
+
+  iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 100})
+  1
+
+  iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 0})
+  0
+
+  """
+  def calculate_mutation_points(player) do
+    if(Random.random_chance_hit(player.mutation_chance)) do
+      #for now, you generate one mutation point at a time
+      1
+    else
+      0
+    end
   end
 
   def get_surrounding_cells(grid, grid_size, cell_index) do
