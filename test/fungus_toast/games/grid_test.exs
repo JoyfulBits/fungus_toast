@@ -11,11 +11,11 @@ defmodule FungusToast.Games.GridTest do
       assert Enum.count(new_grid) == length(player_ids)
     end
 
-    test "that a large enough grid adequeqtly places the number of players" do
+    test "that a large enough grid adequetly places the number of players" do
       player_ids = [1,2,3,4,5]
       grid = Grid.create_starting_grid(20, player_ids)
 
-      assert Map.size(grid) == length(player_ids)
+      assert length(grid) == length(player_ids)
     end
 
     test "that an error is returned if the grid is too small" do
@@ -44,15 +44,12 @@ defmodule FungusToast.Games.GridTest do
       assert player_cell.empty == false
       assert player_cell.live == true
       assert player_cell.player_id == player1Id
-      # make sure the map key is the same as the cell index
-      start_index = hd(Map.keys(new_grid))
-      assert player_cell.index == start_index
+      assert player_cell.index != nil
       refute player_cell.previous_player_id
     end
 
     defp find_grid_cell_for_player(grid, player_id) do
-      tuple = Enum.find(grid, fn {_, v} -> v.player_id == player_id end)
-      elem(tuple, 1)
+      Enum.find(grid, fn grid_cell -> grid_cell.player_id == player_id end)
     end
   end
 

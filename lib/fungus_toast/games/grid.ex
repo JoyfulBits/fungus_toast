@@ -25,13 +25,13 @@ defmodule FungusToast.Games.Grid do
           &{&1, get_start_cell_index(grid_size, number_of_players, &1)}
         )
 
-        Enum.reduce(initial_grid_cells_map, %{}, fn {player_id, position}, map ->
-          Map.put(map, position, %GridCell{
+        Enum.reduce(initial_grid_cells_map, [], fn {player_id, position}, list -> list ++ 
+          [%GridCell{
             index: position,
             player_id: player_id,
             live: true,
             empty: false
-          })
+          }]
         end)
       end
     end
@@ -54,7 +54,7 @@ defmodule FungusToast.Games.Grid do
   end
 
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, growth_cycle, acc \\ [])
-  @spec generate_growth_cycles(map(), integer(), map(), integer()) :: any()
+  @spec generate_growth_cycles(map(), integer(), map(), integer(), list()) :: any()
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, growth_cycle, acc) when growth_cycle > 0 do
     live_cells = Enum.filter(starting_grid, fn {_, grid_cell} -> grid_cell.live end)
 
@@ -75,8 +75,22 @@ defmodule FungusToast.Games.Grid do
     mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
 
     growth_cycles = %GrowthCycle{mutation_points_earned: mutation_points_earned, toast_changes: toast_changes}
-    new_game_state = starting_grid#get_new_game_state(starting_grid, toast_changes)
+    new_game_state = get_new_game_state(starting_grid, toast_changes)
     %{ growth_cyles: growth_cycles, new_game_state: new_game_state }
+  end
+
+  def get_new_game_state(starting_grid, toast_changes) do
+    Enum.map(toast_changes, fn{index, grid_cell} -> add_grid_cell_to_grid(starting_grid, grid_cell) end)
+  end
+
+  def add_grid_cell_to_grid(starting_grid, grid_cell) do
+    acc = starting_grid
+  end
+
+  def add_grid_cell_to_grid(starting_grid, grid_cell, acc \\ [])
+
+  def add_grid_cell_to_grid(starting_grid, grid_cell, acc) do
+
   end
 
   @doc ~S"""
