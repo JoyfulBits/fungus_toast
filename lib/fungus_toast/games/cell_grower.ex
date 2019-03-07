@@ -117,21 +117,22 @@ defmodule FungusToast.Games.CellGrower do
     end
   end
 
+  
   @doc ~S"""
-  Returns [] if the cell does not die, otherwise returns a killed %GridCell{}
+  Returns %{} if the cell does not die, otherwise returns a killed %GridCell{}
 
   ## Examples
 
-  #it returns [] if the cell doesn't die
+  #it returns %{} if the cell doesn't die
   iex>CellGrower.check_for_cell_death(%FungusToast.Games.GridCell{}, %{top_cell: %FungusToast.Games.GridCell{}}, %FungusToast.Games.Player{apoptosis_chance: 0})
-  []
+  %{}
 
   """
   def check_for_cell_death(grid_cell, surrounding_cells, player) do
     if(dies_from_starvation(surrounding_cells) or dies_from_apoptosis(player)) do
-      [%{grid_cell | live: false}]
+      %{ grid_cell.index => %{grid_cell | live: false} }
     else
-      []
+      %{}
     end
   end
 

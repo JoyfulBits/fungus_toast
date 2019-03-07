@@ -25,13 +25,13 @@ defmodule FungusToast.Games.Grid do
           &{&1, get_start_cell_index(grid_size, number_of_players, &1)}
         )
 
-        Enum.reduce(initial_grid_cells_map, [], fn {player_id, position}, list -> list ++ 
-          [%GridCell{
+        Enum.reduce(initial_grid_cells_map, %{}, fn {player_id, position}, map ->
+          Map.put(map, position, %GridCell{
             index: position,
             player_id: player_id,
             live: true,
             empty: false
-          }]
+          })
         end)
       end
     end
@@ -54,16 +54,17 @@ defmodule FungusToast.Games.Grid do
   end
 
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, growth_cycle, acc \\ [])
-  @spec generate_growth_cycles(map(), integer(), map(), integer(), list()) :: any()
+  @spec generate_growth_cycles(map(), integer(), map(), integer(), map()) :: any()
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, growth_cycle, acc) when growth_cycle > 0 do
     live_cells = Enum.filter(starting_grid, fn {_, grid_cell} -> grid_cell.live end)
 
     single_cycle = Enum.map(live_cells, fn{_, grid_cell} -> generate_growth_cycle(starting_grid, grid_size, player_id_to_player_map, grid_cell) end)
 
+    #perhaps this should be a map with keys added via Map.put_new_lazy so we don't have duplicates?
     acc ++ generate_growth_cycles(single_cycle[:new_game_state], grid_size, player_id_to_player_map, growth_cycle - 1)
   end
 
-  def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, growth_cycle, acc), do: acc
+  def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, growth_cycle, acc), do: acc #TODO do we need to handle duplicate keys here?
 
   def generate_growth_cycle(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
@@ -71,12 +72,27 @@ defmodule FungusToast.Games.Grid do
     player = player_id_to_player_map[grid_cell.player_id]
     cell_changes = CellGrower.calculate_cell_growth(surrounding_cells, player)
     #check if the cell dies from apoptosis or starvation
-    toast_changes = cell_changes ++ CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player)
-    mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
+    toast_changes =  Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
+    #TODO figure out how to handle multiple cell toast changes for the same cell!
 
-    growth_cycles = %GrowthCycle{mutation_points_earned: mutation_points_earned, toast_changes: toast_changes}
-    new_game_state = get_new_game_state(starting_grid, toast_changes)
-    %{ growth_cyles: growth_cycles, new_game_state: new_game_state }
+    # mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
+
+    # growth_cycles = %GrowthCycle{mutation_points_earned: mutation_points_earned, toast_changes: toast_changes}
+    # new_game_state = get_new_game_state(starting_grid, toast_changes)
+    # %{ growth_cyles: growth_cycles, new_game_state: new_game_state }
+  end
+
+  def get_surrounding_cells(grid, grid_size, cell_index) do
+    %{
+      :top_left_cell => get_top_left_cell(grid, grid_size, cell_index),
+      :top_cell => get_top_cell(grid, grid_size, cell_index),
+      :top_right_cell => get_top_right_cell(grid, grid_size, cell_index),
+      :right_cell => get_right_cell(grid, grid_size, cell_index),
+      :bottom_right_cell => get_bottom_right_cell(grid, grid_size, cell_index),
+      :bottom_cell => get_bottom_cell(grid, grid_size, cell_index),
+      :bottom_left_cell => get_bottom_left_cell(grid, grid_size, cell_index),
+      :left_cell => get_left_cell(grid, grid_size, cell_index)
+    }
   end
 
   def get_new_game_state(starting_grid, toast_changes) do
@@ -84,7 +100,9 @@ defmodule FungusToast.Games.Grid do
   end
 
   def add_grid_cell_to_grid(starting_grid, grid_cell) do
-    acc = starting_grid
+    # existing_cell = Enum.filter(starting_grid, fn grid_cell -> )
+    # if(Enum.member?(starting_grid, grid_cell))
+    starting_grid ++ [grid_cell]
   end
 
   def add_grid_cell_to_grid(starting_grid, grid_cell, acc \\ [])
@@ -110,19 +128,6 @@ defmodule FungusToast.Games.Grid do
     else
       0
     end
-  end
-
-  def get_surrounding_cells(grid, grid_size, cell_index) do
-    %{
-      :top_left_cell => get_top_left_cell(grid, grid_size, cell_index),
-      :top_cell => get_top_cell(grid, grid_size, cell_index),
-      :top_right_cell => get_top_right_cell(grid, grid_size, cell_index),
-      :right_cell => get_right_cell(grid, grid_size, cell_index),
-      :bottom_right_cell => get_bottom_right_cell(grid, grid_size, cell_index),
-      :bottom_cell => get_bottom_cell(grid, grid_size, cell_index),
-      :bottom_left_cell => get_bottom_left_cell(grid, grid_size, cell_index),
-      :left_cell => get_left_cell(grid, grid_size, cell_index)
-    }
   end
 
   @doc ~S"""
