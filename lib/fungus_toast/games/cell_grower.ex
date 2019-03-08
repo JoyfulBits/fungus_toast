@@ -13,6 +13,7 @@ defmodule FungusToast.Games.CellGrower do
   def calculate_cell_growth(surrounding_cells, player) do
     Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player) end)
       |> Enum.filter(fn x -> x != nil end)
+      |> Enum.into(%{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
   end
 
   def process_cell(position, grid_cell, player) do
@@ -257,10 +258,42 @@ defmodule FungusToast.Games.CellGrower do
     Random.random_chance_hit(player.apoptosis_chance)
   end
 
+  @doc ~S"""
+  Returns an out of grid cell
+
+  ## Examples
+
+  iex> CellGrower.make_out_of_grid_cell()
+  %FungusToast.Games.GridCell{
+    empty: false,
+    index: nil,
+    live: false,
+    out_of_grid: true,
+    player_id: nil,
+    previous_player_id: nil
+  }
+  
+  """
   def make_out_of_grid_cell() do
     %GridCell{live: false, empty: false, out_of_grid: true}
   end
 
+  @doc ~S"""
+  Returns an empty cell at the specified cell_index
+
+  ## Examples
+
+  iex> CellGrower.make_empty_grid_cell(1)
+  %FungusToast.Games.GridCell{
+    empty: true,
+    index: 1,
+    live: false,
+    out_of_grid: false,
+    player_id: nil,
+    previous_player_id: nil
+  }
+  
+  """
   def make_empty_grid_cell(cell_index) do
     %GridCell{index: cell_index, live: false, empty: true, out_of_grid: false}
   end
