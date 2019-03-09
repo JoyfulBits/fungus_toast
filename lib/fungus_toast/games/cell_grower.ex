@@ -21,7 +21,7 @@ defmodule FungusToast.Games.CellGrower do
       try_growing_cell(position, grid_cell.index, player)
     else
       if(grid_cell.live) do
-        check_for_mycotoxin_murder(grid_cell, player.mycotoxin_fungicide_chance)
+        check_for_mycotoxin_murder(grid_cell, player)
       else
         if(!grid_cell.out_of_grid) do
           check_for_regeneration(grid_cell, player)
