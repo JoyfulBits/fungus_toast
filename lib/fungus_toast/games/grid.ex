@@ -53,6 +53,9 @@ defmodule FungusToast.Games.Grid do
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
+  @doc ~S"""
+  Returns the specified number of growth cycles, as well as the ending game state
+  """
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, generation_number \\ 1, acc \\ [])
   @spec generate_growth_cycles(map(), integer(), map(), integer(), list()) :: any()
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
@@ -61,7 +64,7 @@ defmodule FungusToast.Games.Grid do
 
     toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) end)
       # since this returns a [%{}], just take the head to get back to a %{}
-      |> hd
+      |> Enum.reduce(%{}, fn(x, acc) -> Map.merge(x, acc) end)
 
     mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
       |> Enum.into(%{})
@@ -101,21 +104,21 @@ defmodule FungusToast.Games.Grid do
   end
 
   @doc ~S"""
-  Returns the number of mutation points earned by the player during this growth cycle based on the player's mutation_chance
+  Returns the number of mutation points earned by the player during this growth cycle based on the player's mutation_chance + 1
 
   iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 100})
-  1
+  2
 
   iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 0})
-  0
+  1
 
   """
   def calculate_mutation_points(player) do
     if(Random.random_chance_hit(player.mutation_chance)) do
       #for now, you generate one mutation point at a time
-      1
+      2
     else
-      0
+      1
     end
   end
 
