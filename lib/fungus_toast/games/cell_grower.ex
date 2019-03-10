@@ -237,7 +237,7 @@ defmodule FungusToast.Games.CellGrower do
   
   """
   def dies_from_starvation(surrounding_cells, starvation_chance \\ @starvation_death_chance) do
-    Enum.all?(surrounding_cells, fn {k, v} -> v.live and Random.random_chance_hit(starvation_chance) end)
+    Enum.all?(surrounding_cells, fn {_, v} -> v.live and Random.random_chance_hit(starvation_chance) end)
   end
 
   @doc ~S"""
