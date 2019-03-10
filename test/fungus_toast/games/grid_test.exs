@@ -133,6 +133,27 @@ defmodule FungusToast.Games.GridTest do
       assert (Map.keys(result.new_game_state) |> length) > minimum_possible_toast_changes + number_of_starting_cells
     end
 
+    test "it awards extra mutation points if your mutation chance hits" do
+      player_1 = make_maximum_mutation_player(1)
+      player_2 = make_maximum_mutation_player(2)
+      player_3 = make_maximum_mutation_player(3)
+
+      player_id_to_player_map = %{player_1.id => player_1, player_2.id => player_2, player_3.id => player_3}
+      grid_size = 50
+      starting_grid = Grid.create_starting_grid(grid_size, [player_1.id, player_2.id, player_3.id])
+      #set the generation to 5 so it only does one cycle
+      result = Grid.generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, 5, [])
+
+      assert result.growth_cycles
+      growth_cycles = result.growth_cycles
+      assert Enum.count(growth_cycles) == 1
+      
+      growth_cycle = Enum.at(growth_cycles, 0)
+      assert growth_cycle.mutation_points_earned[player_1.id] > 1
+      assert growth_cycle.mutation_points_earned[player_2.id] > 1
+      assert growth_cycle.mutation_points_earned[player_3.id] > 1
+    end
+
     defp make_maximum_growth_player(id) do
       %Player{id: id, 
         top_left_growth_chance: 100, 
@@ -144,6 +165,10 @@ defmodule FungusToast.Games.GridTest do
         bottom_left_growth_chance: 100,
         left_growth_chance: 100
       }
+    end
+
+    defp make_maximum_mutation_player(id) do
+      %Player{id: id, mutation_chance: 100}
     end
 
   end
