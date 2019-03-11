@@ -9,6 +9,7 @@ defmodule FungusToast.Games do
   alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.Game
+  alias FungusToast.Games.GameState
   alias FungusToast.Games.Grid
   alias FungusToast.Games.Round
 
@@ -110,13 +111,16 @@ defmodule FungusToast.Games do
 
   def start_game(game, grid_size, human_player_count) do
       # if(human_player_count == 1) do
-      #   grid_size = Map.get(attrs, :grid_size)
       #   player_ids = Enum.map(game.players, fn(x) -> x.id end)
-      #   starting_cells = FungusToast.Games.GridCell.create_starting_grid(grid_size, player_ids)
-      #   #TODO add the starting cells to the first rounds' growth cycle. Need help!
-      #first_round = %Round{number: 0, game_state: %GameState{cells: starting_cells, round_number: 0, generation_number: 0}}
-      #save the Round to the database
-      #transform the game + the first_round to be a game_view
+      #   starting_cells = Grid.create_starting_grid(grid_size, player_ids)
+      #   #create the first round with an empty starting_game_state and toast changes for the initial cells
+      #   first_round = %Round{number: 0, state_change: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
+      #   #create the second round with a starting_game_state but no state change yet
+      #   second_round = %Round{number: 1, starting_game_state: starting_cells}
+
+      #   create_round(game, first_round)
+      #   create_round(game, second_round)
+      #   #transform the game + the first_round to be a game_view
       # end
   end
 
@@ -130,9 +134,6 @@ defmodule FungusToast.Games do
 
   def create_game_for_user(changeset, %User{} = user) do
     with {:ok, game} <- Repo.insert(changeset) do
-      # TODO: Handle the case where a round is not created
-      create_round(game, %{number: 1})
-
       game
       |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
 
@@ -255,14 +256,13 @@ defmodule FungusToast.Games do
     latest_round = get_latest_round_for_game(game.id)
     #TODO added this until we get to the point where every started game has a Round
     if(latest_round != nil) do
-      current_game_state = latest_round.game_state
+      current_game_state = latest_round.starting_game_state
       players = game.players
       player_id_to_player_map = players
         |> Map.new(fn x -> {x.id, x} end)
 
-      number_of_growth_cycles_to_run = @number_of_growth_cycles_per_round
-      growth_cycles = Grid.generate_growth_cycles(current_game_state, game.grid_size, player_id_to_player_map, number_of_growth_cycles_to_run)
-      #todo save the round
+      growth_cycles = Grid.generate_growth_cycles(current_game_state, game.grid_size, player_id_to_player_map)
+      #TODO save the round
     end
   end
 

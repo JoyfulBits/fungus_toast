@@ -123,8 +123,8 @@ defmodule FungusToast.GamesTest do
   describe "rounds" do
     alias FungusToast.Games.Round
 
-    @valid_attrs %{game_state: %{"hello" => "world"}, state_change: %{"hello" => "world"}}
-    @invalid_attrs %{game_state: nil, state_change: nil}
+    @valid_attrs %{starting_game_state: %{"hello" => "world"}, state_change: %{"hello" => "world"}}
+    @invalid_attrs %{starting_game_state: nil, state_change: nil}
 
     def round_fixture(game_id, attrs \\ %{}) do
       adjusted_attrs =
@@ -148,7 +148,7 @@ defmodule FungusToast.GamesTest do
       user_fixture()
       game = game_fixture()
       assert {:ok, %Round{} = round} = Games.create_round(game.id, @valid_attrs)
-      assert round.game_state == %{"hello" => "world"}
+      assert round.starting_game_state == %{"hello" => "world"}
       assert round.state_change == %{"hello" => "world"}
     end
 

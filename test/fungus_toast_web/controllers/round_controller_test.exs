@@ -6,10 +6,10 @@ defmodule FungusToastWeb.RoundControllerTest do
   alias FungusToast.Games.{Game, Round}
 
   @create_attrs %{
-    game_state: %{},
+    starting_game_state: %{},
     state_change: %{}
   }
-  @invalid_attrs %{game_state: nil, state_change: nil}
+  @invalid_attrs %{starting_game_state: nil, state_change: nil}
 
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
@@ -53,7 +53,7 @@ defmodule FungusToastWeb.RoundControllerTest do
     } do
       conn = get(conn, Routes.game_round_path(conn, :show, game_id, id))
 
-      assert %{"id" => id, "gameId" => game_id, "gameState" => %{}, "stateChange" => %{}} =
+      assert %{"id" => id, "gameId" => game_id, "startingGameState" => %{}, "stateChange" => %{}} =
                json_response(conn, 200)
     end
   end
@@ -70,7 +70,7 @@ defmodule FungusToastWeb.RoundControllerTest do
       assert %{
                "id" => id,
                "gameId" => game_id,
-               "gameState" => %{},
+               "startingGameState" => %{},
                "stateChange" => %{}
              } = json_response(conn, 200)
     end

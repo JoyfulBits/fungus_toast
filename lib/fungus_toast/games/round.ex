@@ -4,14 +4,14 @@ defmodule FungusToast.Games.Round do
 
   @attrs [
     :number,
-    :game_state,
+    :starting_game_state,
     :state_change
   ]
 
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "rounds" do
-    field :game_state, :map, null: false
+    field :starting_game_state, :map, null: false
     field :state_change, :map, null: false
     field :number, :integer, default: 1, null: false
 
