@@ -63,7 +63,6 @@ defmodule FungusToast.Games.Grid do
       |> Enum.into(%{})
 
     toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) end)
-      # since this returns a [%{}], just take the head to get back to a %{}
       |> Enum.reduce(%{}, fn(x, acc) -> Map.merge(x, acc) end)
 
     mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
