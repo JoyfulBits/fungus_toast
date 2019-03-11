@@ -59,7 +59,7 @@ defmodule FungusToast.Games.GridTest do
   end
 
   describe "generate_growth_cycles/5" do
-    test "a single player game with no growth or mutation chance will generate 5 sequential growth cycles with no toast changes, and 1 mutation point per growth cycle" do
+    test "that a single player game with no growth or mutation chance will generate 5 sequential growth cycles with no toast changes, and 1 mutation point per growth cycle" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
@@ -88,7 +88,7 @@ defmodule FungusToast.Games.GridTest do
       end
     end
 
-    test "a multiplayer game where each player has max growth chance will generate an rapidly increasing number of growth cycles" do
+    test "that a multiplayer game where each player has max growth chance will generate an rapidly increasing number of growth cycles" do
       player_1 = make_maximum_growth_player(1)
       player_2 = make_maximum_growth_player(2)
       player_3 = make_maximum_growth_player(3)
@@ -131,6 +131,30 @@ defmodule FungusToast.Games.GridTest do
       minimum_possible_toast_changes = 3 * 5 + 3 * 7 + 3 * 9 + 3 * 11
       number_of_starting_cells = 3
       assert (Map.keys(result.new_game_state) |> length) > minimum_possible_toast_changes + number_of_starting_cells
+    end
+
+    test "that you cannot have more than the grid_size * grid_size number of cells in the new game state" do
+      player_1 = make_maximum_growth_player(1)
+      # player_2 = make_maximum_growth_player(2)
+      # player_3 = make_maximum_growth_player(3)
+      # player_4 = make_maximum_growth_player(4)
+      # player_5 = make_maximum_growth_player(5)
+
+      player_id_to_player_map = %{player_1.id => player_1}#, player_2.id => player_2, player_3.id => player_3, player_4.id => player_4, player_5.id => player_5}
+      grid_size = 50
+      starting_grid = Grid.create_starting_grid(grid_size, [player_1.id])#, player_2.id, player_3.id, player_4.id, player_5.id])
+      #set the growth_cycle number to -44 so that we get a full 50 growth cycles (44 + 6 to get up to +5) -- more than enough to fill the entire grid
+      result = Grid.generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, -44, [])
+      
+      assert result.growth_cycles
+      growth_cycles = result.growth_cycles
+      assert Enum.count(growth_cycles) == 50
+      
+      assert (Map.keys(result.new_game_state) |> length) == grid_size * grid_size
+
+      last_growth_cycle = Enum.at(growth_cycles, 49)
+      number_of_live_cell_toast_changes = Enum.count(last_growth_cycle.toast_changes, fn {_, grid_cell} -> grid_cell.live end)
+      assert number_of_live_cell_toast_changes == 0
     end
 
     test "it awards extra mutation points if your mutation chance hits" do
