@@ -120,6 +120,18 @@ defmodule FungusToast.GamesTest do
     end
   end
 
+  describe "create_game_for_user" do
+    alias FungusToast.Games
+    alias FungusToast.Games.Game
+    alias FungusToast.Accounts.User
+
+    test "that it creates a game with a single player for the current user populated" do
+      cs = Game.changeset(%Game{}, %{number_of_human_players: 1})
+      {:ok, game} = Games.create_game_for_user(cs, %User{})
+      assert [player | _] = game.players
+    end
+  end
+  
   describe "rounds" do
     alias FungusToast.Games.Round
 
