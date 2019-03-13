@@ -109,9 +109,9 @@ defmodule FungusToast.Games do
     end
   end
 
-  def start_game(game, grid_size, human_player_count) do
+  def start_game(game = %Game{players: players}, grid_size, human_player_count) do
       # if(human_player_count == 1) do
-      #   player_ids = Enum.map(game.players, fn(x) -> x.id end)
+      #   player_ids = Enum.map(players, fn(x) -> x.id end)
       #   starting_cells = Grid.create_starting_grid(grid_size, player_ids)
       #   #create the first round with an empty starting_game_state and toast changes for the initial cells
       #   first_round = %Round{number: 0, state_change: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
@@ -120,7 +120,7 @@ defmodule FungusToast.Games do
 
       #   create_round(game, first_round)
       #   create_round(game, second_round)
-      #   #transform the game + the first_round to be a game_view
+      #   #TODO transform the game + the first_round to be a game_view (or something else)
       # end
   end
 
@@ -132,9 +132,9 @@ defmodule FungusToast.Games do
     {:error, :bad_request}
   end
 
-  def create_game_for_user(changeset, %User{} = user) do
+  def create_game_for_user(changeset = %Ecto.Changeset{}, %User{} = user) do
     with {:ok, game} <- Repo.insert(changeset) do
-      game
+      game  
       |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
 
       {:ok, game}
