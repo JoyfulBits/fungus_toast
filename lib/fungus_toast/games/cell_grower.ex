@@ -125,7 +125,7 @@ defmodule FungusToast.Games.CellGrower do
   ## Examples
 
   #it returns %{} if the cell doesn't die
-  iex>CellGrower.check_for_cell_death(%FungusToast.Games.GridCell{}, %{top_cell: %FungusToast.Games.GridCell{}}, %FungusToast.Games.Player{apoptosis_chance: 0})
+  iex>CellGrower.check_for_cell_death(%FungusToast.Games.GridCell{}, %{top_cell: %FungusToast.Games.GridCell{}}, %FungusToast.Games.Player{apoptosis_chance: 0.0})
   %{}
 
   """
@@ -246,11 +246,11 @@ defmodule FungusToast.Games.CellGrower do
   ## Examples
 
   #it dies if the apoptosis chance hits
-  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 100})
+  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 100.0})
   true
 
   #it does not die if the apoptosis chance misses
-  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 0})
+  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 0.0})
   false
   
   """
