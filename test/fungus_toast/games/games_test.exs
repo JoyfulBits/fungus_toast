@@ -63,14 +63,12 @@ defmodule FungusToast.GamesTest do
     @update_attrs %{active: true}
 
     test "list_games/0 returns all games" do
-      user_fixture()
-      game = game_fixture()
+      game = Fixtures.Game.create!
       assert Games.list_games() == [game]
     end
 
     test "get_game!/1 returns the game with given id" do
-      user_fixture()
-      game = game_fixture()
+      game = Fixtures.Game.create!
       assert Games.get_game!(game.id) == game
     end
 
@@ -122,7 +120,6 @@ defmodule FungusToast.GamesTest do
   describe "create_game_for_user" do
     alias FungusToast.Games
     alias FungusToast.Games.Game
-    alias FungusToast.Accounts.User
 
     test "that it creates a game with a single player for the current user populated" do
       user = user_fixture()
