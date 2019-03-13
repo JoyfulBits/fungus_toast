@@ -29,7 +29,6 @@ defmodule FungusToast.GamesTest do
       |> Enum.into(%{human: true, user_name: user.user_name, name: user.user_name})
 
     {:ok, player} = Players.create_player(game, updated_attrs)
-
     player
   end
 
@@ -126,8 +125,9 @@ defmodule FungusToast.GamesTest do
     alias FungusToast.Accounts.User
 
     test "that it creates a game with a single player for the current user populated" do
+      user = user_fixture()
       cs = Game.changeset(%Game{}, %{number_of_human_players: 1})
-      {:ok, game} = Games.create_game_for_user(cs, %User{})
+      {:ok, game} = Games.create_game_for_user(cs, user)
       assert [player | _] = game.players
     end
   end

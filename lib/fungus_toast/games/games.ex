@@ -12,6 +12,7 @@ defmodule FungusToast.Games do
   alias FungusToast.Games.GameState
   alias FungusToast.Games.Grid
   alias FungusToast.Games.Round
+  alias FungusToast.Games.Player
 
   @number_of_growth_cycles_per_round 5
 
@@ -132,13 +133,16 @@ defmodule FungusToast.Games do
     {:error, :bad_request}
   end
 
-  def create_game_for_user(changeset = %Ecto.Changeset{}, %User{} = user) do
-    with {:ok, game} <- Repo.insert(changeset) do
-      game  
-      |> Players.create_player(%{human: true, user_name: user.user_name, name: user.user_name})
+  def create_game_for_user(game_changeset = %Ecto.Changeset{}, %User{} = user) do
+    Repo.transaction(fn ->
+      {:ok, game} = Repo.insert(game_changeset)
 
-      {:ok, game}
-    end
+      %Player{game_id: game.id, user_id: user.id}
+      |> Player.changeset(%{human: true, user_name: user.user_name, name: user.user_name})
+      |> Repo.insert()
+
+      Repo.get(Game, game.id) |> Repo.preload(:players)
+    end)
   end
 
   def create_game_for_user(changeset, user_name) when is_binary(user_name) do
