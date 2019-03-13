@@ -99,9 +99,6 @@ defmodule FungusToast.Games do
       ai_player_count =
         Map.get(attrs, :number_of_ai_players) || Map.get(attrs, "number_of_ai_players") || 0
 
-      game
-      |> Players.create_ai_players(ai_player_count)
-
       grid_size = Map.get(attrs, :grid_size)
       start_game(game, grid_size, human_player_count)
 

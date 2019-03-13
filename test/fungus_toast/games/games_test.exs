@@ -73,19 +73,12 @@ defmodule FungusToast.GamesTest do
     end
 
     test "create_game/1 with valid data creates a game" do
-      user_fixture(%{user_name: "Fungusmotron"})
-      user_fixture()
-      assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
-      game = game |> FungusToast.Repo.preload(:players)
-      assert length(game.players) == 3
-    end
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{user_name: user.user_name, number_of_human_players: 1, number_of_ai_players: 2}
 
-    test "create_game/1 with valid data creates the correct number of AI players" do
-      user_fixture(%{user_name: "Fungusmotron"})
-      user_fixture()
-      assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
-      game = game |> FungusToast.Repo.preload(:players)
-      assert game.players |> Enum.filter(fn p -> Map.get(p, :human) == false end) |> length() == 2
+      assert {:ok, %Game{} = game} = Games.create_game(valid_attrs)
+      assert length(game.players) == 1
+      assert game.number_of_ai_players == 2
     end
 
     test "create_game/1 with invalid data does not create a game" do
