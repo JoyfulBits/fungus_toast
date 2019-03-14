@@ -93,19 +93,16 @@ defmodule FungusToast.Players do
     :ok
   end
 
-  def create_ai_players(game, ai_players) when is_number(ai_players) do
-    # Do we have a better way to do this?
-    # Should we just tag users as human/ai and then pass that on to their players?
-    # That way we could just look up the non-human player and not care about name
-    ai_user = Accounts.get_user_for_name("Fungusmotron")
-
-    create_player(game, %{
-      human: false,
-      user_name: ai_user.user_name,
-      name: "Fungal Mutation #{get_ai_player_count() + 1}"
-    })
-
-    create_ai_players(game, ai_players - 1)
+  @doc """
+  Creates the requested number of AI players for the given game. AI players have no user associated with them
+  """
+  @spec create_ai_players(integer(), integer()) :: %Player{}
+  def create_ai_players(game, number_of_ai_players) when is_number(number_of_ai_players) do
+    Enum.each(1..number_of_ai_players, fn x -> 
+      %Player{game_id: game.id, human: false, name: "Fungal Mutation #{x}"}
+      |> Player.changeset(%{})
+      |> Repo.insert()
+    end)
   end
 
   @doc """
