@@ -94,11 +94,22 @@ defmodule FungusToast.Players do
   end
 
   @doc """
+  Creates a player for the given user and game
+  """
+  @spec create_player_for_user(%Game{}, String.t()) :: %Player{}
+  def create_player_for_user(game, user_name) do
+    user = Accounts.get_user_for_name(user_name)
+    %Player{game_id: game.id, human: true, user_id: user.id, name: user.user_name}
+    |> Player.changeset(%{})
+    |> Repo.insert()
+  end
+
+  @doc """
   Creates the requested number of AI players for the given game. AI players have no user associated with them
   """
-  @spec create_ai_players(integer(), integer()) :: %Player{}
-  def create_ai_players(game, number_of_ai_players) when is_number(number_of_ai_players) do
-    Enum.each(1..number_of_ai_players, fn x -> 
+  @spec create_ai_players(%Game{}, integer()) :: %Player{}
+  def create_ai_players(game) do
+    Enum.each(1..game.number_of_ai_players, fn x -> 
       %Player{game_id: game.id, human: false, name: "Fungal Mutation #{x}"}
       |> Player.changeset(%{})
       |> Repo.insert()
@@ -106,52 +117,64 @@ defmodule FungusToast.Players do
   end
 
   @doc """
-  Creates a player.
-
-  ## Examples
-
-      iex> create_player(game, %{field: value})
-      {:ok, %Player{}}
-
-      iex> create_player(game, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-      iex> create_player(1, %{field: value})
-      {:ok, %Player{}}
-
-      iex> create_player(1, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
+  Creates the requested number of yet unknown human players for the given game.
   """
-  def create_player(game, attrs \\ %{})
-
-  def create_player(%Game{} = game, attrs) when is_map(attrs) do
-    create_player(game.id, attrs)
+  @spec create_human_players(%Game{}, integer()) :: %Player{}
+  def create_human_players(game, number_of_human_players) do
+    Enum.each(1..number_of_human_players, fn x -> 
+      %Player{game_id: game.id, human: true}
+      |> Player.changeset(%{})
+      |> Repo.insert()
+    end)
   end
 
-  def create_player(game_id, attrs) when is_binary(game_id) do
-    game = Games.get_game!(game_id)
-    create_player(game.id, attrs)
-  end
+  # @doc """
+  # Creates a player.
 
-  def create_player(game_id, attrs) when is_map(attrs) do
-    user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
-    create_player_for_user(game_id, user_name, attrs)
-  end
+  # ## Examples
 
-  defp create_player_for_user(nil, _, _), do: {:error, :bad_request}
-  defp create_player_for_user(_, nil, _), do: {:error, :bad_request}
+  #     iex> create_player(game, %{field: value})
+  #     {:ok, %Player{}}
 
-  defp create_player_for_user(game_id, user_name, attrs) when is_binary(user_name) do
-    user = Accounts.get_user_for_name(user_name)
-    create_player_for_user(game_id, user.id, attrs)
-  end
+  #     iex> create_player(game, %{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
 
-  defp create_player_for_user(game_id, user_id, attrs) do
-    %Player{game_id: game_id, user_id: user_id}
-    |> Player.changeset(attrs)
-    |> Repo.insert()
-  end
+  #     iex> create_player(1, %{field: value})
+  #     {:ok, %Player{}}
+
+  #     iex> create_player(1, %{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
+
+  # """
+  # def create_player(game, attrs \\ %{})
+
+  # def create_player(%Game{} = game, attrs) when is_map(attrs) do
+  #   create_player(game.id, attrs)
+  # end
+
+  # def create_player(game_id, attrs) when is_binary(game_id) do
+  #   game = Games.get_game!(game_id)
+  #   create_player(game.id, attrs)
+  # end
+
+  # def create_player(game_id, attrs) when is_map(attrs) do
+  #   user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
+  #   create_player_for_user(game_id, user_name, attrs)
+  # end
+
+  # defp create_player_for_user(nil, _, _), do: {:error, :bad_request}
+  # defp create_player_for_user(_, nil, _), do: {:error, :bad_request}
+
+  # defp create_player_for_user(game_id, user_name, attrs) when is_binary(user_name) do
+  #   user = Accounts.get_user_for_name(user_name)
+  #   create_player_for_user(game_id, user.id, attrs)
+  # end
+
+  # defp create_player_for_user(game_id, user_id, attrs) do
+  #   %Player{game_id: game_id, user_id: user_id}
+  #   |> Player.changeset(attrs)
+  #   |> Repo.insert()
+  # end
 
   @doc """
   Updates a player.

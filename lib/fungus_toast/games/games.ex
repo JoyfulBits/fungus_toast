@@ -93,66 +93,54 @@ defmodule FungusToast.Games do
     user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
 
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
-      human_player_count =
-        Map.get(attrs, :number_of_human_players) || Map.get(attrs, "number_of_human_players")
-
-      ai_player_count =
-        Map.get(attrs, :number_of_ai_players) || Map.get(attrs, "number_of_ai_players") || 0
-
       game	
-        |> Players.create_ai_players(ai_player_count)
+        |> Players.create_ai_players()
 
       grid_size = Map.get(attrs, :grid_size)
+      human_player_count =
+        Map.get(attrs, :number_of_human_players) || Map.get(attrs, "number_of_human_players")
       start_game(game, grid_size, human_player_count)
 
       game
-      |> set_new_game_status(human_player_count)
+        |> set_new_game_status(human_player_count)
     end
   end
 
   def start_game(game = %Game{players: players}, grid_size, human_player_count) do
-      # if(human_player_count == 1) do
-      #   player_ids = Enum.map(players, fn(x) -> x.id end)
-      #   starting_cells = Grid.create_starting_grid(grid_size, player_ids)
-      #   #create the first round with an empty starting_game_state and toast changes for the initial cells
-      #   first_round = %Round{number: 0, state_change: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
-      #   #create the second round with a starting_game_state but no state change yet
-      #   second_round = %Round{number: 1, starting_game_state: starting_cells}
+      if(human_player_count == 1) do
+        player_ids = Enum.map(players, fn(x) -> x.id end)
+        starting_cells = Grid.create_starting_grid(grid_size, player_ids)
+        #create the first round with an empty starting_game_state and toast changes for the initial cells
+        first_round = %Round{number: 0, state_change: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
+        #create the second round with a starting_game_state but no state change yet
+        second_round = %Round{number: 1, starting_game_state: starting_cells}
 
-      #   create_round(game, first_round)
-      #   create_round(game, second_round)
-      #   #TODO transform the game + the first_round to be a game_view (or something else)
-      # end
+        create_round(game, first_round)
+        create_round(game, second_round)
+        #TODO transform the game + the first_round to be a game_view (or something else)
+      end
   end
 
-  # This is a special case to avoid creating human players with our AI user.
-  # AI users should also just not be able to create games in general.
-  # If we move the "human" flag to User, we could do away with this and use
-  # the user's value on line 85, but I don't expect us to need multipl AI users yet
-  def create_game_for_user(_, "Fungusmotron") do
-    {:error, :bad_request}
-  end
-
-  def create_game_for_user(game_changeset = %Ecto.Changeset{}, %User{} = user) do
+  def create_game_for_user(game_changeset = %Ecto.Changeset{}, user_name) when is_binary(user_name) do
     Repo.transaction(fn ->
       {:ok, game} = Repo.insert(game_changeset)
 
-      %Player{game_id: game.id, user_id: user.id}
-      |> Player.changeset(%{human: true, user_name: user.user_name, name: user.user_name})
-      |> Repo.insert()
+      Players.create_player_for_user(game, user_name)
+      Players.create_human_players(game, game.number_of_human_players - 1)
+      Players.create_ai_players(game)
 
       Repo.get(Game, game.id) |> Repo.preload(:players)
     end)
   end
 
-  def create_game_for_user(changeset, user_name) when is_binary(user_name) do
-    user = Accounts.get_user_for_name(user_name)
-    create_game_for_user(changeset, user)
-  end
+  # def create_game_for_user(changeset, user_name) when is_binary(user_name) do
+  #   user = Accounts.get_user_for_name(user_name)
+  #   create_game_for_user(changeset, user)
+  # end
 
-  def create_game_for_user(_, _) do
-    {:error, :bad_request}
-  end
+  # def create_game_for_user(_, _) do
+  #   {:error, :bad_request}
+  # end
 
   defp set_new_game_status(game, 1) do
     update_game(game, %{status: "Started"})
@@ -282,7 +270,6 @@ defmodule FungusToast.Games do
   defdelegate list_players_for_game(game), to: Players
   defdelegate get_player_for_game(game_id, id), to: Players
   defdelegate get_player!(id), to: Players
-  defdelegate create_player(game, attrs), to: Players
   defdelegate update_player(player, attrs), to: Players
 
   defdelegate get_player_skills(player), to: PlayerSkills
