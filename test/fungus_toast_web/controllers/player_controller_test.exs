@@ -5,20 +5,22 @@ defmodule FungusToastWeb.PlayerControllerTest do
   alias FungusToast.Games
   alias FungusToast.Games.{Game, Player}
 
+  @user_name "testUser"
+
   @create_attrs %{
     human: true,
-    name: "testUser",
-    user_name: "testUser"
+    name: @user_name,
+    user_name: @user_name
   }
   @invalid_attrs %{human: nil}
 
   def fixture(:game) do
-    {:ok, game} = Games.create_game(%{user_name: "testUser", number_of_human_players: 1})
+    {:ok, game} = Games.create_game(%{user_name: @user_name, number_of_human_players: 1})
     game
   end
 
   def fixture(:user) do
-    {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
+    {:ok, user} = Accounts.create_user(%{user_name: @user_name, active: true})
     user
   end
 

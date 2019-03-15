@@ -15,7 +15,7 @@ defmodule FungusToastWeb.GameControllerTest do
   end
 
   def fixture(:game) do
-    {:ok, game} = Games.create_game(%{user_name: "testUser", number_of_human_players: 2})
+    {:ok, game} = Fixtures.Game.create!()    
     game
   end
 
@@ -59,7 +59,6 @@ defmodule FungusToastWeb.GameControllerTest do
 
     test "invalid params", %{conn: conn} do
       conn = post(conn, Routes.game_path(conn, :create), %{"bad" => "params"})
-
       assert "Bad Request" = json_response(conn, 400)
     end
 

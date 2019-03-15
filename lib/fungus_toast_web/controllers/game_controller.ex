@@ -27,7 +27,9 @@ defmodule FungusToastWeb.GameController do
   end
 
   def create(conn, game) do
-    with {:ok, game} <- Games.create_game(game) do
+    #TODO should the user id be passed in or the user name?
+    user_name = Map.get(conn, :user_name) || Map.get(conn, "user_name")
+    with {:ok, game} <- Games.create_game(user_name, game) do
       game = game |> Games.preload_for_games()
 
       conn

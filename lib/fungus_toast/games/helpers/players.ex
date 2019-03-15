@@ -97,7 +97,7 @@ defmodule FungusToast.Players do
   Creates a player for the given user and game
   """
   @spec create_player_for_user(%Game{}, String.t()) :: %Player{}
-  def create_player_for_user(game, user_name) do
+  def create_player_for_user(game = %Game{}, user_name) do
     user = Accounts.get_user_for_name(user_name)
     %Player{game_id: game.id, human: true, user_id: user.id, name: user.user_name}
     |> Player.changeset(%{})

@@ -80,17 +80,16 @@ defmodule FungusToast.Games do
 
   ## Examples
 
-      iex> create_game(%{field: value})
+      iex> create_game("testUser", %{field: value})
       {:ok, %Game{}}
 
-      iex> create_game(%{field: bad_value})
+      iex> create_game("testUser", %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
   #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
-  def create_game(attrs \\ %{}) do
+  def create_game(user_name, attrs \\ %{}) do
     changeset = %Game{} |> Game.changeset(attrs)
-    user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
 
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
       Players.create_ai_players(game)
@@ -114,7 +113,7 @@ defmodule FungusToast.Games do
       end
   end
 
-  def create_game_for_user(game_changeset = %Ecto.Changeset{}, user_name) when is_binary(user_name) do
+  def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
     Repo.transaction(fn ->
       {:ok, game} = Repo.insert(game_changeset)
 
@@ -125,15 +124,6 @@ defmodule FungusToast.Games do
       Repo.get(Game, game.id) |> Repo.preload(:players)
     end)
   end
-
-  # def create_game_for_user(changeset, user_name) when is_binary(user_name) do
-  #   user = Accounts.get_user_for_name(user_name)
-  #   create_game_for_user(changeset, user)
-  # end
-
-  # def create_game_for_user(_, _) do
-  #   {:error, :bad_request}
-  # end
 
   defp set_new_game_status(game = %Game{number_of_human_players: 1}) do
     update_game(game, %{status: "Started"})
