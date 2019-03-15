@@ -93,20 +93,13 @@ defmodule FungusToast.Games do
     user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
 
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
-      game	
-        |> Players.create_ai_players()
-
-      grid_size = Map.get(attrs, :grid_size)
-      human_player_count =
-        Map.get(attrs, :number_of_human_players) || Map.get(attrs, "number_of_human_players")
-      start_game(game, grid_size, human_player_count)
-
-      game
-        |> set_new_game_status(human_player_count)
+      Players.create_ai_players(game)
+      start_game(game)
+      set_new_game_status(game)
     end
   end
 
-  def start_game(game = %Game{players: players}, grid_size, human_player_count) do
+  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players:  human_player_count}) do
       if(human_player_count == 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
@@ -142,17 +135,15 @@ defmodule FungusToast.Games do
   #   {:error, :bad_request}
   # end
 
-  defp set_new_game_status(game, 1) do
+  defp set_new_game_status(game = %Game{number_of_human_players: 1}) do
     update_game(game, %{status: "Started"})
   end
 
-  defp set_new_game_status(game, human_player_count) when human_player_count > 0 do
+  defp set_new_game_status(game = %Game{number_of_human_players: human_player_count}) when human_player_count > 0 do
     {:ok, game}
   end
 
-  defp set_new_game_status(_, _) do
-    {:error, :bad_request}
-  end
+  defp set_new_game_status(_), do: {:error, :bad_request}
 
   @doc """
   Updates a game.
