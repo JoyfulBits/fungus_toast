@@ -88,7 +88,7 @@ defmodule FungusToast.Games do
 
   """
   #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
-  def create_game(user_name, attrs \\ %{}) do
+  def create_game(user_name, attrs) do
     changeset = %Game{} |> Game.changeset(attrs)
 
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
@@ -98,14 +98,17 @@ defmodule FungusToast.Games do
     end
   end
 
+  # TODO: think through the API we actually want with this...
+  def create_game(%{user_name: user_name} = attrs), do: create_game(user_name, attrs)
+
   def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players:  human_player_count}) do
       if(human_player_count == 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
-        first_round = %Round{number: 0, state_change: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
+        first_round = %{number: 0, state_change: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
-        second_round = %Round{number: 1, starting_game_state: starting_cells}
+        second_round = %{number: 1, starting_game_state: starting_cells}
 
         create_round(game, first_round)
         create_round(game, second_round)
