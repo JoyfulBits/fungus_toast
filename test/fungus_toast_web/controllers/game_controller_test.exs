@@ -1,38 +1,12 @@
 defmodule FungusToastWeb.GameControllerTest do
   use FungusToastWeb.ConnCase
-
-  alias FungusToast.Accounts
-  alias FungusToast.Games
   alias FungusToast.Games.Game
 
-  def fixture(:ai_user) do
-    Accounts.create_user(%{user_name: "Fungusmotron", active: true})
-  end
-
-  def fixture(:user) do
-    {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
-    user
-  end
-
-  def fixture(:game) do
-    {:ok, game} = Fixtures.Game.create!()    
-    game
-  end
-
-  defp create_game(_) do
-    fixture(:user)
-    game = fixture(:game)
-    {:ok, game: game}
-  end
-
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
-  end
 
   describe "GET" do
-    setup [:create_game]
+    test "renders game when data is valid", %{conn: conn} do
+      %Game{id: id} = Fixtures.Game.create!()
 
-    test "renders game when data is valid", %{conn: conn, game: %Game{id: id}} do
       conn = get(conn, Routes.game_path(conn, :show, id))
 
       assert %{"id" => id} = json_response(conn, 200)
@@ -50,20 +24,22 @@ defmodule FungusToastWeb.GameControllerTest do
     end
 
     test "valid params", %{conn: conn} do
-      fixture(:user)
-      fixture(:ai_user)
+      Fixtures.Accounts.User.create!()
+      
       conn = post(conn, Routes.game_path(conn, :create), game_params())
 
       assert %{"id" => _} = json_response(conn, 201)
     end
 
     test "invalid params", %{conn: conn} do
-      conn = post(conn, Routes.game_path(conn, :create), %{"bad" => "params"})
-      assert "Bad Request" = json_response(conn, 400)
+      assert_raise Phoenix.ActionClauseError, fn ->
+        conn = post(conn, Routes.game_path(conn, :create), %{"bad" => "params"})
+        assert "Bad Request" = json_response(conn, 400)
+      end
     end
 
     test "case transformation", %{conn: conn} do
-      fixture(:user)
+      Fixtures.Accounts.User.create!()
 
       params = %{
         "userName" => "testUser",
@@ -76,7 +52,7 @@ defmodule FungusToastWeb.GameControllerTest do
                "id" => id
              } = json_response(conn, 201)
 
-      assert %Games.Game{id: id, number_of_human_players: 2} = Games.get_game!(id)
+      assert %Game{id: id, number_of_human_players: 2} = FungusToast.Games.get_game!(id)
     end
   end
 end

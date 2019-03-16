@@ -26,9 +26,9 @@ defmodule FungusToastWeb.GameController do
     render(conn, "show.json", game: game)
   end
 
-  def create(conn, game) do
+  def create(conn, %{"user_name" => user_name} = game) do
     #TODO should the user id be passed in or the user name?
-    user_name = Map.get(conn, :user_name) || Map.get(conn, "user_name")
+    #TODO return a better error code when the user can't be found
     with {:ok, game} <- Games.create_game(user_name, game) do
       game = game |> Games.preload_for_games()
 
