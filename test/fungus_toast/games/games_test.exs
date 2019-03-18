@@ -24,7 +24,7 @@ defmodule FungusToast.GamesTest do
     creates a human player with a user
   """
   defp human_player_with_user_fixture(user_name, game, mutation_points \\ 0) do
-    {:ok, player} = Players.create_player_for_user(user_name, game)
+    {:ok, player} = Players.create_player_for_user(game, user_name)
     Players.update_player(player, %{mutation_points: mutation_points})
   end
 
@@ -86,6 +86,7 @@ defmodule FungusToast.GamesTest do
     end
 
     test "create_game/2 with invalid status does not create a game" do
+      #TODO creat_game makes a call to Repo.insert(game_changeset), which throws it's own changeset error and doesn't match the pattern in there. How to catch that here?
       assert {:error, :bad_request} =
                Games.create_game("some user name", %{status: "Nope", number_of_human_players: 2})
     end
@@ -183,7 +184,7 @@ defmodule FungusToast.GamesTest do
 
     test "next_round_available/1 returns true if there is one human player and they have spent their points" do
       game =
-        game_fixture(%{number_of_ai_players: Enum.random(1..3)})
+        game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
         |> Games.preload_for_games()
 
       {:ok, _player} =
@@ -213,18 +214,14 @@ defmodule FungusToast.GamesTest do
     end
 
     test "next_round_available/1 returns true if all players have spent their points" do
-      # Generate 1-3 more players alongside the existing testUser
-      human_players = Enum.random(1..3)
-      # Fill the game with up to 2 more AI players
-      ai_players = Enum.random(0..(3 - human_players))
-      user = user_fixture()
+      user = user_fixture(%{user_name: "another user"})
       
       game =
-        game_fixture(%{number_of_human_players: human_players, number_of_ai_players: ai_players})
+        game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
 
       human_player_with_user_fixture(user.user_name, game, 0)
-      ai_player_fixture(game)
       human_player_without_user_fixture(game)
+      ai_player_fixture(game)
       game = Games.get_game!(game.id) |> Games.preload_for_games()
 
       game.players
