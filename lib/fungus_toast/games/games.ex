@@ -87,7 +87,7 @@ defmodule FungusToast.Games do
   #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
   def create_game(user_name, attrs) do
     attrs = if(Map.get(attrs, "number_of_human_players") < 2) do
-      %{attrs | status: "Started"}
+      Map.put(attrs, "status", "Started")
     else
       attrs
     end
@@ -222,7 +222,7 @@ defmodule FungusToast.Games do
     latest_round = get_latest_round_for_game(game.id)
     #TODO added this until we get to the point where every started game has a Round
     if(latest_round != nil) do
-      current_game_state = latest_round.starting_game_state
+      current_game_state = latest_round.starting_game_state["cells"]
       players = game.players
       player_id_to_player_map = players
         |> Map.new(fn x -> {x.id, x} end)
