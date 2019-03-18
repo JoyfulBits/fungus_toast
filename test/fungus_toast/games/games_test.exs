@@ -33,7 +33,7 @@ defmodule FungusToast.GamesTest do
   """
   defp human_player_without_user_fixture(game, mutation_points \\ 0) do
     Players.create_human_players(game, 1)
-    game = Games.get_game(game.id)
+    game = Games.get_game!(game.id) |> Repo.preload(:players)
     player = Enum.filter(game.players, fn p -> p.human and p.user_id == nil end)
       |> hd
     Players.update_player(player, %{mutation_points: mutation_points})
