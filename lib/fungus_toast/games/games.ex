@@ -89,17 +89,24 @@ defmodule FungusToast.Games do
   """
   #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
   def create_game(user_name, attrs) do
+    attrs = if(Map.get(attrs, "number_of_human_players") < 2) do
+      %{attrs | status: "Started"}
+    else
+      attrs
+    end
     changeset = %Game{} |> Game.changeset(attrs)
 
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
-      Players.create_ai_players(game)
       start_game(game)
-      set_new_game_status(game)
+      preloaded_game = get_game!(game.id) 
+        |> Repo.preload(:players)
+
+      {:ok, preloaded_game}
     end
   end
 
-  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players:  human_player_count}) do
-      if(human_player_count == 1) do
+  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players:  number_of_human_players}) do
+      if(number_of_human_players == 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
@@ -109,7 +116,6 @@ defmodule FungusToast.Games do
 
         create_round(game, first_round)
         create_round(game, second_round)
-        #TODO transform the game + the first_round to be a game_view (or something else)
       end
   end
 
@@ -124,16 +130,6 @@ defmodule FungusToast.Games do
       Repo.get(Game, game.id) |> Repo.preload(:players)
     end)
   end
-
-  defp set_new_game_status(game = %Game{number_of_human_players: 1}) do
-    update_game(game, %{status: "Started"})
-  end
-
-  defp set_new_game_status(game = %Game{number_of_human_players: human_player_count}) when human_player_count > 0 do
-    {:ok, game}
-  end
-
-  defp set_new_game_status(_), do: {:error, :bad_request}
 
   @doc """
   Updates a game.
