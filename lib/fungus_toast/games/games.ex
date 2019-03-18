@@ -98,9 +98,6 @@ defmodule FungusToast.Games do
     end
   end
 
-  # TODO: think through the API we actually want with this...
-  def create_game(%{user_name: user_name} = attrs), do: create_game(user_name, attrs)
-
   def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players:  human_player_count}) do
       if(human_player_count == 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)

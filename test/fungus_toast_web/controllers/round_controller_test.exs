@@ -17,7 +17,7 @@ defmodule FungusToastWeb.RoundControllerTest do
   end
 
   def fixture(:game) do
-    {:ok, game} = Games.create_game(%{user_name: "testUser", number_of_human_players: 2})
+    {:ok, game} = Games.create_game("testUser", %{number_of_human_players: 2})
     game
   end
 
