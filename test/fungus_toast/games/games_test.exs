@@ -85,14 +85,11 @@ defmodule FungusToast.GamesTest do
     end
 
     test "create_game/2 with missing data does not create a game" do
-      #TODO creat_game makes a call to Repo.insert(game_changeset), which throws it's own changeset error and doesn't match the pattern in there. How to catch that here?
-      assert {:error, :bad_request} = Games.create_game("some user name", %{})
+      assert catch_error Games.create_game("some user name", %{})
     end
 
     test "create_game/2 with invalid status does not create a game" do
-      #TODO creat_game makes a call to Repo.insert(game_changeset), which throws it's own changeset error and doesn't match the pattern in there. How to catch that here?
-      assert {:error, :bad_request} =
-               Games.create_game("some user name", %{status: "Nope", number_of_human_players: 2})
+      assert catch_error Games.create_game("some user name", %{status: "Nope", number_of_human_players: 2})
     end
 
     test "update_game/2 with valid data updates the game" do
