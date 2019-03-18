@@ -12,9 +12,6 @@ defmodule FungusToast.Games do
   alias FungusToast.Games.GameState
   alias FungusToast.Games.Grid
   alias FungusToast.Games.Round
-  alias FungusToast.Games.Player
-
-  @number_of_growth_cycles_per_round 5
 
   @doc """
   Returns the list of games.
