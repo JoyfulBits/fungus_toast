@@ -109,7 +109,7 @@ defmodule FungusToast.Players do
   """
   @spec create_ai_players(%Game{}) :: %Player{}
   def create_ai_players(game) do
-    Enum.each(1..game.number_of_ai_players, fn x -> 
+    Enum.map(1..game.number_of_ai_players, fn x -> 
       %Player{game_id: game.id, human: false, name: "Fungal Mutation #{x}"}
       |> Player.changeset(%{})
       |> Repo.insert()
