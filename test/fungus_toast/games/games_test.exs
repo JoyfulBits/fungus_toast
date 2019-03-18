@@ -4,6 +4,7 @@ defmodule FungusToast.GamesTest do
   alias FungusToast.Accounts
   alias FungusToast.Games
   alias FungusToast.Players
+  alias FungusToast.Games.Player
 
   defp user_fixture(attrs \\ %{}) do
     {:ok, user} =
@@ -32,11 +33,9 @@ defmodule FungusToast.GamesTest do
     creates a human player without a user
   """
   defp human_player_without_user_fixture(game, mutation_points \\ 0) do
-    Players.create_human_players(game, 1)
-    game = Games.get_game!(game.id) |> Repo.preload(:players)
-    player = Enum.filter(game.players, fn p -> p.human and p.user_id == nil end)
-      |> hd
-    Players.update_player(player, %{mutation_points: mutation_points})
+    %Player{game_id: game.id, human: true, mutation_points: mutation_points}
+      |> Player.changeset(%{})
+      |> Repo.insert()
   end
 
   @doc """
@@ -50,6 +49,12 @@ defmodule FungusToast.GamesTest do
     players = Enum.map(players, fn p -> %{p | mutation_points: mutation_points} end)
     Enum.each(players, fn p -> Players.update_player(p, %{mutation_points: mutation_points}) end)
     players
+  end
+
+  defp create_ai_player(game_id) do
+    %Player{game_id: game.id, human: false}
+    |> Player.changeset(%{})
+    |> Repo.insert()
   end
 
   describe "games" do
