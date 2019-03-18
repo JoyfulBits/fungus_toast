@@ -14,7 +14,7 @@ alias FungusToast.{Accounts, Games}
 Accounts.create_user(%{user_name: "Fungusmotron"})
 Accounts.create_user(%{user_name: "Fungus Amungus"})
 
-Games.create_game(%{user_name: "Fungus Amungus", number_of_human_players: 1})
+Games.create_game("Fungus Amungus", %{number_of_human_players: 1})
 
 Games.create_skill(%{
   name: "Hypermutation",
