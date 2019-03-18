@@ -107,7 +107,7 @@ defmodule FungusToast.Players do
   @doc """
   Creates the requested number of AI players for the given game. AI players have no user associated with them
   """
-  @spec create_ai_players(%Game{}, integer()) :: %Player{}
+  @spec create_ai_players(%Game{}) :: %Player{}
   def create_ai_players(game) do
     Enum.each(1..game.number_of_ai_players, fn x -> 
       %Player{game_id: game.id, human: false, name: "Fungal Mutation #{x}"}
