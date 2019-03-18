@@ -15,6 +15,9 @@ defmodule FungusToast.GamesTest do
     user
   end
 
+  @doc """
+    Creates a game with a human player for that user, as well as any AI players
+  """
   defp game_fixture(attrs \\ %{number_of_human_players: 1}) do
     {:ok, game} = Games.create_game("testUser", attrs)
     
@@ -39,16 +42,12 @@ defmodule FungusToast.GamesTest do
   end
 
   @doc """
-    creates all of the AI players for the game
+    Creates an AI player for the specified game with the specified number of mutation points
   """
   defp ai_player_fixture(game, mutation_points \\ 0) do
-    Players.create_ai_players(game)
-    game = Repo.get(Game, game.id) |> Repo.preload(:players)
-    players = Enum.filter(game.players, fn p -> !p.human end)
-
-    players = Enum.map(players, fn p -> %{p | mutation_points: mutation_points} end)
-    Enum.each(players, fn p -> Players.update_player(p, %{mutation_points: mutation_points}) end)
-    players
+    %Player{game_id: game.id, human: false, mutation_points: mutation_points}
+      |> Player.changeset(%{})
+      |> Repo.insert()
   end
 
   defp create_ai_player(game_id) do
@@ -207,8 +206,21 @@ defmodule FungusToast.GamesTest do
 
     test "next_round_available/1 returns false if at least one human player has unspent points" do
       user = user_fixture(%{user_name: "someOtherUser"})
-      game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: Enum.random(1..2)})
+      game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
       human_player_with_user_fixture(user.user_name, game, 1)
+      game = Games.get_game!(game.id) |> Games.preload_for_games()
+
+      game =
+        Games.get_game!(game.id)
+        |> Games.preload_for_games()
+
+      refute Games.next_round_available?(game)
+    end
+
+    test "next_round_available/1 returns false if at least one ai player has unspent points" do
+      user = user_fixture(%{user_name: "someOtherUser"})
+      game = game_fixture(%{number_of_human_players: 1, number_of_ai_players: 0})
+      ai_player_fixture(game, 1)
       game = Games.get_game!(game.id) |> Games.preload_for_games()
 
       game =
