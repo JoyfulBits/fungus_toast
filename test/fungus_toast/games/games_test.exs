@@ -15,45 +15,31 @@ defmodule FungusToast.GamesTest do
     user
   end
 
-  @doc """
-    Creates a game with a human player for that user, as well as any AI players
-  """
+  #Creates a game with a human player for that user, as well as any AI players
   defp game_fixture(attrs \\ %{number_of_human_players: 1}) do
     {:ok, game} = Games.create_game("testUser", attrs)
     
     game
   end
 
-  @doc """
-    creates a human player with a user
-  """
-  defp human_player_with_user_fixture(user_name, game, mutation_points \\ 0) do
+  #creates a human player with a user
+  defp human_player_with_user_fixture(user_name, game, mutation_points) do
     {:ok, player} = Players.create_player_for_user(game, user_name)
     Players.update_player(player, %{mutation_points: mutation_points})
   end
 
-  @doc """
-    creates a human player without a user
-  """
+  #creates a human player without a user
   defp human_player_without_user_fixture(game, mutation_points \\ 0) do
     %Player{game_id: game.id, human: true, mutation_points: mutation_points}
       |> Player.changeset(%{})
       |> Repo.insert()
   end
 
-  @doc """
-    Creates an AI player for the specified game with the specified number of mutation points
-  """
+  #Creates an AI player for the specified game with the specified number of mutation points
   defp ai_player_fixture(game, mutation_points \\ 0) do
     %Player{game_id: game.id, human: false, mutation_points: mutation_points}
       |> Player.changeset(%{})
       |> Repo.insert()
-  end
-
-  defp create_ai_player(game_id) do
-    %Player{game_id: game.id, human: false}
-    |> Player.changeset(%{})
-    |> Repo.insert()
   end
 
   describe "games" do
@@ -215,7 +201,7 @@ defmodule FungusToast.GamesTest do
     end
 
     test "next_round_available/1 returns false if at least one ai player has unspent points" do
-      user = user_fixture(%{user_name: "someOtherUser"})
+      user_fixture(%{user_name: "someOtherUser"})
       game = game_fixture(%{number_of_human_players: 1, number_of_ai_players: 0})
       ai_player_fixture(game, 1)
       game = Games.get_game!(game.id) |> Games.preload_for_games()
