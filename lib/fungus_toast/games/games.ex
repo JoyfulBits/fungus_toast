@@ -107,7 +107,8 @@ defmodule FungusToast.Games do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
-        first_round = %{number: 0, state_change: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
+        #TODO need to set growth cycles instead of starting cells
+        first_round = %{number: 0, growth_cycles: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
         second_round = %{number: 1, starting_game_state: starting_cells}
 
@@ -228,7 +229,14 @@ defmodule FungusToast.Games do
         |> Map.new(fn x -> {x.id, x} end)
 
       growth_cycles = Grid.generate_growth_cycles(current_game_state, game.grid_size, player_id_to_player_map)
-      #TODO save the round
+
+      #TODO the %Round definition isn't right. we need an array of growth_cycles
+
+      #set the growth cycles on the latest around
+      # latest_round = Map.put(Rounds.get_latest_round_for_game(game), :growth_cycles, growth_cycles.growth_cycles
+      # latest_round = %{latest_round | growth_cycles}
+
+      # Rounds.update_round(latest_round)
     end
   end
 
