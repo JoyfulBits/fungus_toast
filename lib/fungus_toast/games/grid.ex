@@ -54,7 +54,41 @@ defmodule FungusToast.Games.Grid do
   end
 
   @doc ~S"""
-  Returns the specified number of growth cycles, as well as the ending game state
+  Returns the specified number of growth cycles, as well as the ending game state.
+  
+  ##Examples
+  iex> Grid.generate_growth_cycles(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1}})
+  %{
+    growth_cycles: [
+      %FungusToast.Games.GrowthCycle{
+        generation_number: 1,
+        mutation_points_earned: %{1 => 1},
+        toast_changes: %{}
+      },
+      %FungusToast.Games.GrowthCycle{
+        generation_number: 2,
+        mutation_points_earned: %{1 => 1},
+        toast_changes: %{}
+      },
+      %FungusToast.Games.GrowthCycle{
+        generation_number: 3,
+        mutation_points_earned: %{1 => 1},
+        toast_changes: %{}
+      },
+      %FungusToast.Games.GrowthCycle{
+        generation_number: 4,
+        mutation_points_earned: %{1 => 1},
+        toast_changes: %{}
+      },
+      %FungusToast.Games.GrowthCycle{
+        generation_number: 5,
+        mutation_points_earned: %{1 => 1},
+        toast_changes: %{}
+      }
+    ],
+    new_game_state: %{}
+  }
+
   """
   def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, generation_number \\ 1, acc \\ [])
   @spec generate_growth_cycles(map(), integer(), map(), integer(), list()) :: any()
@@ -105,11 +139,13 @@ defmodule FungusToast.Games.Grid do
   @doc ~S"""
   Returns the number of mutation points earned by the player during this growth cycle based on the player's mutation_chance + 1
 
-  iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 100})
-  2
+  ## Examples
 
-  iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 0})
-  1
+    iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 100})
+    2
+
+    iex(83)> Grid.calculate_mutation_points(%FungusToast.Games.Player{mutation_chance: 0})
+    1
 
   """
   def calculate_mutation_points(player) do
