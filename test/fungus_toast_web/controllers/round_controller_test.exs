@@ -9,7 +9,6 @@ defmodule FungusToastWeb.RoundControllerTest do
     starting_game_state: %{},
     growth_cycles: %{}
   }
-  @invalid_attrs %{starting_game_state: nil, growth_cycles: nil}
 
   def fixture(:user) do
     {:ok, user} = Accounts.create_user(%{user_name: "testUser", active: true})
@@ -24,12 +23,6 @@ defmodule FungusToastWeb.RoundControllerTest do
   def fixture(:round, game) do
     {:ok, round} = Games.create_round(game, @create_attrs)
     round
-  end
-
-  defp create_game(_) do
-    fixture(:user)
-    game = fixture(:game)
-    {:ok, game: game}
   end
 
   defp create_round(_) do

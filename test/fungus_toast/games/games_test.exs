@@ -55,8 +55,8 @@ defmodule FungusToast.GamesTest do
     end
 
     test "get_game!/1 returns the game with given id" do
-      game = Fixtures.Game.create!
-      assert Games.get_game!(game.id) == game
+      %Game{id: id} = Fixtures.Game.create!
+      assert %{id: id} = Games.get_game!(id)
     end
 
     test "create_game/2 with valid data creates a game" do
@@ -159,7 +159,6 @@ defmodule FungusToast.GamesTest do
     test "next_round_available/1 returns false if there is one human player and they have points to spend" do
       game =
         game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
-        |> Games.preload_for_games()
 
       human_player = Enum.filter(game.players, fn p -> p.human end)
         |> hd
@@ -172,7 +171,6 @@ defmodule FungusToast.GamesTest do
     test "next_round_available/1 returns true if there is one human player and they have spent their points" do
       game =
         game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
-        |> Games.preload_for_games()
 
       {:ok, _player} =
         game.players
@@ -182,7 +180,6 @@ defmodule FungusToast.GamesTest do
 
       game =
         Games.get_game!(game.id)
-        |> Games.preload_for_games()
 
       assert Games.next_round_available?(game)
     end
@@ -191,11 +188,9 @@ defmodule FungusToast.GamesTest do
       user = user_fixture(%{user_name: "someOtherUser"})
       game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
       human_player_with_user_fixture(user.user_name, game, 1)
-      game = Games.get_game!(game.id) |> Games.preload_for_games()
+      game = Games.get_game!(game.id)
 
-      game =
-        Games.get_game!(game.id)
-        |> Games.preload_for_games()
+      game = Games.get_game!(game.id)
 
       refute Games.next_round_available?(game)
     end
@@ -204,11 +199,10 @@ defmodule FungusToast.GamesTest do
       user_fixture(%{user_name: "someOtherUser"})
       game = game_fixture(%{number_of_human_players: 1, number_of_ai_players: 0})
       ai_player_fixture(game, 1)
-      game = Games.get_game!(game.id) |> Games.preload_for_games()
+      game = Games.get_game!(game.id)
 
       game =
         Games.get_game!(game.id)
-        |> Games.preload_for_games()
 
       refute Games.next_round_available?(game)
     end
@@ -222,15 +216,13 @@ defmodule FungusToast.GamesTest do
       human_player_with_user_fixture(user.user_name, game, 0)
       human_player_without_user_fixture(game)
       ai_player_fixture(game)
-      game = Games.get_game!(game.id) |> Games.preload_for_games()
+      game = Games.get_game!(game.id)
 
       game.players
       |> Enum.filter(fn p -> p.human end)
       |> Enum.map(fn p -> p |> Games.update_player(%{mutation_points: 0}) end)
 
-      game =
-        Games.get_game!(game.id)
-        |> Games.preload_for_games()
+      game = Games.get_game!(game.id)
 
       assert Games.next_round_available?(game)
     end
