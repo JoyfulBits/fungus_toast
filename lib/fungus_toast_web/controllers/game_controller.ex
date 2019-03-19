@@ -9,17 +9,12 @@ defmodule FungusToastWeb.GameController do
     active = Map.get(params, "active") in ["true", "1"]
 
     with {:ok, games} <- Games.list_games_for_user(user_id, active) do
-      games =
-        games
-        |> Games.decorate_games()
-
       render(conn, "index.json", games: games)
     end
   end
 
   def show(conn, %{"id" => id}) do
     game = Games.get_game!(id) 
-      |> Games.decorate_games()
     render(conn, "show.json", game: game)
   end
 
