@@ -57,7 +57,7 @@ defmodule FungusToast.Games.Grid do
   Returns the specified number of growth cycles, as well as the ending game state.
   
   ##Examples
-  iex> Grid.generate_growth_cycles(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
+  iex> Grid.generate_growth_summary(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
   %{
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
@@ -90,9 +90,9 @@ defmodule FungusToast.Games.Grid do
   }
 
   """
-  def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, generation_number \\ 1, acc \\ [])
-  @spec generate_growth_cycles(map(), integer(), map(), integer(), list()) :: any()
-  def generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
+  def generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, generation_number \\ 1, acc \\ [])
+  @spec generate_growth_summary(map(), integer(), map(), integer(), list()) :: any()
+  def generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
     live_cells = Enum.filter(starting_grid, fn {_, grid_cell} -> grid_cell.live end)
       |> Enum.into(%{})
 
@@ -109,10 +109,10 @@ defmodule FungusToast.Games.Grid do
     
     acc = acc ++ [growth_cycle]
 
-    generate_growth_cycles(new_grid, grid_size, player_id_to_player_map, generation_number + 1, acc)
+    generate_growth_summary(new_grid, grid_size, player_id_to_player_map, generation_number + 1, acc)
   end
 
-  def generate_growth_cycles(ending_grid, grid_size, player_id_to_player_map, generation_number, acc), do: %{growth_cycles: acc, new_game_state: ending_grid}
+  def generate_growth_summary(ending_grid, grid_size, player_id_to_player_map, generation_number, acc), do: %{growth_cycles: acc, new_game_state: ending_grid}
 
   def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)

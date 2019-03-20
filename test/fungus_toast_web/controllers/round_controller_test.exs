@@ -25,12 +25,6 @@ defmodule FungusToastWeb.RoundControllerTest do
     round
   end
 
-  defp create_game(_) do
-    fixture(:user)
-    game = fixture(:game)
-    {:ok, game: game}
-  end
-
   defp create_round(_) do
     fixture(:user)
     game = fixture(:game)

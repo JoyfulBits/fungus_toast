@@ -228,15 +228,15 @@ defmodule FungusToast.Games do
       player_id_to_player_map = players
         |> Map.new(fn x -> {x.id, x} end)
 
-      growth_cycles = Grid.generate_growth_cycles(current_game_state, game.grid_size, player_id_to_player_map)
-
-      #TODO the %Round definition isn't right. we need an array of growth_cycles
+      growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
 
       #set the growth cycles on the latest around
-      # latest_round = Map.put(Rounds.get_latest_round_for_game(game), :growth_cycles, growth_cycles.growth_cycles
-      # latest_round = %{latest_round | growth_cycles}
+      latest_round = Rounds.get_latest_round_for_game(game)
+        |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-      # Rounds.update_round(latest_round)
+      #set up the new round with only the starting game state
+      next_round = %Round{number: latest_round.number + 1, starting_game_state: growth_summary.new_game_state}
+      Rounds.create_round(game.id, next_round)
     end
   end
 

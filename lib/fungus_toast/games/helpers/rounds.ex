@@ -96,4 +96,10 @@ defmodule FungusToast.Rounds do
     |> Round.changeset(attrs)
     |> Repo.insert()
   end
+
+  def update_round(%Round{} = round, attrs) do
+    round
+    |> Round.changeset(attrs)
+    |> Repo.update()
+  end
 end

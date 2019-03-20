@@ -58,13 +58,13 @@ defmodule FungusToast.Games.GridTest do
     end
   end
 
-  describe "generate_growth_cycles/5" do
+  describe "generate_growth_summary/5" do
     test "that a single player game with no growth or mutation chance will generate 5 sequential growth cycles with no toast changes, and 1 mutation point per growth cycle" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
-      result = Grid.generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, 1, [])
+      result = Grid.generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, 1, [])
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -96,7 +96,7 @@ defmodule FungusToast.Games.GridTest do
       player_id_to_player_map = %{player_1.id => player_1, player_2.id => player_2, player_3.id => player_3}
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id, player_2.id, player_3.id])
-      result = Grid.generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, 1, [])
+      result = Grid.generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, 1, [])
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -144,7 +144,7 @@ defmodule FungusToast.Games.GridTest do
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id])#, player_2.id, player_3.id, player_4.id, player_5.id])
       #set the growth_cycle number to -44 so that we get a full 50 growth cycles (44 + 6 to get up to +5) -- more than enough to fill the entire grid
-      result = Grid.generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, -44, [])
+      result = Grid.generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, -44, [])
       
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -166,7 +166,7 @@ defmodule FungusToast.Games.GridTest do
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id, player_2.id, player_3.id])
       #set the generation to 5 so it only does one cycle
-      result = Grid.generate_growth_cycles(starting_grid, grid_size, player_id_to_player_map, 5, [])
+      result = Grid.generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, 5, [])
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
