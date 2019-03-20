@@ -57,7 +57,7 @@ defmodule FungusToast.Games.Grid do
   Returns the specified number of growth cycles, as well as the ending game state.
   
   ##Examples
-  iex> Grid.generate_growth_cycles(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1}})
+  iex> Grid.generate_growth_cycles(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
   %{
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
