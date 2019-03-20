@@ -43,6 +43,9 @@ defmodule FungusToastWeb do
       import FungusToastWeb.Gettext
       alias FungusToastWeb.Router.Helpers, as: Routes
 
+      @doc """
+      Converts a struct into a map and strips out the __meta___ key/value pair if it exists
+      """
       def map_from(%{__meta__: _} = struct) do
         Map.from_struct(struct)
         |> Map.pop(:__meta__)
