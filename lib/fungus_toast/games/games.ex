@@ -12,6 +12,9 @@ defmodule FungusToast.Games do
   alias FungusToast.Games.GameState
   alias FungusToast.Games.Grid
   alias FungusToast.Games.Round
+  alias FungusToast.Games.GrowthCycle
+
+  @starting_mutation_points 5
 
   @doc """
   Returns the list of games.
@@ -108,13 +111,20 @@ defmodule FungusToast.Games do
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         #TODO need to set growth cycles instead of starting cells
-        first_round = %{number: 0, growth_cycles: starting_cells, starting_game_state: %GameState{cells: %{}, round_number: 0}}
+        mutation_points_earned = get_starting_mutation_points(players)
+        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
+        first_round = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: %{}, round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
         second_round = %{number: 1, starting_game_state: starting_cells}
 
-        create_round(game, first_round)
-        create_round(game, second_round)
+        Rounds.create_round(game.id, first_round)
+        Rounds.create_round(game.id, second_round)
       end
+  end
+
+  def get_starting_mutation_points(players) do
+    Enum.map(players, fn player -> %{player.id => @starting_mutation_points} end) 
+      |> Enum.reduce(fn (x, acc) -> Map.merge(x, acc) end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
