@@ -43,6 +43,7 @@ defmodule FungusToast.Games do
       user.players
       |> Enum.map(fn p -> p.game end)
       |> Enum.filter(fn g -> Enum.member?(statuses, g.status) end)
+      |> preload_for_games
 
     {:ok, games}
   end
@@ -70,7 +71,7 @@ defmodule FungusToast.Games do
       ** (Ecto.NoResultsError)
 
   """
-  def get_game!(id), do: Repo.get!(Game, id)
+  def get_game!(id), do: Repo.get!(Game, id) |> preload_for_games()
 
   @doc """
   Creates a game.
@@ -95,8 +96,7 @@ defmodule FungusToast.Games do
 
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
       start_game(game)
-      preloaded_game = get_game!(game.id) 
-        |> Repo.preload(:players)
+      preloaded_game = get_game!(game.id) |> preload_for_games()
 
       {:ok, preloaded_game}
     end
@@ -179,7 +179,7 @@ defmodule FungusToast.Games do
   @doc """
   Preloads the necessary data for games
   """
-  def preload_for_games(games) do
+  defp preload_for_games(games) do
     games |> Repo.preload([:rounds, players: [skills: :skill]])
   end
 

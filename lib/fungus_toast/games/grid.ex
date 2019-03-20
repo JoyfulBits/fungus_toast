@@ -53,6 +53,7 @@ defmodule FungusToast.Games.Grid do
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
+  # TODO: This doctest is flaky... look into this
   @doc ~S"""
   Returns the specified number of growth cycles, as well as the ending game state.
   
@@ -105,14 +106,11 @@ defmodule FungusToast.Games.Grid do
     growth_cycle = %GrowthCycle{ generation_number: generation_number, toast_changes: toast_changes, mutation_points_earned: mutation_points_earned }
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
-    new_grid = Map.merge(starting_grid, toast_changes, fn index, grid_cell_1, grid_cell_2 -> grid_cell_2 end)
-    
-    acc = acc ++ [growth_cycle]
-
-    generate_growth_summary(new_grid, grid_size, player_id_to_player_map, generation_number + 1, acc)
+    Map.merge(starting_grid, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)
+    |> generate_growth_summary(grid_size, player_id_to_player_map, generation_number + 1, acc ++ [growth_cycle])
   end
 
-  def generate_growth_summary(ending_grid, grid_size, player_id_to_player_map, generation_number, acc), do: %{growth_cycles: acc, new_game_state: ending_grid}
+  def generate_growth_summary(ending_grid, _, _, _, acc), do: %{growth_cycles: acc, new_game_state: ending_grid}
 
   def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
@@ -120,7 +118,7 @@ defmodule FungusToast.Games.Grid do
     player = player_id_to_player_map[grid_cell.player_id]
     cell_changes = CellGrower.calculate_cell_growth(surrounding_cells, player)
     #check if the cell dies from apoptosis or starvation
-    toast_changes =  Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
+    Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
   end
 
   def get_surrounding_cells(grid, grid_size, cell_index) do
