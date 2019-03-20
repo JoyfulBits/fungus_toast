@@ -2,7 +2,6 @@ defmodule FungusToastWeb.RoundController do
   use FungusToastWeb, :controller
 
   alias FungusToast.Games
-  alias FungusToast.Games.Round
 
   action_fallback FungusToastWeb.FallbackController
 
