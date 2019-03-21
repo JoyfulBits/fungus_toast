@@ -231,23 +231,21 @@ defmodule FungusToast.Games do
   """
   def trigger_next_round(game) do
     latest_round = get_latest_round_for_game(game.id)
-    #TODO added this until we get to the point where every started game has a Round
-    if(latest_round != nil) do
-      current_game_state = latest_round.starting_game_state["cells"]
-      players = game.players
-      player_id_to_player_map = players
-        |> Map.new(fn x -> {x.id, x} end)
 
-      growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
+    current_game_state = latest_round.starting_game_state["cells"]
+    players = game.players
+    player_id_to_player_map = players
+      |> Map.new(fn x -> {x.id, x} end)
 
-      #set the growth cycles on the latest around
-      latest_round = Rounds.get_latest_round_for_game(game)
-        |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
+    growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
 
-      #set up the new round with only the starting game state
-      next_round = %Round{number: latest_round.number + 1, starting_game_state: growth_summary.new_game_state}
-      Rounds.create_round(game.id, next_round)
-    end
+    #set the growth cycles on the latest around
+    latest_round = Rounds.get_latest_round_for_game(game)
+      |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
+
+    #set up the new round with only the starting game state
+    next_round = %Round{number: latest_round.number + 1, starting_game_state: growth_summary.new_game_state}
+    Rounds.create_round(game.id, next_round)
   end
 
   defdelegate get_latest_round_for_game(game), to: Rounds
