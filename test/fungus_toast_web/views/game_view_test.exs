@@ -18,10 +18,8 @@ defmodule FungusToastWeb.GameViewTest do
           %{
               number_of_human_players: 1,
               number_of_ai_players: 1,
-              number_of_rows: 50,
-              number_of_columns: 50,
-              status: "Not Started",
-              number_of_cells: 2500
+              grid_size: 50,
+              status: "Not Started"
           }
     end
   end
