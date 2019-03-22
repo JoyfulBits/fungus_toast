@@ -28,6 +28,24 @@ defmodule FungusToast.Skills do
 
   ## Examples
 
+      iex> get_skill!("Budding")
+      %Skill{}
+
+      iex> get_skill!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_skill!(name) when is_binary(name) do
+    from(s in Skill, where: s.name == ^name) |> Repo.one
+  end
+
+  @doc """
+  Gets a single skill.
+
+  Raises `Ecto.NoResultsError` if the Skill does not exist.
+
+  ## Examples
+
       iex> get_skill!(123)
       %Skill{}
 
@@ -35,7 +53,9 @@ defmodule FungusToast.Skills do
       ** (Ecto.NoResultsError)
 
   """
-  def get_skill!(id), do: Repo.get!(Skill, id)
+  def get_skill!(id) when is_integer(id) do
+    Repo.get!(Skill, id)
+  end
 
   @doc """
   Creates a skill.

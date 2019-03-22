@@ -10,6 +10,7 @@ defmodule FungusToast.Players do
   alias FungusToast.Accounts.User
   alias FungusToast.Games
   alias FungusToast.Games.{Game, Player}
+  alias FungusToast.PlayerSkills
 
   @doc """
   Returns the list of players.
@@ -54,7 +55,7 @@ defmodule FungusToast.Players do
 
   """
   def list_players_for_game(game_id) do
-    from(p in Player, where: p.game_id == ^game_id) |> Repo.all()
+    from(p in Player, where: p.game_id == ^game_id) |> Repo.one
   end
 
   @doc """
@@ -157,5 +158,25 @@ defmodule FungusToast.Players do
   """
   def change_player(%Player{} = player) do
     Player.changeset(player, %{})
+  end
+
+  @spec spend_ai_mutation_points(%Player{}, integer()) :: any()
+  def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points)  when mutation_points > 0 do
+    skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
+    skill_name = elem(skill_tuple, 0)
+
+    player_skill = PlayerSkills.get_player_skill(player.id, skill_name)
+    PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
+
+    skill = Skills.get_skill!(skill_name)
+
+    #TODO for each skill in elem(skill_tuple, 1), increase the corresponding player attribute by skill.increase_per_point (if up_is_good), or
+    # decrease it by skill.increase_per_point if !up_is_good
+    player = %{player | mutation_points: mutation_points - 1, }
+    spend_ai_mutation_points(player, mutation_points - 1)
+  end
+
+  def spend_ai_mutation_points(player, mutation_points) when mutation_points == 0 do
+    player
   end
 end

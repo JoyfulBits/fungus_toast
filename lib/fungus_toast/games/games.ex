@@ -237,8 +237,8 @@ defmodule FungusToast.Games do
     player_id_to_player_map = players
       |> Map.new(fn x -> {x.id, x} end)
 
-    # ai_players = Enum.filter(players, fn player -> !player.human end)
-    #   |> Players.spend_ai_mutation_points()
+    Enum.filter(players, fn player -> !player.human end)
+      |> (fn player -> Players.spend_ai_mutation_points(player, player.mutation_points) end).()
 
     growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
 
