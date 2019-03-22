@@ -47,6 +47,7 @@ defmodule FungusToast.Games.Player do
   schema "players" do
     field :name, :string, null: false
     field :human, :boolean, default: false, null: false
+    field :ai_type, :string, null: true
 
     field :mutation_points, :integer, default: 5, null: false
 
