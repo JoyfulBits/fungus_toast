@@ -91,7 +91,7 @@ defmodule FungusToast.Games do
   #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
   def create_game(user_name, attrs) do
     attrs = if(Map.get(attrs, :number_of_human_players) < 2) do
-      Map.put(attrs, "status", "Started")
+      Map.put(attrs, :status, "Started")
     else
       attrs
     end
