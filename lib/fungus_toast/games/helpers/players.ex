@@ -6,18 +6,12 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Games, Accounts, Skills, PlayerSkills}
+  alias FungusToast.{Accounts, Skills, PlayerSkills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, Player}
 
   @doc """
   Returns the list of players.
-
-  ## Examples
-
-      iex> list_players()
-      [%Player{}, ...]
-
   """
   def list_players do
     Repo.all(Player)
@@ -25,15 +19,6 @@ defmodule FungusToast.Players do
 
   @doc """
   Returns the list of players for a given user.
-
-  ## Examples
-
-      iex> list_players_for_user(%User{})
-      [%Player{}, ...]
-
-      iex> list_players_for_user(1)
-      [%Player{}, ...]
-
   """
   def list_players_for_user(%User{} = user) do
     list_players_for_user(user.id)
@@ -45,12 +30,6 @@ defmodule FungusToast.Players do
 
   @doc """
   Returns the list of players for a given game.
-
-  ## Examples
-
-      iex> list_players_for_game(1)
-      [%Player{}, ...]
-
   """
   def list_players_for_game(game_id) do
     from(p in Player, where: p.game_id == ^game_id) |> Repo.one
@@ -60,15 +39,6 @@ defmodule FungusToast.Players do
   Gets a single player.
 
   Raises `Ecto.NoResultsError` if the Player does not exist.
-
-  ## Examples
-
-      iex> get_player!(123)
-      %Player{}
-
-      iex> get_player!(456)
-      ** (Ecto.NoResultsError)
-
   """
   def get_player!(id), do: Repo.get!(Player, id)
 
@@ -109,7 +79,7 @@ defmodule FungusToast.Players do
   @spec create_ai_players(%Game{}) :: %Player{}
   def create_ai_players(game) do
     default_skills = PlayerSkills.get_default_starting_skills()
-    Enum.map(1..game.number_of_ai_players, fn x -> 
+    Enum.map(1..game.number_of_ai_players, fn x ->
       create_basic_player(game.id, false,"Fungal Mutation #{x}")
       |> Player.changeset(%{})
       |> Repo.insert()
@@ -121,29 +91,20 @@ defmodule FungusToast.Players do
   """
   @spec create_human_players(%Game{}, integer()) :: %Player{}
   def create_human_players(game, number_of_human_players) do
-    Enum.each(1..number_of_human_players, fn x -> 
+    Enum.each(1..number_of_human_players, fn x ->
       create_basic_player(game.id, true, nil)
       |> Player.changeset(%{})
       |> Repo.insert()
     end)
   end
 
-  defp create_basic_player(game_id, human, name, user_id \\ nil) do
+  def create_basic_player(game_id, human, name, user_id \\ nil) do
     default_skills = PlayerSkills.get_default_starting_skills()
     %Player{game_id: game_id, human: human, name: name, user_id: user_id, skills: default_skills}
   end
 
   @doc """
   Updates a player.
-
-  ## Examples
-
-      iex> update_player(player, %{field: new_value})
-      {:ok, %Player{}}
-
-      iex> update_player(player, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
   def update_player(%Player{} = player, attrs) do
     player
@@ -153,11 +114,6 @@ defmodule FungusToast.Players do
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking player changes.
-
-  ## Examples
-
-      iex> change_player(player)
-      %Ecto.Changeset{source: %Player{}}
 
   """
   def change_player(%Player{} = player) do
