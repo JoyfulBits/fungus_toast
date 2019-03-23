@@ -11,18 +11,14 @@ defmodule FungusToastWeb.GameView do
   end
 
   def render("game.json", %{game: game}) do 
-    transform_game_fields(game)
+    game
+    |> map_from()
     |> transform_player_fields()
   end
 
-  defp transform_game_fields(game) do
-    {value, map} = map_from(game) |> Map.pop(:grid_size)
-    Map.put_new(map, :number_of_rows, value)
-    |> Map.put_new(:number_of_columns, value)
-    |> Map.put_new(:number_of_cells, trunc(:math.pow(value, 2)))
-  end
-
-  defp transform_player_fields(%{players: _players} = game) do
-    game # TODO: tansform
+  defp transform_player_fields(%{players: players} = game) do
+    p = Enum.map(players, &map_from(&1))
+    |> Enum.map(&Map.drop(&1, [:skills, :user, :game]))
+    Map.put(game, :players, p)
   end
 end
