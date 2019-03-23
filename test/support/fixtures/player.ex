@@ -1,4 +1,4 @@
-defmodule Fixtures.PLayer do
+defmodule Fixtures.Player do
     alias FungusToast.Games.Player, as: P
     alias FungusToast.Repo
 
