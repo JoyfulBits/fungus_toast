@@ -21,11 +21,9 @@ defmodule FungusToast.PlayersTest do
             length(player.skills) > 0
         end
 
-        test "that it can create players with no user_name or user_id" do
-            player = Players.create_basic_player(-1, false)
+        test "that it can create players without user_id" do
+            player = Players.create_basic_player(-1, false, "some user name")
 
-            assert player.human == false
-            assert player.name == nil
             assert player.user_id == nil
         end
 
@@ -48,6 +46,25 @@ defmodule FungusToast.PlayersTest do
         end
     end
 
+    describe "create_human_players/2" do
+        test "that it creates and returns a list of game.number_of_human_players -1 human players" do
+            #the player for the user that created the game is created separately
+            number_of_human_players = 2
+            game = Fixtures.Game.create!(%{number_of_human_players: 3})
+            Players.create_human_players(game, number_of_human_players)
+            |> Enum.reduce(1, fn ok_player_tuple, acc ->
+                {:ok, player} = ok_player_tuple
+                assert player.id != nil
+                assert player.game_id == game.id
+                assert player.human
+                assert player.name == "Unknown Player " <> Integer.to_string(acc)
+                assert player.user_id == nil
+                assert acc <= number_of_human_players
+                acc + 1
+            end)
+        end
+    end
+
     describe "create_ai_players/2" do
         test "that it creates and returns a list of game.number_of_ai_players AI players" do
             game = Fixtures.Game.create!(%{number_of_ai_players: 2, number_of_human_players: 1})
@@ -55,6 +72,7 @@ defmodule FungusToast.PlayersTest do
             |> Enum.reduce(1, fn ok_player_tuple, acc ->
                 {:ok, player} = ok_player_tuple
                 assert player.id != nil
+                assert player.game_id == game.id
                 assert !player.human
                 assert "Fungal Mutation " <> Integer.to_string(acc) == player.name
                 assert player.user_id == nil

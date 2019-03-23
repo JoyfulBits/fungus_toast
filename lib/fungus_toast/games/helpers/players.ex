@@ -76,7 +76,7 @@ defmodule FungusToast.Players do
   @doc """
   Creates the requested number of AI players for the given game. AI players have no user associated with them
   """
-  @spec create_ai_players(%Game{}) :: %Player{}
+  @spec create_ai_players(%Game{}) :: [%Player{}]
   def create_ai_players(game) do
     Enum.map(1..game.number_of_ai_players, fn x ->
       create_basic_player(game.id, false, "Fungal Mutation #{x}")
@@ -88,17 +88,17 @@ defmodule FungusToast.Players do
   @doc """
   Creates the requested number of yet unknown human players for the given game.
   """
-  @spec create_human_players(%Game{}, integer()) :: %Player{}
+  @spec create_human_players(%Game{}, integer()) :: [%Player{}]
   def create_human_players(game, number_of_human_players) do
-    Enum.each(1..number_of_human_players, fn _ ->
-      create_basic_player(game.id, true)
+    Enum.map(1..number_of_human_players, fn x ->
+      create_basic_player(game.id, true, "Unknown Player #{x}")
       |> Player.changeset(%{})
       |> Repo.insert()
     end)
   end
 
   @spec create_basic_player(integer(), boolean(), String.t(), integer()) :: %Player{}
-  def create_basic_player(game_id, human, name \\ nil, user_id \\ nil) do
+  def create_basic_player(game_id, human, name, user_id \\ nil) do
     if(!human and user_id != nil) do
       raise ArgumentError, message: "AI players cannot have a user_id"
     end
