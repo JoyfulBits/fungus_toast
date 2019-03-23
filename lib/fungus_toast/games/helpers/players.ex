@@ -164,6 +164,9 @@ defmodule FungusToast.Players do
     Player.changeset(player, %{})
   end
 
+  @doc """
+  Makes the AI player spend it's mutation points in accordance with it's ai_type
+  """
   @spec spend_ai_mutation_points(%Player{}, integer()) :: any()
   def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points)  when mutation_points > 0 do
     skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
@@ -174,8 +177,6 @@ defmodule FungusToast.Players do
     player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
     PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
 
-    #TODO for each skill in elem(skill_tuple, 1), increase the corresponding player attribute by skill.increase_per_point (if up_is_good), or
-    # decrease it by skill.increase_per_point if !up_is_good
     attributes_to_update = elem(skill_tuple, 1)
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
@@ -195,7 +196,7 @@ defmodule FungusToast.Players do
     update_attribute(updated_player, skill_change, remaining_attributes)
   end
 
-  def update_attribute(%Player{} = player, skill_change, attributes) when length(attributes) == 0 do
+  def update_attribute(%Player{} = player, _, attributes) when length(attributes) == 0 do
     player
   end
 end
