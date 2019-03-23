@@ -36,16 +36,15 @@ defmodule FungusToast.PlayersTest do
     end
 
     describe "create_player_for_user/2" do
-        test "that it creates a human player with the correct username" do
+        test "that it creates and returns a human player with the correct username" do
             game = Fixtures.Game.create!
             user = Fixtures.Accounts.User.create!
             {:ok, player} = Players.create_player_for_user(game, user.user_name)
 
             assert player.id != nil
-            assert player.name == user.user_name
             assert player.human
-            #TODO this passes when I run everything through IEX, but I have no idea why it fails when running the test
-            #assert length(player.skills) > 0
+            assert player.name == user.user_name
+            assert player.user_id == user.id
         end
     end
 end
