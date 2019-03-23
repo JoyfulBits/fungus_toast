@@ -98,7 +98,7 @@ defmodule FungusToast.Players do
   @spec create_player_for_user(%Game{}, String.t()) :: %Player{}
   def create_player_for_user(game = %Game{}, user_name) do
     user = Accounts.get_user_for_name(user_name)
-    %Player{game_id: game.id, human: true, user_id: user.id, name: user.user_name}
+    create_basic_player(game.id, true, user.user_name, user.id)
     |> Player.changeset(%{})
     |> Repo.insert()
   end
@@ -108,8 +108,9 @@ defmodule FungusToast.Players do
   """
   @spec create_ai_players(%Game{}) :: %Player{}
   def create_ai_players(game) do
+    default_skills = PlayerSkills.get_default_starting_skills()
     Enum.map(1..game.number_of_ai_players, fn x -> 
-      %Player{game_id: game.id, human: false, name: "Fungal Mutation #{x}"}
+      create_basic_player(game.id, false,"Fungal Mutation #{x}")
       |> Player.changeset(%{})
       |> Repo.insert()
     end)
@@ -121,10 +122,15 @@ defmodule FungusToast.Players do
   @spec create_human_players(%Game{}, integer()) :: %Player{}
   def create_human_players(game, number_of_human_players) do
     Enum.each(1..number_of_human_players, fn x -> 
-      %Player{game_id: game.id, human: true}
+      create_basic_player(game.id, true, nil)
       |> Player.changeset(%{})
       |> Repo.insert()
     end)
+  end
+
+  defp create_basic_player(game_id, human, name, user_id \\ nil) do
+    default_skills = PlayerSkills.get_default_starting_skills()
+    %Player{game_id: game_id, human: human, name: name, user_id: user_id, skills: default_skills}
   end
 
   @doc """
