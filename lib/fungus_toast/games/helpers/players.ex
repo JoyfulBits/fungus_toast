@@ -6,11 +6,9 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Accounts
+  alias FungusToast.{Games, Accounts, Skills, PlayerSkills}
   alias FungusToast.Accounts.User
-  alias FungusToast.Games
   alias FungusToast.Games.{Game, Player}
-  alias FungusToast.PlayerSkills
 
   @doc """
   Returns the list of players.
@@ -165,18 +163,33 @@ defmodule FungusToast.Players do
     skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
     skill_name = elem(skill_tuple, 0)
 
-    player_skill = PlayerSkills.get_player_skill(player.id, skill_name)
-    PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
+    skill = Skills.get_skill_by_name(skill_name)
 
-    skill = Skills.get_skill!(skill_name)
+    player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
+    PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
 
     #TODO for each skill in elem(skill_tuple, 1), increase the corresponding player attribute by skill.increase_per_point (if up_is_good), or
     # decrease it by skill.increase_per_point if !up_is_good
+    attributes_to_update = elem(skill_tuple, 1)
+    skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
+
+    player = update_attribute(attributes_to_update, skill_change, player)
     player = %{player | mutation_points: mutation_points - 1, }
     spend_ai_mutation_points(player, mutation_points - 1)
   end
 
   def spend_ai_mutation_points(player, mutation_points) when mutation_points == 0 do
+    player
+  end
+
+  def update_attribute(%Player{} = player, skill_change, attributes) when length(attributes) > 0 do
+    [attribute | remaining_attributes] = attributes
+    existing_value = player[attribute]
+    updated_player = Map.put(player, attribute, existing_value + skill_change)
+    update_attribute(updated_player, skill_change, remaining_attributes)
+  end
+
+  def update_attribute(%Player{} = player, skill_change, attributes) when length(attributes) == 0 do
     player
   end
 end

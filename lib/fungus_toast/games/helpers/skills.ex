@@ -28,14 +28,14 @@ defmodule FungusToast.Skills do
 
   ## Examples
 
-      iex> get_skill!("Budding")
+      iex> get_skill_by_name("Budding")
       %Skill{}
 
-      iex> get_skill!(456)
+      iex> get_skill_by_name("invalid")
       ** (Ecto.NoResultsError)
 
   """
-  def get_skill!(name) when is_binary(name) do
+  def get_skill_by_name(name) do
     from(s in Skill, where: s.name == ^name) |> Repo.one
   end
 
