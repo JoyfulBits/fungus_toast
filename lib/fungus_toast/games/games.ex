@@ -105,12 +105,11 @@ defmodule FungusToast.Games do
     end
   end
 
-  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players:  number_of_human_players}) do
+  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
       if(number_of_human_players == 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
-        #TODO need to set growth cycles instead of starting cells
         mutation_points_earned = get_starting_mutation_points(players)
         growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
         first_round = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: %{}, round_number: 0}}
@@ -123,7 +122,7 @@ defmodule FungusToast.Games do
   end
 
   def get_starting_mutation_points(players) do
-    Enum.map(players, fn player -> %{player.id => @starting_mutation_points} end) 
+    Enum.map(players, fn player -> %{player.id => @starting_mutation_points} end)
       |> Enum.reduce(fn (x, acc) -> Map.merge(x, acc) end)
   end
 
@@ -212,7 +211,7 @@ defmodule FungusToast.Games do
   end
 
   defp decorate_game(%Game{} = game) do
-    game 
+    game
       |> Map.put(:next_round_available, next_round_available?(game))
       |> Map.put(:latest_round, get_latest_round_for_game(game.id))
   end
