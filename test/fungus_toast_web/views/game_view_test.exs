@@ -67,76 +67,20 @@ defmodule FungusToastWeb.GameViewTest do
                      top_left_growth_chance: 0.0,
                      top_right_growth_chance: 0.0
                    }
-                 ]
+                 ],
+                 generation_number: 0,
+                 round_number: 0,
+                 total_dead_cells: 0,
+                 total_empty_cells: 0,
+                 total_live_cells: 0,
+                 total_regenerated_cells: 0,
+                 join_game_password: "password"
                }
     end
   end
 end
 
 # {
-#  "id":2391,
-#  "numberOfHumanPlayers":2,
-#  "numberOfAiPlayers":1,
-#  "gridSize":50,
-#  "status":"Not Started",
-#  "players":[
-#     {
-#        "name":"Jake",
-#        "id":"Player 1 id",
-#        "mutationPoints":0,
-#        "human":true,
-#        "topLeftGrowthChance":0.0,
-#        "topGrowthChance":0.0,
-#        "topRightGrowthChance":0.0,
-#        "rightGrowthChance":0.0,
-#        "bottomRightGrowthChance":0.0,
-#        "bottomGrowthChance":0.0,
-#        "bottomLeftGrowthChance":0.0,
-#        "leftGrowthChance":0.0,
-#        "deadCells":0,
-#        "liveCells":0,
-#        "regeneratedCells":0,
-#        "hyperMutationSkillLevel":0,
-#        "antiApoptosisSkillLevel":0,
-#        "regenerationSkillLevel":0,
-#        "buddingSkillLevel":0,
-#        "mycotoxinsSkillLevel":0,
-#        "apoptosisChance":0.0,
-#        "starvedCellDeathChance":0.0,
-#        "mutationChance":0.0,
-#        "regenerationChance":0.0,
-#        "mycotoxinFungicideChance":0.0,
-#        "status":"Joined"
-#     },
-#     {
-#        "name":"AI Player",
-#        "id":"AI Player 3 id",
-#        "mutationPoints":0,
-#        "human":false,
-#        "topLeftGrowthChance":0.0,
-#        "topGrowthChance":0.0,
-#        "topRightGrowthChance":0.0,
-#        "rightGrowthChance":0.0,
-#        "bottomRightGrowthChance":0.0,
-#        "bottomGrowthChance":0.0,
-#        "bottomLeftGrowthChance":0.0,
-#        "leftGrowthChance":0.0,
-#        "deadCells":0,
-#        "liveCells":0,
-#        "regeneratedCells":0,
-#        "hyperMutationSkillLevel":0,
-#        "antiApoptosisSkillLevel":0,
-#        "regenerationSkillLevel":0,
-#        "buddingSkillLevel":0,
-#        "mycotoxinsSkillLevel":0,
-#        "apoptosisChance":0.0,
-#        "starvedCellDeathChance":0.0,
-#        "mutationChance":0.0,
-#        "regenerationChance":0.0,
-#        "mycotoxinFungicideChance":0.0,
-#        "status":"Joined"
-#     }
-#  ],
 #  "previousGameState":{
 #     "roundNumber":0,
 #     "generationNumber":0,
@@ -146,12 +90,5 @@ end
 #  },
 #  "growthCycles":[
 #
-#  ],
-#  "generationNumber":0,
-#  "roundNumber":0,
-#  "totalDeadCells":0,
-#  "totalEmptyCells":0,
-#  "totalLiveCells":0,
-#  "totalRegeneratedCells":0,
-#  "joinGamePassword":"password"
+#  ]
 # }
