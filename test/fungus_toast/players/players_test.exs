@@ -47,4 +47,19 @@ defmodule FungusToast.PlayersTest do
             assert player.user_id == user.id
         end
     end
+
+    describe "create_ai_players/2" do
+        test "that it creates and returns a list of game.number_of_ai_players AI players" do
+            game = Fixtures.Game.create!(%{number_of_ai_players: 2, number_of_human_players: 1})
+            Players.create_ai_players(game)
+            |> Enum.reduce(1, fn ok_player_tuple, acc ->
+                {:ok, player} = ok_player_tuple
+                assert player.id != nil
+                assert !player.human
+                assert "Fungal Mutation " <> Integer.to_string(acc) == player.name
+                assert player.user_id == nil
+                acc + 1
+            end)
+        end
+    end
 end
