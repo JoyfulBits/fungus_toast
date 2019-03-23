@@ -217,12 +217,11 @@ defmodule FungusToast.Games do
   end
 
   @doc """
-  Returns whether or not all human players have spent their mutation points
+  Returns whether or not all players have spent their mutation points
   """
   def next_round_available?(%Game{} = game_with_players) do
     game_with_players.players
-    |> Enum.filter(fn p -> Map.get(p, :human) end)
-    |> Enum.all?(fn p -> Map.get(p, :mutation_points) == 0 end)
+    |> Enum.all?(fn player -> player.mutation_points == 0 end)
   end
 
   @doc """

@@ -18,7 +18,7 @@ defmodule FungusToast.GamesTest do
   #Creates a game with a human player for that user, as well as any AI players
   defp game_fixture(attrs \\ %{number_of_human_players: 1}) do
     {:ok, game} = Games.create_game("testUser", attrs)
-    
+
     game
   end
 
@@ -63,10 +63,11 @@ defmodule FungusToast.GamesTest do
       user = Fixtures.Accounts.User.create!()
       valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 2}
 
-      assert {:ok, %Game{} = game} = Games.create_game(user.user_name, valid_attrs)
-      
+      assert {:ok, game} = Games.create_game(user.user_name, valid_attrs)
+
       assert game.number_of_human_players == 1
       assert game.number_of_ai_players == 2
+      #TODO I have no idea why this is failing... it works in IEX
       assert length(game.players) == 3
     end
 
@@ -109,7 +110,7 @@ defmodule FungusToast.GamesTest do
       assert [player | _] = game.players
     end
   end
-  
+
   describe "rounds" do
     alias FungusToast.Games.Round
 
@@ -149,14 +150,14 @@ defmodule FungusToast.GamesTest do
     end
   end
 
-  describe "next round" do
+  describe "next_round_available/1" do
     setup do
       user_fixture(%{user_name: "Fungusmotron"})
       user_fixture()
       :ok
     end
 
-    test "next_round_available/1 returns false if there is one human player and they have points to spend" do
+    test "that returns false if there is one human player and they have points to spend" do
       game =
         game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
 
@@ -168,15 +169,12 @@ defmodule FungusToast.GamesTest do
       refute Games.next_round_available?(game)
     end
 
-    test "next_round_available/1 returns true if there is one human player and they have spent their points" do
+    test "that returns true if all players have spent their mutation points" do
       game =
         game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
 
-      {:ok, _player} =
-        game.players
-        |> Enum.filter(fn p -> p.human end)
-        |> List.first()
-        |> Games.update_player(%{mutation_points: 0})
+      Enum.each(game.players, fn player ->
+        Games.update_player(player, %{mutation_points: 0}) end)
 
       game =
         Games.get_game!(game.id)
@@ -184,12 +182,10 @@ defmodule FungusToast.GamesTest do
       assert Games.next_round_available?(game)
     end
 
-    test "next_round_available/1 returns false if at least one human player has unspent points" do
+    test "that returns false if at least one player has unspent points" do
       user = user_fixture(%{user_name: "someOtherUser"})
       game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
       human_player_with_user_fixture(user.user_name, game, 1)
-      game = Games.get_game!(game.id)
-
       game = Games.get_game!(game.id)
 
       refute Games.next_round_available?(game)
@@ -209,7 +205,7 @@ defmodule FungusToast.GamesTest do
 
     test "next_round_available/1 returns true if all players have spent their points" do
       user = user_fixture(%{user_name: "another user"})
-      
+
       game =
         game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
 
@@ -218,9 +214,8 @@ defmodule FungusToast.GamesTest do
       ai_player_fixture(game)
       game = Games.get_game!(game.id)
 
-      game.players
-      |> Enum.filter(fn p -> p.human end)
-      |> Enum.map(fn p -> p |> Games.update_player(%{mutation_points: 0}) end)
+      Enum.each(game.players, fn player ->
+        Games.update_player(player, %{mutation_points: 0}) end)
 
       game = Games.get_game!(game.id)
 
