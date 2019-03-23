@@ -78,9 +78,8 @@ defmodule FungusToast.Players do
   """
   @spec create_ai_players(%Game{}) :: %Player{}
   def create_ai_players(game) do
-    default_skills = PlayerSkills.get_default_starting_skills()
     Enum.map(1..game.number_of_ai_players, fn x ->
-      create_basic_player(game.id, false,"Fungal Mutation #{x}")
+      create_basic_player(game.id, false, "Fungal Mutation #{x}")
       |> Player.changeset(%{})
       |> Repo.insert()
     end)
@@ -91,14 +90,18 @@ defmodule FungusToast.Players do
   """
   @spec create_human_players(%Game{}, integer()) :: %Player{}
   def create_human_players(game, number_of_human_players) do
-    Enum.each(1..number_of_human_players, fn x ->
-      create_basic_player(game.id, true, nil)
+    Enum.each(1..number_of_human_players, fn _ ->
+      create_basic_player(game.id, true)
       |> Player.changeset(%{})
       |> Repo.insert()
     end)
   end
 
-  def create_basic_player(game_id, human, name, user_id \\ nil) do
+  @spec create_basic_player(integer(), boolean(), String.t(), integer()) :: %Player{}
+  def create_basic_player(game_id, human, name \\ nil, user_id \\ nil) do
+    if(!human and user_id != nil) do
+      raise ArgumentError, message: "AI players cannot have a user_id"
+    end
     default_skills = PlayerSkills.get_default_starting_skills()
     %Player{game_id: game_id, human: human, name: name, user_id: user_id, skills: default_skills}
   end
