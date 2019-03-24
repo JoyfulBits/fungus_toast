@@ -5,6 +5,8 @@ defmodule FungusToastWeb.GameViewTest do
   alias FungusToast.Games.Player
   alias FungusToast.Games.Round
 
+  import FungusToast.Factory
+
   describe "game.json" do
     @stub_game %Game{
       id: "fake",

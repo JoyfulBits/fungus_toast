@@ -45,7 +45,8 @@ defmodule FungusToast.MixProject do
       {:plug_cowboy, "~> 2.0"},
 
       # additional deps
-      {:proper_case, "~> 1.0.2"}
+      {:proper_case, "~> 1.0.2"},
+      {:ex_machina, "~> 2.3", only: :test},
     ]
   end
 
