@@ -67,7 +67,6 @@ defmodule FungusToast.GamesTest do
 
       assert game.number_of_human_players == 1
       assert game.number_of_ai_players == 2
-      #TODO I have no idea why this is failing... it works in IEX
       assert length(game.players) == 3
     end
 

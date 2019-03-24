@@ -78,11 +78,15 @@ defmodule FungusToast.Players do
   """
   @spec create_ai_players(%Game{}) :: [%Player{}]
   def create_ai_players(game) do
-    Enum.map(1..game.number_of_ai_players, fn x ->
-      create_basic_player(game.id, false, "Fungal Mutation #{x}")
-      |> Player.changeset(%{})
-      |> Repo.insert()
-    end)
+    if(game.number_of_ai_players > 0) do
+      Enum.map(1..game.number_of_ai_players, fn x ->
+        create_basic_player(game.id, false, "Fungal Mutation #{x}")
+        |> Player.changeset(%{})
+        |> Repo.insert()
+      end)
+    else
+      []
+    end
   end
 
   @doc """
@@ -90,11 +94,15 @@ defmodule FungusToast.Players do
   """
   @spec create_human_players(%Game{}, integer()) :: [%Player{}]
   def create_human_players(game, number_of_human_players) do
-    Enum.map(1..number_of_human_players, fn x ->
-      create_basic_player(game.id, true, "Unknown Player #{x}")
-      |> Player.changeset(%{})
-      |> Repo.insert()
-    end)
+    if(number_of_human_players > 0) do
+      Enum.map(1..number_of_human_players, fn x ->
+        create_basic_player(game.id, true, "Unknown Player #{x}")
+        |> Player.changeset(%{})
+        |> Repo.insert()
+      end)
+    else
+      []
+    end
   end
 
   @spec create_basic_player(integer(), boolean(), String.t(), integer()) :: %Player{}
