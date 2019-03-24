@@ -67,28 +67,8 @@ defmodule FungusToastWeb.GameViewTest do
                      top_left_growth_chance: 0.0,
                      top_right_growth_chance: 0.0
                    }
-                 ],
-                 generation_number: 0,
-                 round_number: 0,
-                 total_dead_cells: 0,
-                 total_empty_cells: 0,
-                 total_live_cells: 0,
-                 total_regenerated_cells: 0,
-                 join_game_password: "password"
+                 ]
                }
     end
   end
 end
-
-# {
-#  "previousGameState":{
-#     "roundNumber":0,
-#     "generationNumber":0,
-#     "fungalCells":[
-#
-#     ]
-#  },
-#  "growthCycles":[
-#
-#  ]
-# }

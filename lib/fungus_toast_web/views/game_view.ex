@@ -10,46 +10,41 @@ defmodule FungusToastWeb.GameView do
     render_one(game, GameView, "game.json")
   end
 
-  def render("game.json", %{game: game}) do
-    game
-    |> map_from()
-    |> transform_player_fields()
-    |> Map.drop([:inserted_at, :rounds, :updated_at])
+  def render("game.json", %{game: game}), do: game_json(game)
+
+  defp game_json(game) do
+    %{
+      id: game.id,
+      grid_size: game.grid_size,
+      number_of_ai_players: game.number_of_ai_players,
+      number_of_human_players: game.number_of_human_players,
+      status: game.status,
+      players: Enum.map(game.players, &player_json(&1))
+    }
   end
 
-  @player_json_fields [
-    :name,
-    :id,
-    :mutation_points,
-    :human,
-    :top_left_growth_chance,
-    :top_growth_chance,
-    :top_right_growth_chance,
-    :right_growth_chance,
-    :bottom_right_growth_chance,
-    :bottom_growth_chance,
-    :bottom_left_growth_chance,
-    :left_growth_chance,
-    :dead_cells,
-    :live_cells,
-    :regenerated_cells,
-    :hyperMutation_skill_level,
-    :anti_apoptosis_skill_level,
-    :regeneration_skill_level,
-    :budding_skill_level,
-    :mycotoxins_skill_level,
-    :apoptosis_chance,
-    :starved_cell_death_chance,
-    :mutation_chance,
-    :regeneration_chance,
-    :mycotoxin_fungicide_chance,
-    :status
-  ]
-  defp transform_player_fields(%{players: players} = game) do
-    p =
-      Enum.map(players, &map_from(&1))
-      |> Enum.map(&Map.take(&1, @player_json_fields))
-
-    Map.put(game, :players, p)
+  defp player_json(player) do
+    %{
+      id: player.id,
+      name: player.name,
+      mutation_points: player.mutation_points,
+      human: player.human,
+      top_left_growth_chance: player.top_left_growth_chance,
+      top_growth_chance: player.top_growth_chance,
+      top_right_growth_chance: player.top_right_growth_chance,
+      right_growth_chance: player.right_growth_chance,
+      bottom_right_growth_chance: player.bottom_right_growth_chance,
+      bottom_growth_chance: player.bottom_growth_chance,
+      bottom_left_growth_chance: player.bottom_left_growth_chance,
+      left_growth_chance: player.left_growth_chance,
+      dead_cells: player.dead_cells,
+      live_cells: player.live_cells,
+      regenerated_cells: player.regenerated_cells,
+      apoptosis_chance: player.apoptosis_chance,
+      starved_cell_death_chance: player.starved_cell_death_chance,
+      mutation_chance: player.mutation_chance,
+      regeneration_chance: player.regeneration_chance,
+      mycotoxin_fungicide_chance: player.mycotoxin_fungicide_chance
+    }
   end
 end
