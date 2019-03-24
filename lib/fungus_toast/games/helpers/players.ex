@@ -10,6 +10,10 @@ defmodule FungusToast.Players do
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, Player}
 
+  @ai_types ["Random"]
+
+  def get_ai_types, do: @ai_types
+
   @doc """
   Returns the list of players.
   """
@@ -68,9 +72,11 @@ defmodule FungusToast.Players do
   @spec create_player_for_user(%Game{}, String.t()) :: %Player{}
   def create_player_for_user(game = %Game{}, user_name) do
     user = Accounts.get_user_for_name(user_name)
-    create_basic_player(game.id, true, user.user_name, user.id)
+    {:ok, player} = create_basic_player(game.id, true, user.user_name, user.id)
     |> Player.changeset(%{})
     |> Repo.insert()
+
+    player
   end
 
   @doc """
@@ -80,9 +86,11 @@ defmodule FungusToast.Players do
   def create_ai_players(game) do
     if(game.number_of_ai_players > 0) do
       Enum.map(1..game.number_of_ai_players, fn x ->
-        create_basic_player(game.id, false, "Fungal Mutation #{x}")
+        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}")
         |> Player.changeset(%{})
         |> Repo.insert()
+
+        player
       end)
     else
       []
@@ -96,9 +104,11 @@ defmodule FungusToast.Players do
   def create_human_players(game, number_of_human_players) do
     if(number_of_human_players > 0) do
       Enum.map(1..number_of_human_players, fn x ->
-        create_basic_player(game.id, true, "Unknown Player #{x}")
+        {:ok, player} = create_basic_player(game.id, true, "Unknown Player #{x}")
         |> Player.changeset(%{})
         |> Repo.insert()
+
+        player
       end)
     else
       []
@@ -111,7 +121,15 @@ defmodule FungusToast.Players do
       raise ArgumentError, message: "AI players cannot have a user_id"
     end
     default_skills = PlayerSkills.get_default_starting_skills()
-    %Player{game_id: game_id, human: human, name: name, user_id: user_id, skills: default_skills}
+    ai_type = get_ai_type(human)
+
+    %Player{game_id: game_id, human: human, name: name, user_id: user_id, ai_type: ai_type, skills: default_skills}
+  end
+
+  defp get_ai_type(human) do
+    if(!human) do
+      Enum.random(get_ai_types())
+    end
   end
 
   @doc """
@@ -132,14 +150,15 @@ defmodule FungusToast.Players do
   end
 
   @doc """
-  Makes the AI player spend it's mutation points in accordance with it's ai_type
+  Makes the AI player spend its mutation points in accordance with it's ai_type
   """
   @spec spend_ai_mutation_points(%Player{}, integer()) :: any()
-  def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points)  when mutation_points > 0 do
+  def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points) when mutation_points > 0 do
     skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
-    skill_name = elem(skill_tuple, 0)
 
-    skill = Skills.get_skill_by_name(skill_name)
+    #TODO this skill is always nil when running in a test -- but always comes back just fine when running in IEX. Ahhh!
+    skill = elem(skill_tuple, 0)
+    |> FungusToast.Skills.get_skill_by_name()
 
     player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
     PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
@@ -148,11 +167,12 @@ defmodule FungusToast.Players do
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
     player = update_attribute(attributes_to_update, skill_change, player)
-    player = %{player | mutation_points: mutation_points - 1, }
+    player = %{player | mutation_points: mutation_points - 1}
     spend_ai_mutation_points(player, mutation_points - 1)
   end
 
   def spend_ai_mutation_points(player, mutation_points) when mutation_points == 0 do
+    {:ok, player} = update_player(player, player)
     player
   end
 

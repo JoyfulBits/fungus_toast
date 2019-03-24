@@ -24,8 +24,8 @@ defmodule FungusToast.GamesTest do
 
   #creates a human player with a user
   defp human_player_with_user_fixture(user_name, game, mutation_points) do
-    {:ok, player} = Players.create_player_for_user(game, user_name)
-    Players.update_player(player, %{mutation_points: mutation_points})
+    Players.create_player_for_user(game, user_name)
+    |> Players.update_player(%{mutation_points: mutation_points})
   end
 
   #creates a human player without a user
