@@ -153,7 +153,8 @@ defmodule FungusToast.Players do
   Makes the AI player spend its mutation points in accordance with it's ai_type
   """
   @spec spend_ai_mutation_points(%Player{}, integer()) :: any()
-  def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points) when mutation_points > 0 do
+  def spend_ai_mutation_points(player, mutation_points, acc \\ %{})
+  def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points, acc) when mutation_points > 0 do
     skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
 
     #TODO this skill is always nil when running in a test -- but always comes back just fine when running in IEX. Ahhh!
@@ -166,24 +167,24 @@ defmodule FungusToast.Players do
     attributes_to_update = elem(skill_tuple, 1)
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
-    player = update_attribute(attributes_to_update, skill_change, player)
-    player = %{player | mutation_points: mutation_points - 1}
-    spend_ai_mutation_points(player, mutation_points - 1)
+    acc = update_attribute(player, skill_change, attributes_to_update, acc)
+    acc = Map.put(acc, :mutation_points, mutation_points - 1)
+    spend_ai_mutation_points(player, mutation_points - 1, acc)
   end
 
-  def spend_ai_mutation_points(player, mutation_points) when mutation_points == 0 do
-    {:ok, player} = update_player(player, player)
+  def spend_ai_mutation_points(player, mutation_points, acc) when mutation_points == 0 do
+    {:ok, player} = update_player(player, acc)
     player
   end
 
-  def update_attribute(%Player{} = player, skill_change, attributes) when length(attributes) > 0 do
+  def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
     [attribute | remaining_attributes] = attributes
-    existing_value = player[attribute]
-    updated_player = Map.put(player, attribute, existing_value + skill_change)
-    update_attribute(updated_player, skill_change, remaining_attributes)
+    existing_value = Map.get(player, attribute)
+    acc = Map.put(acc, attribute, existing_value + skill_change)
+    update_attribute(player, skill_change, remaining_attributes, acc)
   end
 
-  def update_attribute(%Player{} = player, _, attributes) when length(attributes) == 0 do
-    player
+  def update_attribute(_player, _skill_change, attributes, acc) when length(attributes) == 0 do
+    acc
   end
 end
