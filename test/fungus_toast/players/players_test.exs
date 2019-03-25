@@ -4,6 +4,8 @@ defmodule FungusToast.PlayersTest do
     alias FungusToast.Games.Player
     alias FungusToast.Players
     alias FungusToast.Skills
+    alias FungusToast.Skills.SkillsSeed
+    alias FungusToast.PlayerSkills
 
     doctest FungusToast.Players
 
@@ -89,6 +91,8 @@ defmodule FungusToast.PlayersTest do
 
     describe "spend_ai_mutation_points/2" do
         test "that all mutation points are spent and skills are adjusted accordingly" do
+            SkillsSeed.seed_skills()
+
             mutation_points = 3
             game = Fixtures.Game.create!(%{number_of_ai_players: 1, number_of_human_players: 0})
             player = hd(FungusToast.Players.create_ai_players(game))
@@ -96,15 +100,18 @@ defmodule FungusToast.PlayersTest do
             {:ok, player} = Player.changeset(player, %{mutation_points: mutation_points})
             |> Repo.update()
 
+            #TODO this player has the correct attributes
             player = Players.spend_ai_mutation_points(player, player.mutation_points)
-
+            #this player has the default attributes
             player = Repo.get(Player, player.id) |> Repo.preload(:skills)
 
-            total_skill_level = Enum.reduce(player.skills, 0, fn player_skill, acc -> player_skill.skill_level + acc end)
             Enum.each(player.skills, fn player_skill ->
                 skill = Skills.get_skill!(player_skill.skill_id)
-                assert player[PlayerSkills.basic_player_skills[skill.name]] == skill.increase_per_point * player_skill.skill_level
+                assert Map.get(player, hd(PlayerSkills.basic_player_skills[skill.name])) == skill.increase_per_point * player_skill.skill_level
             end)
+
+            total_skill_level = Enum.reduce(player.skills, 0, fn player_skill, acc -> player_skill.skill_level + acc end)
+
             assert total_skill_level == mutation_points
         end
     end

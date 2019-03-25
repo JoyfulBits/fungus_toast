@@ -157,7 +157,6 @@ defmodule FungusToast.Players do
   def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points, acc) when mutation_points > 0 do
     skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
 
-    #TODO this skill is always nil when running in a test -- but always comes back just fine when running in IEX. Ahhh!
     skill = elem(skill_tuple, 0)
     |> FungusToast.Skills.get_skill_by_name()
 
@@ -167,7 +166,7 @@ defmodule FungusToast.Players do
     attributes_to_update = elem(skill_tuple, 1)
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
-    acc = update_attribute(player, skill_change, attributes_to_update, acc)
+    {player, acc} = update_attribute(player, skill_change, attributes_to_update, acc)
     acc = Map.put(acc, :mutation_points, mutation_points - 1)
     spend_ai_mutation_points(player, mutation_points - 1, acc)
   end
@@ -180,11 +179,13 @@ defmodule FungusToast.Players do
   def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
     [attribute | remaining_attributes] = attributes
     existing_value = Map.get(player, attribute)
+    #TODO there is surely a better way to do this. I'm trying to track changes as well as keep the %Player up to date
     acc = Map.put(acc, attribute, existing_value + skill_change)
+    player = Map.put(player, attribute, existing_value + skill_change)
     update_attribute(player, skill_change, remaining_attributes, acc)
   end
 
-  def update_attribute(_player, _skill_change, attributes, acc) when length(attributes) == 0 do
-    acc
+  def update_attribute(player, _skill_change, attributes, acc) when length(attributes) == 0 do
+    {player, acc}
   end
 end
