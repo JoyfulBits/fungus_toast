@@ -6,7 +6,7 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Accounts, Skills, PlayerSkills}
+  alias FungusToast.{Accounts, PlayerSkills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, Player}
 
@@ -166,26 +166,30 @@ defmodule FungusToast.Players do
     attributes_to_update = elem(skill_tuple, 1)
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
-    {player, acc} = update_attribute(player, skill_change, attributes_to_update, acc)
-    acc = Map.put(acc, :mutation_points, mutation_points - 1)
+    acc = update_attribute(player, skill_change, attributes_to_update, acc)
+    |> Map.put(:mutation_points, mutation_points - 1)
     spend_ai_mutation_points(player, mutation_points - 1, acc)
   end
 
   def spend_ai_mutation_points(player, mutation_points, acc) when mutation_points == 0 do
-    {:ok, player} = update_player(player, acc)
-    player
+    {:ok, updated_player} = update_player(player, acc)
+    updated_player
   end
 
   def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
     [attribute | remaining_attributes] = attributes
-    existing_value = Map.get(player, attribute)
-    #TODO there is surely a better way to do this. I'm trying to track changes as well as keep the %Player up to date
+    existing_value = Map.get(acc, attribute)
+    existing_value =
+      if(existing_value == nil) do
+        Map.get(player, attribute)
+      else
+        existing_value
+      end
     acc = Map.put(acc, attribute, existing_value + skill_change)
-    player = Map.put(player, attribute, existing_value + skill_change)
     update_attribute(player, skill_change, remaining_attributes, acc)
   end
 
-  def update_attribute(player, _skill_change, attributes, acc) when length(attributes) == 0 do
-    {player, acc}
+  def update_attribute(_player, _skill_change, attributes, acc) when length(attributes) == 0 do
+    acc
   end
 end

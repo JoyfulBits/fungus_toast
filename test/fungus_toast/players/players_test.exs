@@ -11,6 +11,8 @@ defmodule FungusToast.PlayersTest do
 
     describe "create_basic_player/2" do
         test "that it creates the player including at least the 5 basic skills" do
+            SkillsSeed.seed_skills()
+
             game_id = 2
             human = true
             user_name = "some user name"
@@ -21,7 +23,7 @@ defmodule FungusToast.PlayersTest do
             assert player.human == true
             assert player.name == user_name
             assert player.user_id == user_id
-            length(player.skills) > 0
+            assert length(player.skills) > 0
         end
 
         test "that it can create players without user_id" do
@@ -100,19 +102,32 @@ defmodule FungusToast.PlayersTest do
             {:ok, player} = Player.changeset(player, %{mutation_points: mutation_points})
             |> Repo.update()
 
-            #TODO this player has the correct attributes
             player = Players.spend_ai_mutation_points(player, player.mutation_points)
-            #this player has the default attributes
+
             player = Repo.get(Player, player.id) |> Repo.preload(:skills)
 
+            default_player = %Player{}
             Enum.each(player.skills, fn player_skill ->
                 skill = Skills.get_skill!(player_skill.skill_id)
-                assert Map.get(player, hd(PlayerSkills.basic_player_skills[skill.name])) == skill.increase_per_point * player_skill.skill_level
+
+                current_player_attribute_value = Map.get(player, hd(PlayerSkills.basic_player_skills[skill.name]))
+                default_player_attribute_value = Map.get(default_player, hd(PlayerSkills.basic_player_skills[skill.name]))
+
+                assert current_player_attribute_value ==
+                    default_player_attribute_value + (skill.increase_per_point * get_up_is_good_multiplier(skill.up_is_good)) * player_skill.skill_level
             end)
 
             total_skill_level = Enum.reduce(player.skills, 0, fn player_skill, acc -> player_skill.skill_level + acc end)
 
             assert total_skill_level == mutation_points
+        end
+
+        defp get_up_is_good_multiplier(up_is_good) do
+            if(up_is_good) do
+                1.0
+            else
+                -1.0
+            end
         end
     end
 end
