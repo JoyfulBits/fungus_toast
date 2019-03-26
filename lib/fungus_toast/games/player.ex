@@ -2,6 +2,24 @@ defmodule FungusToast.Games.Player do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @position_to_attribute_map %{
+    :top_left_cell => :top_left_growth_chance,
+    :top_cell => :top_growth_chance,
+    :top_right_cell => :top_right_growth_chance,
+    :right_cell => :right_growth_chance,
+    :bottom_right_cell => :bottom_right_growth_chance,
+    :bottom_cell => :bottom_growth_chance,
+    :bottom_left_cell => :bottom_left_growth_chance,
+    :left_cell => :left_growth_chance
+  }
+
+  def position_to_attribute_map, do: @position_to_attribute_map
+
+  @default_top_right_bottom_left_growth_chance 7.5
+  @default_mutation_chance 20.0
+  @default_apoptosis_chance 5.0
+  @default_starved_cell_death_chance 10.0
+
   @attrs [
     :name,
     :human,
@@ -29,25 +47,26 @@ defmodule FungusToast.Games.Player do
   schema "players" do
     field :name, :string, null: false
     field :human, :boolean, default: false, null: false
+    field :ai_type, :string, null: true
 
     field :mutation_points, :integer, default: 5, null: false
 
     field :top_left_growth_chance, :float, default: 0.0, null: false
-    field :top_growth_chance, :float, default: 0.0, null: false
+    field :top_growth_chance, :float, default: @default_top_right_bottom_left_growth_chance, null: false
     field :top_right_growth_chance, :float, default: 0.0, null: false
-    field :right_growth_chance, :float, default: 0.0, null: false
+    field :right_growth_chance, :float, default: @default_top_right_bottom_left_growth_chance, null: false
     field :bottom_right_growth_chance, :float, default: 0.0, null: false
-    field :bottom_growth_chance, :float, default: 0.0, null: false
+    field :bottom_growth_chance, :float, default: @default_top_right_bottom_left_growth_chance, null: false
     field :bottom_left_growth_chance, :float, default: 0.0, null: false
-    field :left_growth_chance, :float, default: 0.0, null: false
+    field :left_growth_chance, :float, default: @default_top_right_bottom_left_growth_chance, null: false
 
     field :dead_cells, :integer, default: 0, null: false
     field :live_cells, :integer, default: 0, null: false
     field :regenerated_cells, :integer, default: 0, null: false
 
-    field :apoptosis_chance, :float, default: 0.0, null: false
-    field :starved_cell_death_chance, :float, default: 0.0, null: false
-    field :mutation_chance, :float, default: 0.0, null: false
+    field :apoptosis_chance, :float, default: @default_apoptosis_chance, null: false
+    field :starved_cell_death_chance, :float, default: @default_starved_cell_death_chance, null: false
+    field :mutation_chance, :float, default: @default_mutation_chance, null: false
     field :regeneration_chance, :float, default: 0.0, null: false
     field :mycotoxin_fungicide_chance, :float, default: 0.0, null: false
 

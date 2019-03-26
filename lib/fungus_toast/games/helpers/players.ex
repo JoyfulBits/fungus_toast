@@ -6,19 +6,13 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Accounts
+  alias FungusToast.{Accounts, PlayerSkills, AiStrategies}
   alias FungusToast.Accounts.User
-  alias FungusToast.Games
   alias FungusToast.Games.{Game, Player}
+
 
   @doc """
   Returns the list of players.
-
-  ## Examples
-
-      iex> list_players()
-      [%Player{}, ...]
-
   """
   def list_players do
     Repo.all(Player)
@@ -26,15 +20,6 @@ defmodule FungusToast.Players do
 
   @doc """
   Returns the list of players for a given user.
-
-  ## Examples
-
-      iex> list_players_for_user(%User{})
-      [%Player{}, ...]
-
-      iex> list_players_for_user(1)
-      [%Player{}, ...]
-
   """
   def list_players_for_user(%User{} = user) do
     list_players_for_user(user.id)
@@ -46,30 +31,15 @@ defmodule FungusToast.Players do
 
   @doc """
   Returns the list of players for a given game.
-
-  ## Examples
-
-      iex> list_players_for_game(1)
-      [%Player{}, ...]
-
   """
   def list_players_for_game(game_id) do
-    from(p in Player, where: p.game_id == ^game_id) |> Repo.all()
+    from(p in Player, where: p.game_id == ^game_id) |> Repo.one
   end
 
   @doc """
   Gets a single player.
 
   Raises `Ecto.NoResultsError` if the Player does not exist.
-
-  ## Examples
-
-      iex> get_player!(123)
-      %Player{}
-
-      iex> get_player!(456)
-      ** (Ecto.NoResultsError)
-
   """
   def get_player!(id), do: Repo.get!(Player, id)
 
@@ -93,80 +63,74 @@ defmodule FungusToast.Players do
     :ok
   end
 
-  def create_ai_players(game, ai_players) when is_number(ai_players) do
-    # Do we have a better way to do this?
-    # Should we just tag users as human/ai and then pass that on to their players?
-    # That way we could just look up the non-human player and not care about name
-    ai_user = Accounts.get_user_for_name("Fungusmotron")
+  @doc """
+  Creates a player for the given user and game
+  """
+  @spec create_player_for_user(%Game{}, String.t()) :: %Player{}
+  def create_player_for_user(game = %Game{}, user_name) do
+    user = Accounts.get_user_for_name(user_name)
+    {:ok, player} = create_basic_player(game.id, true, user.user_name, user.id)
+    |> Player.changeset(%{})
+    |> Repo.insert()
 
-    create_player(game, %{
-      human: false,
-      user_name: ai_user.user_name,
-      name: "Fungal Mutation #{get_ai_player_count() + 1}"
-    })
-
-    create_ai_players(game, ai_players - 1)
+    player
   end
 
   @doc """
-  Creates a player.
-
-  ## Examples
-
-      iex> create_player(game, %{field: value})
-      {:ok, %Player{}}
-
-      iex> create_player(game, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-      iex> create_player(1, %{field: value})
-      {:ok, %Player{}}
-
-      iex> create_player(1, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
+  Creates the requested number of AI players for the given game. AI players have no user associated with them
   """
-  def create_player(game, attrs \\ %{})
+  @spec create_ai_players(%Game{}) :: [%Player{}]
+  def create_ai_players(game) do
+    if(game.number_of_ai_players > 0) do
+      Enum.map(1..game.number_of_ai_players, fn x ->
+        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}")
+        |> Player.changeset(%{})
+        |> Repo.insert()
 
-  def create_player(%Game{} = game, attrs) when is_map(attrs) do
-    create_player(game.id, attrs)
+        player
+      end)
+    else
+      []
+    end
   end
 
-  def create_player(game_id, attrs) when is_binary(game_id) do
-    game = Games.get_game!(game_id)
-    create_player(game.id, attrs)
+  @doc """
+  Creates the requested number of yet unknown human players for the given game.
+  """
+  @spec create_human_players(%Game{}, integer()) :: [%Player{}]
+  def create_human_players(game, number_of_human_players) do
+    if(number_of_human_players > 0) do
+      Enum.map(1..number_of_human_players, fn x ->
+        {:ok, player} = create_basic_player(game.id, true, "Unknown Player #{x}")
+        |> Player.changeset(%{})
+        |> Repo.insert()
+
+        player
+      end)
+    else
+      []
+    end
   end
 
-  def create_player(game_id, attrs) when is_map(attrs) do
-    user_name = Map.get(attrs, :user_name) || Map.get(attrs, "user_name")
-    create_player_for_user(game_id, user_name, attrs)
+  @spec create_basic_player(integer(), boolean(), String.t(), integer()) :: %Player{}
+  def create_basic_player(game_id, human, name, user_id \\ nil) do
+    if(!human and user_id != nil) do
+      raise ArgumentError, message: "AI players cannot have a user_id"
+    end
+    default_skills = PlayerSkills.get_default_starting_skills()
+    ai_type = get_ai_type(human)
+
+    %Player{game_id: game_id, human: human, name: name, user_id: user_id, ai_type: ai_type, skills: default_skills}
   end
 
-  defp create_player_for_user(nil, _, _), do: {:error, :bad_request}
-  defp create_player_for_user(_, nil, _), do: {:error, :bad_request}
-
-  defp create_player_for_user(game_id, user_name, attrs) when is_binary(user_name) do
-    user = Accounts.get_user_for_name(user_name)
-    create_player_for_user(game_id, user.id, attrs)
-  end
-
-  defp create_player_for_user(game_id, user_id, attrs) do
-    %Player{game_id: game_id, user_id: user_id}
-    |> Player.changeset(attrs)
-    |> Repo.insert()
+  defp get_ai_type(human) do
+    if(!human) do
+      Enum.random(AiStrategies.get_ai_types())
+    end
   end
 
   @doc """
   Updates a player.
-
-  ## Examples
-
-      iex> update_player(player, %{field: new_value})
-      {:ok, %Player{}}
-
-      iex> update_player(player, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
   def update_player(%Player{} = player, attrs) do
     player
@@ -177,13 +141,50 @@ defmodule FungusToast.Players do
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking player changes.
 
-  ## Examples
-
-      iex> change_player(player)
-      %Ecto.Changeset{source: %Player{}}
-
   """
   def change_player(%Player{} = player) do
     Player.changeset(player, %{})
+  end
+
+  @doc """
+  Makes the AI player spend its mutation points in accordance with it's ai_type
+  """
+  @spec spend_ai_mutation_points(%Player{}, integer(), integer(), integer()) :: any()
+  def spend_ai_mutation_points(player, mutation_points, total_cells, number_of_remaining_cells, acc \\ %{})
+  def spend_ai_mutation_points(%Player{} = player, mutation_points, total_cells, number_of_remaining_cells, acc) when mutation_points > 0 do
+    skill = AiStrategies.get_skill_choice(player.ai_type, total_cells, number_of_remaining_cells)
+    |> FungusToast.Skills.get_skill_by_name()
+
+    player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
+    PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
+
+    attributes_to_update = AiStrategies.get_player_attributes_for_skill_name(skill.name)
+    skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
+
+    acc = update_attribute(player, skill_change, attributes_to_update, acc)
+    |> Map.put(:mutation_points, mutation_points - 1)
+    spend_ai_mutation_points(player, mutation_points - 1, total_cells, number_of_remaining_cells, acc)
+  end
+
+  def spend_ai_mutation_points(player, mutation_points, _total_cells, _number_of_remaining_cells, acc) when mutation_points == 0 do
+    {:ok, updated_player} = update_player(player, acc)
+    updated_player
+  end
+
+  def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
+    [attribute | remaining_attributes] = attributes
+    existing_value = Map.get(acc, attribute)
+    existing_value =
+      if(existing_value == nil) do
+        Map.get(player, attribute)
+      else
+        existing_value
+      end
+    acc = Map.put(acc, attribute, existing_value + skill_change)
+    update_attribute(player, skill_change, remaining_attributes, acc)
+  end
+
+  def update_attribute(_player, _skill_change, attributes, acc) when length(attributes) == 0 do
+    acc
   end
 end

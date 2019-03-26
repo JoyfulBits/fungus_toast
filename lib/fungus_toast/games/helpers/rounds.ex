@@ -63,22 +63,6 @@ defmodule FungusToast.Rounds do
   end
 
   @doc """
-  Gets a single round.
-
-  Raises `Ecto.NoResultsError` if the Round does not exist.
-
-  ## Examples
-
-      iex> get_round!(123)
-      %Round{}
-
-      iex> get_round!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_round!(id), do: Repo.get!(Round, id)
-
-  @doc """
   Creates a round.
 
   ## Examples
@@ -111,5 +95,11 @@ defmodule FungusToast.Rounds do
     %Round{game_id: game_id}
     |> Round.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def update_round(%Round{} = round, attrs) do
+    round
+    |> Round.changeset(attrs)
+    |> Repo.update()
   end
 end

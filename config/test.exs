@@ -7,7 +7,7 @@ config :fungus_toast, FungusToastWeb.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warn, backends: [:console], compile_time_purge_level: :debug
 
 # Configure your database
 config :fungus_toast, FungusToast.Repo,

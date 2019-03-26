@@ -8,6 +8,13 @@ defmodule FungusToast.PlayerSkills do
 
   alias FungusToast.Games
   alias FungusToast.Games.{Player, PlayerSkill, Skill}
+  alias FungusToast.Skills
+
+  @spec get_default_starting_skills() :: [%PlayerSkill{}, ...]
+  def get_default_starting_skills() do
+    Skills.list_skills
+      |> Enum.map(fn skill -> %PlayerSkill{skill_id: skill.id } end)
+  end
 
   @doc """
   Returns the skill information for a given player.

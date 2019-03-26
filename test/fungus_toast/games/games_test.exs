@@ -4,6 +4,7 @@ defmodule FungusToast.GamesTest do
   alias FungusToast.Accounts
   alias FungusToast.Games
   alias FungusToast.Players
+  alias FungusToast.Games.Player
 
   defp user_fixture(attrs \\ %{}) do
     {:ok, user} =
@@ -14,46 +15,31 @@ defmodule FungusToast.GamesTest do
     user
   end
 
-  defp game_fixture(attrs \\ %{}) do
-    {:ok, game} =
-      attrs
-      |> Enum.into(%{user_name: "testUser", number_of_human_players: 1})
-      |> Games.create_game()
+  #Creates a game with a human player for that user, as well as any AI players
+  defp game_fixture(attrs \\ %{number_of_human_players: 1}) do
+    {:ok, game} = Games.create_game("testUser", attrs)
 
     game
   end
 
-  defp player_fixture(user, game, attrs \\ %{}) do
-    updated_attrs =
-      attrs
-      |> Enum.into(%{human: true, user_name: user.user_name, name: user.user_name})
-
-    {:ok, player} = Players.create_player(game, updated_attrs)
-
-    player
+  #creates a human player with a user
+  defp human_player_with_user_fixture(user_name, game, mutation_points) do
+    Players.create_player_for_user(game, user_name)
+    |> Players.update_player(%{mutation_points: mutation_points})
   end
 
-  defp create_users(count), do: create_users(count, [])
-
-  defp create_users(count, accum) when count > 0 do
-    user = user_fixture(%{user_name: "testUsers #{count}"})
-    create_users(count - 1, [user | accum])
+  #creates a human player without a user
+  defp human_player_without_user_fixture(game, mutation_points \\ 0) do
+    %Player{game_id: game.id, human: true, mutation_points: mutation_points}
+      |> Player.changeset(%{})
+      |> Repo.insert()
   end
 
-  defp create_users(0, accum) do
-    accum
-  end
-
-  defp create_players(users, game) when is_list(users), do: create_players(users, game, [])
-  defp create_players(users, game) when not is_nil(users), do: create_players([users], game, [])
-
-  defp create_players([head | tail], game, accum) do
-    player = player_fixture(head, game)
-    create_players(tail, game, [player | accum])
-  end
-
-  defp create_players([], _, accum) do
-    accum
+  #Creates an AI player for the specified game with the specified number of mutation points
+  defp ai_player_fixture(game, mutation_points \\ 0) do
+    %Player{game_id: game.id, human: false, mutation_points: mutation_points}
+      |> Player.changeset(%{})
+      |> Repo.insert()
   end
 
   describe "games" do
@@ -64,40 +50,32 @@ defmodule FungusToast.GamesTest do
     @update_attrs %{active: true}
 
     test "list_games/0 returns all games" do
-      user_fixture()
-      game = game_fixture()
+      game = Fixtures.Game.create!
       assert Games.list_games() == [game]
     end
 
     test "get_game!/1 returns the game with given id" do
-      user_fixture()
-      game = game_fixture()
-      assert Games.get_game!(game.id) == game
+      %Game{id: id} = Fixtures.Game.create!
+      assert %{id: id} = Games.get_game!(id)
     end
 
-    test "create_game/1 with valid data creates a game" do
-      user_fixture(%{user_name: "Fungusmotron"})
-      user_fixture()
-      assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
-      game = game |> FungusToast.Repo.preload(:players)
+    test "create_game/2 with valid data creates a game" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 2}
+
+      assert {:ok, game} = Games.create_game(user.user_name, valid_attrs)
+
+      assert game.number_of_human_players == 1
+      assert game.number_of_ai_players == 2
       assert length(game.players) == 3
     end
 
-    test "create_game/1 with valid data creates the correct number of AI players" do
-      user_fixture(%{user_name: "Fungusmotron"})
-      user_fixture()
-      assert {:ok, %Game{} = game} = Games.create_game(@valid_attrs)
-      game = game |> FungusToast.Repo.preload(:players)
-      assert game.players |> Enum.filter(fn p -> Map.get(p, :human) == false end) |> length() == 2
+    test "create_game/2 with missing data does not create a game" do
+      assert catch_error Games.create_game("some user name", %{})
     end
 
-    test "create_game/1 with invalid data does not create a game" do
-      assert {:error, :bad_request} = Games.create_game()
-    end
-
-    test "create_game/1 with invalid status does not create a game" do
-      assert {:error, :bad_request} =
-               Games.create_game(%{status: "Nope", number_of_human_players: 2})
+    test "create_game/2 with invalid status does not create a game" do
+      assert catch_error Games.create_game("some user name", %{status: "Nope", number_of_human_players: 2})
     end
 
     test "update_game/2 with valid data updates the game" do
@@ -120,11 +98,23 @@ defmodule FungusToast.GamesTest do
     end
   end
 
+  describe "create_game_for_user" do
+    alias FungusToast.Games
+    alias FungusToast.Games.Game
+
+    test "that it creates a game with a single player for the current user populated" do
+      user = user_fixture()
+      cs = Game.changeset(%Game{}, %{number_of_human_players: 1})
+      {:ok, game} = Games.create_game_for_user(cs, user.user_name)
+      assert [player | _] = game.players
+    end
+  end
+
   describe "rounds" do
     alias FungusToast.Games.Round
 
-    @valid_attrs %{game_state: %{"hello" => "world"}, state_change: %{"hello" => "world"}}
-    @invalid_attrs %{game_state: nil, state_change: nil}
+    @valid_attrs %{starting_game_state: %{"hello" => "world"}, growth_cycles: %{}}
+    @invalid_attrs %{starting_game_state: nil, growth_cycles: nil}
 
     def round_fixture(game_id, attrs \\ %{}) do
       adjusted_attrs =
@@ -136,19 +126,20 @@ defmodule FungusToast.GamesTest do
       round
     end
 
-    test "get_round!/1 returns the round with given id" do
-      user_fixture()
-      game = game_fixture()
-      round = round_fixture(game.id)
-      assert Games.get_round!(round.id) == round
-    end
+    # TODO: Revisit this test setup
+    #test "get_round!/1 returns the round with given id" do
+    #  user_fixture()
+    #  game = game_fixture()
+    #  round = round_fixture(game.id)
+    #  assert Games.get_round!(round.id) == round
+    #end
 
     test "create_round/2 with valid data creates a round" do
       user_fixture()
       game = game_fixture()
       assert {:ok, %Round{} = round} = Games.create_round(game.id, @valid_attrs)
-      assert round.game_state == %{"hello" => "world"}
-      assert round.state_change == %{"hello" => "world"}
+      assert round.starting_game_state == %{"hello" => "world"}
+      assert round.growth_cycles == %{}
     end
 
     test "create_round/2 with invalid data returns error changeset" do
@@ -156,111 +147,76 @@ defmodule FungusToast.GamesTest do
       game = game_fixture()
       assert {:error, %Ecto.Changeset{}} = Games.create_round(game.id, @invalid_attrs)
     end
-
-    test "list_rounds_for_game/1 returns rounds for the specified game" do
-      user_fixture()
-      game1 = game_fixture()
-      game1 = game1 |> FungusToast.Repo.preload(:rounds)
-      game2 = game_fixture()
-
-      rounds = game1.rounds
-
-      round2 =
-        round_fixture(game1.id, %{number: 2, game_state: %{"hello" => "world"}, state_change: %{}})
-
-      _round3 = round_fixture(game2.id, %{number: 3, game_state: %{}, state_change: %{}})
-
-      assert Games.list_rounds_for_game(game1.id) == rounds ++ [round2]
-    end
-
-    test "get_round_for_game!/2 returns the round with the given round number for the specified game" do
-      user_fixture()
-      game = game_fixture()
-
-      round2 =
-        round_fixture(game.id, %{
-          game_state: %{"hello" => "world"},
-          state_change: %{"hello" => "world"},
-          number: 2
-        })
-
-      assert Games.get_round_for_game!(game.id, 2) == round2
-    end
   end
 
-  describe "next round" do
+  describe "next_round_available/1" do
     setup do
       user_fixture(%{user_name: "Fungusmotron"})
       user_fixture()
       :ok
     end
 
-    test "next_round_available/1 returns false if there is one human player and they have points to spend" do
+    test "that returns false if there is one human player and they have points to spend" do
       game =
-        game_fixture(%{number_of_ai_players: Enum.random(1..3)})
-        |> Games.preload_for_games()
+        game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
+
+      human_player = Enum.filter(game.players, fn p -> p.human end)
+        |> hd
+
+      Players.update_player(human_player, %{mutation_points: 1})
 
       refute Games.next_round_available?(game)
     end
 
-    test "next_round_available/1 returns true if there is one human player and they have spent their points" do
+    test "that returns true if all players have spent their mutation points" do
       game =
-        game_fixture(%{number_of_ai_players: Enum.random(1..3)})
-        |> Games.preload_for_games()
+        game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
 
-      {:ok, _player} =
-        game.players
-        |> Enum.filter(fn p -> p.human end)
-        |> List.first()
-        |> Games.update_player(%{mutation_points: 0})
+      Enum.each(game.players, fn player ->
+        Games.update_player(player, %{mutation_points: 0}) end)
 
       game =
         Games.get_game!(game.id)
-        |> Games.preload_for_games()
 
       assert Games.next_round_available?(game)
     end
 
-    test "next_round_available/1 returns false if at least one human player has unspent points" do
+    test "that returns false if at least one player has unspent points" do
       user = user_fixture(%{user_name: "someOtherUser"})
-      game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: Enum.random(1..2)})
-      player_fixture(user, game)
-      game = Games.get_game!(game.id) |> Games.preload_for_games()
-
-      {:ok, _player} =
-        game.players
-        |> Enum.filter(fn p -> p.human end)
-        |> List.first()
-        |> Games.update_player(%{mutation_points: 0})
-
-      game =
-        Games.get_game!(game.id)
-        |> Games.preload_for_games()
+      game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
+      human_player_with_user_fixture(user.user_name, game, 1)
+      game = Games.get_game!(game.id)
 
       refute Games.next_round_available?(game)
     end
 
-    test "next_round_available/1 returns true if all human players have spent their points" do
-      # Generate 1-3 more players alongside the existing testUser
-      human_players = Enum.random(1..3)
-      # Fill the game with up to 2 more AI players
-      ai_players = Enum.random(0..(3 - human_players))
-
-      users = create_users(human_players)
-
-      game =
-        game_fixture(%{number_of_human_players: human_players, number_of_ai_players: ai_players})
-
-      create_players(users, game)
-      game = Games.get_game!(game.id) |> Games.preload_for_games()
-
-      game.players
-      |> Enum.filter(fn p -> p.human end)
-      |> Enum.map(fn p -> p |> Games.update_player(%{mutation_points: 0}) end)
+    test "next_round_available/1 returns false if at least one ai player has unspent points" do
+      user_fixture(%{user_name: "someOtherUser"})
+      game = game_fixture(%{number_of_human_players: 1, number_of_ai_players: 0})
+      ai_player_fixture(game, 1)
+      game = Games.get_game!(game.id)
 
       game =
         Games.get_game!(game.id)
-        |> Games.preload_for_games()
+
+      refute Games.next_round_available?(game)
+    end
+
+    test "next_round_available/1 returns true if all players have spent their points" do
+      user = user_fixture(%{user_name: "another user"})
+
+      game =
+        game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
+
+      human_player_with_user_fixture(user.user_name, game, 0)
+      human_player_without_user_fixture(game)
+      ai_player_fixture(game)
+      game = Games.get_game!(game.id)
+
+      Enum.each(game.players, fn player ->
+        Games.update_player(player, %{mutation_points: 0}) end)
+
+      game = Games.get_game!(game.id)
 
       assert Games.next_round_available?(game)
     end
