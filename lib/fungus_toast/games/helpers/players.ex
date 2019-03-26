@@ -6,13 +6,10 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Accounts, PlayerSkills}
+  alias FungusToast.{Accounts, PlayerSkills, AiStrategies}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, Player}
 
-  @ai_types ["Random"]
-
-  def get_ai_types, do: @ai_types
 
   @doc """
   Returns the list of players.
@@ -128,7 +125,7 @@ defmodule FungusToast.Players do
 
   defp get_ai_type(human) do
     if(!human) do
-      Enum.random(get_ai_types())
+      Enum.random(AiStrategies.get_ai_types())
     end
   end
 
@@ -152,26 +149,24 @@ defmodule FungusToast.Players do
   @doc """
   Makes the AI player spend its mutation points in accordance with it's ai_type
   """
-  @spec spend_ai_mutation_points(%Player{}, integer()) :: any()
-  def spend_ai_mutation_points(player, mutation_points, acc \\ %{})
-  def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points, acc) when mutation_points > 0 do
-    skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
-
-    skill = elem(skill_tuple, 0)
+  @spec spend_ai_mutation_points(%Player{}, integer(), integer(), integer()) :: any()
+  def spend_ai_mutation_points(player, mutation_points, total_cells, number_of_remaining_cells, acc \\ %{})
+  def spend_ai_mutation_points(%Player{} = player, mutation_points, total_cells, number_of_remaining_cells, acc) when mutation_points > 0 do
+    skill = AiStrategies.get_skill_choice(player.ai_type, total_cells, number_of_remaining_cells)
     |> FungusToast.Skills.get_skill_by_name()
 
     player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
     PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
 
-    attributes_to_update = elem(skill_tuple, 1)
+    attributes_to_update = AiStrategies.get_player_attributes_for_skill_name(skill.name)
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
     acc = update_attribute(player, skill_change, attributes_to_update, acc)
     |> Map.put(:mutation_points, mutation_points - 1)
-    spend_ai_mutation_points(player, mutation_points - 1, acc)
+    spend_ai_mutation_points(player, mutation_points - 1, total_cells, number_of_remaining_cells, acc)
   end
 
-  def spend_ai_mutation_points(player, mutation_points, acc) when mutation_points == 0 do
+  def spend_ai_mutation_points(player, mutation_points, _total_cells, _number_of_remaining_cells, acc) when mutation_points == 0 do
     {:ok, updated_player} = update_player(player, acc)
     updated_player
   end

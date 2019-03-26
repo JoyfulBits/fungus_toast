@@ -2,10 +2,8 @@ defmodule FungusToast.PlayersTest do
     use FungusToast.DataCase
     alias FungusToast.Games.Grid
     alias FungusToast.Games.Player
-    alias FungusToast.Players
-    alias FungusToast.Skills
+    alias FungusToast.{Players, Skills, PlayerSkills, AiStrategies}
     alias FungusToast.Skills.SkillsSeed
-    alias FungusToast.PlayerSkills
 
     doctest FungusToast.Players
 
@@ -102,7 +100,10 @@ defmodule FungusToast.PlayersTest do
             {:ok, player} = Player.changeset(player, %{mutation_points: mutation_points})
             |> Repo.update()
 
-            player = Players.spend_ai_mutation_points(player, player.mutation_points)
+            total_cells = game.grid_size * game.grid_size
+            remaining_cells = 1
+
+            player = Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, remaining_cells)
 
             player = Repo.get(Player, player.id) |> Repo.preload(:skills)
 
@@ -110,11 +111,14 @@ defmodule FungusToast.PlayersTest do
             Enum.each(player.skills, fn player_skill ->
                 skill = Skills.get_skill!(player_skill.skill_id)
 
-                current_player_attribute_value = Map.get(player, hd(PlayerSkills.basic_player_skills[skill.name]))
-                default_player_attribute_value = Map.get(default_player, hd(PlayerSkills.basic_player_skills[skill.name]))
+                attributes_to_check = AiStrategies.get_player_attributes_for_skill_name(skill.name)
 
-                assert current_player_attribute_value ==
-                    default_player_attribute_value + (skill.increase_per_point * get_up_is_good_multiplier(skill.up_is_good)) * player_skill.skill_level
+                Enum.each(attributes_to_check, fn attribute ->
+                    current_player_attribute_value = Map.get(player, attribute)
+                    default_player_attribute_value = Map.get(default_player, attribute)
+                    assert current_player_attribute_value ==
+                        default_player_attribute_value + (skill.increase_per_point * get_up_is_good_multiplier(skill.up_is_good)) * player_skill.skill_level
+                end)
             end)
 
             total_skill_level = Enum.reduce(player.skills, 0, fn player_skill, acc -> player_skill.skill_level + acc end)

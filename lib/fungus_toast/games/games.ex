@@ -185,9 +185,7 @@ defmodule FungusToast.Games do
     Game.changeset(game, %{})
   end
 
-  @doc """
-  Preloads the necessary data for games
-  """
+  #Preloads the necessary data for games
   defp preload_for_games(games) do
     games |> Repo.preload([:rounds, players: [skills: :skill]])
   end
@@ -235,8 +233,11 @@ defmodule FungusToast.Games do
     player_id_to_player_map = players
       |> Map.new(fn x -> {x.id, x} end)
 
+    total_cells = game.grid_size * game.grid_size
+    total_remaining_cells = total_cells - map_size(current_game_state)
+
     Enum.filter(players, fn player -> !player.human end)
-      |> (fn player -> Players.spend_ai_mutation_points(player, player.mutation_points) end).()
+      |> (fn player -> Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells) end).()
 
     growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
 
