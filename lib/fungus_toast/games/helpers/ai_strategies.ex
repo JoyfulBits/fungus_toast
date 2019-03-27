@@ -1,9 +1,13 @@
 defmodule FungusToast.AiStrategies do
 
   @ai_type_random "Random"
+  def ai_type_random, do:  @ai_type_random
   @ai_type_growth "Growth"
+  def ai_type_growth, do:  @ai_type_growth
   @ai_type_toxic "Toxic"
+  def ai_type_toxic, do:  @ai_type_toxic
   @ai_type_long_term "Long Term"
+  def ai_type_long_term, do:  @ai_type_long_term
   @ai_types [@ai_type_random, @ai_type_growth, @ai_type_toxic, @ai_type_long_term]
 
   def get_ai_types, do: @ai_types
