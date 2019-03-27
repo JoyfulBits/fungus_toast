@@ -8,16 +8,10 @@ defmodule FungusToastWeb.GameViewTest do
   import FungusToast.Factory
 
   describe "game.json" do
-    @stub_game %Game{
-      id: "fake",
-      number_of_human_players: 1,
-      number_of_ai_players: 1,
-      players: [%Player{}, %Player{}],
-      rounds: [%Round{}, %Round{}]
-    }
-
     test "the transformation of data model to json" do
-      assert GameView.render("game.json", %{game: @stub_game}) ==
+      game = insert(:game)
+
+      assert GameView.render("game.json", %{game: game}) ==
                %{
                  grid_size: 50,
                  id: "fake",
