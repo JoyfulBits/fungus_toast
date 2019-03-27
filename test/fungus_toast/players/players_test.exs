@@ -2,7 +2,7 @@ defmodule FungusToast.PlayersTest do
     use FungusToast.DataCase
     alias FungusToast.Games.Grid
     alias FungusToast.Games.Player
-    alias FungusToast.{Players, Skills, PlayerSkills, AiStrategies}
+    alias FungusToast.{Players, Skills, AiStrategies}
     alias FungusToast.Skills.SkillsSeed
 
     doctest FungusToast.Players

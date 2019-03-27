@@ -111,8 +111,6 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "rounds" do
-    alias FungusToast.Games.Round
-
     @valid_attrs %{starting_game_state: %{"hello" => "world"}, growth_cycles: []}
     @invalid_attrs %{starting_game_state: nil, growth_cycles: nil}
 
