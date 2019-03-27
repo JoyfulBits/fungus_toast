@@ -57,13 +57,6 @@ defmodule FungusToast.Players do
   end
 
   @doc """
-  Creates the requested number of AI players for the given game
-  """
-  def create_ai_players(_, 0) do
-    :ok
-  end
-
-  @doc """
   Creates a player for the given user and game
   """
   @spec create_player_for_user(%Game{}, String.t()) :: %Player{}
@@ -79,11 +72,11 @@ defmodule FungusToast.Players do
   @doc """
   Creates the requested number of AI players for the given game. AI players have no user associated with them
   """
-  @spec create_ai_players(%Game{}) :: [%Player{}]
-  def create_ai_players(game) do
+  @spec create_ai_players(%Game{}, String.t()) :: [%Player{}]
+  def create_ai_players(game, ai_type \\ nil) do
     if(game.number_of_ai_players > 0) do
       Enum.map(1..game.number_of_ai_players, fn x ->
-        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}")
+        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}", nil, ai_type)
         |> Player.changeset(%{})
         |> Repo.insert()
 
@@ -112,13 +105,21 @@ defmodule FungusToast.Players do
     end
   end
 
-  @spec create_basic_player(integer(), boolean(), String.t(), integer()) :: %Player{}
-  def create_basic_player(game_id, human, name, user_id \\ nil) do
+  @doc """
+  Creates a player with teh default skills populated. If it is an AI player, it will set the AI type to whatever is specified, or choose one
+  at random if not specified.
+  """
+  @spec create_basic_player(integer(), boolean(), String.t(), integer(), String.t()) :: %Player{}
+  def create_basic_player(game_id, human, name, user_id \\ nil, ai_type \\ nil) do
     if(!human and user_id != nil) do
       raise ArgumentError, message: "AI players cannot have a user_id"
     end
     default_skills = PlayerSkills.get_default_starting_skills()
-    ai_type = get_ai_type(human)
+    ai_type = if(ai_type == nil) do
+      get_ai_type(human)
+    else
+      ai_type
+    end
 
     %Player{game_id: game_id, human: human, name: name, user_id: user_id, ai_type: ai_type, skills: default_skills}
   end

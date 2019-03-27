@@ -2,7 +2,7 @@ defmodule FungusToast.PlayersTest do
     use FungusToast.DataCase
     alias FungusToast.Games.Grid
     alias FungusToast.Games.Player
-    alias FungusToast.{Players, Skills, PlayerSkills, AiStrategies}
+    alias FungusToast.{Players, Skills, AiStrategies}
     alias FungusToast.Skills.SkillsSeed
 
     doctest FungusToast.Players
@@ -30,10 +30,17 @@ defmodule FungusToast.PlayersTest do
             assert player.user_id == nil
         end
 
-        test "that it sets the ai_type for AI players" do
+        test "that it sets the ai_type for AI players when not specified" do
             player = Players.create_basic_player(-1, false, "some user name")
 
             assert player.ai_type != nil
+        end
+
+        test "that it sets the ai_type to the specified value" do
+            expected_ai_type = "some ai type"
+            player = Players.create_basic_player(-1, false, "some user name", nil, expected_ai_type)
+
+            assert player.ai_type == expected_ai_type
         end
 
         test "that it raises an error if trying to create an AI player with a user_id" do

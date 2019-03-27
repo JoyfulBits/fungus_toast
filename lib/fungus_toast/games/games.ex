@@ -106,7 +106,7 @@ defmodule FungusToast.Games do
   end
 
   def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
-      if(number_of_human_players == 1) do
+      if(number_of_human_players <= 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
@@ -114,7 +114,7 @@ defmodule FungusToast.Games do
         growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
         first_round = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: %{}, round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
-        second_round = %{number: 1, starting_game_state: starting_cells}
+        second_round = %{number: 1, growth_cycles: [], starting_game_state: starting_cells}
 
         Rounds.create_round(game.id, first_round)
         Rounds.create_round(game.id, second_round)
@@ -217,27 +217,28 @@ defmodule FungusToast.Games do
   @doc """
   Returns whether or not all players have spent their mutation points
   """
-  def next_round_available?(%Game{} = game_with_players) do
-    game_with_players.players
+  def next_round_available?(%Game{players: players}) do
+    players
     |> Enum.all?(fn player -> player.mutation_points == 0 end)
   end
 
   @doc """
   Executes a full round of growth cycles and creates a new round for this game
   """
-  def trigger_next_round(game) do
+  def trigger_next_round(%Game{players: players} = game) do
     latest_round = get_latest_round_for_game(game.id)
 
-    current_game_state = latest_round.starting_game_state["cells"]
-    players = game.players
+    current_game_state = latest_round.starting_game_state
+
     player_id_to_player_map = players
       |> Map.new(fn x -> {x.id, x} end)
 
     total_cells = game.grid_size * game.grid_size
     total_remaining_cells = total_cells - map_size(current_game_state)
 
-    Enum.filter(players, fn player -> !player.human end)
-      |> (fn player -> Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells) end).()
+    Enum.each(Enum.filter(players, fn player -> !player.human end), fn player ->
+        Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
+      end)
 
     growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
 
