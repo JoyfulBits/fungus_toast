@@ -7,7 +7,7 @@ defmodule FungusToastWeb.RoundControllerTest do
 
   @create_attrs %{
     starting_game_state: %{},
-    growth_cycles: %{}
+    growth_cycles: []
   }
 
   def fixture(:user) do
@@ -21,8 +21,7 @@ defmodule FungusToastWeb.RoundControllerTest do
   end
 
   def fixture(:round, game) do
-    {:ok, round} = Games.create_round(game, @create_attrs)
-    round
+    Games.create_round(game, @create_attrs)
   end
 
   defp create_round(_) do
@@ -46,7 +45,7 @@ defmodule FungusToastWeb.RoundControllerTest do
     } do
       conn = get(conn, Routes.game_round_path(conn, :show, game_id, id))
 
-      assert %{"id" => id, "gameId" => game_id, "startingGameState" => %{}, "growthCycles" => %{}} =
+      assert %{"id" => id, "gameId" => game_id, "startingGameState" => %{}, "growthCycles" => []} =
                json_response(conn, 200)
     end
   end

@@ -12,7 +12,7 @@ defmodule FungusToast.Games.Round do
 
   schema "rounds" do
     field :starting_game_state, :map, null: false
-    field :growth_cycles, :map, null: false
+    field :growth_cycles, {:array, :map}, null: false
     field :number, :integer, default: 1, null: false
 
     belongs_to :game, FungusToast.Games.Game

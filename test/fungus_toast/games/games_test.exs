@@ -113,7 +113,7 @@ defmodule FungusToast.GamesTest do
   describe "rounds" do
     alias FungusToast.Games.Round
 
-    @valid_attrs %{starting_game_state: %{"hello" => "world"}, growth_cycles: %{}}
+    @valid_attrs %{starting_game_state: %{"hello" => "world"}, growth_cycles: []}
     @invalid_attrs %{starting_game_state: nil, growth_cycles: nil}
 
     def round_fixture(game_id, attrs \\ %{}) do
@@ -137,15 +137,15 @@ defmodule FungusToast.GamesTest do
     test "create_round/2 with valid data creates a round" do
       user_fixture()
       game = game_fixture()
-      assert {:ok, %Round{} = round} = Games.create_round(game.id, @valid_attrs)
+      round = Games.create_round(game.id, @valid_attrs)
       assert round.starting_game_state == %{"hello" => "world"}
-      assert round.growth_cycles == %{}
+      assert round.growth_cycles == []
     end
 
     test "create_round/2 with invalid data returns error changeset" do
       user_fixture()
       game = game_fixture()
-      assert {:error, %Ecto.Changeset{}} = Games.create_round(game.id, @invalid_attrs)
+      assert_raise MatchError, fn -> Games.create_round(game.id, @invalid_attrs) end
     end
   end
 
