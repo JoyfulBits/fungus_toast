@@ -8,63 +8,28 @@ defmodule FungusToastWeb.GameViewTest do
   import FungusToast.Factory
 
   describe "game.json" do
+    # TODO: run through this piece by piece until we swagger or something else:
+    # https://docs.google.com/document/d/1e7jwVzMLy4Ob9T36gQxmDFHR36xtcbk78mJdzlt9mqM/edit
     test "the transformation of data model to json" do
       game = insert(:game)
 
-      assert GameView.render("game.json", %{game: game}) ==
-               %{
-                 grid_size: 50,
-                 id: "fake",
-                 number_of_ai_players: 1,
+      assert %{
+                 id: _,
                  number_of_human_players: 1,
+                 number_of_ai_players: 0,
+                 grid_size: 50,
                  status: "Not Started",
                  players: [
                    %{
-                     human: false,
-                     id: nil,
-                     name: nil,
-                     apoptosis_chance: 5.0,
-                     bottom_growth_chance: 7.5,
-                     bottom_left_growth_chance: 0.0,
-                     bottom_right_growth_chance: 0.0,
-                     dead_cells: 0,
-                     left_growth_chance: 7.5,
-                     live_cells: 0,
-                     mutation_chance: 20.0,
+                     name: _,
+                     id: _,
                      mutation_points: 5,
-                     mycotoxin_fungicide_chance: 0.0,
-                     regenerated_cells: 0,
-                     regeneration_chance: 0.0,
-                     right_growth_chance: 7.5,
-                     starved_cell_death_chance: 10.0,
-                     top_growth_chance: 7.5,
-                     top_left_growth_chance: 0.0,
-                     top_right_growth_chance: 0.0
-                   },
-                   %{
-                     human: false,
-                     id: nil,
-                     name: nil,
-                     apoptosis_chance: 5.0,
-                     bottom_growth_chance: 7.5,
-                     bottom_left_growth_chance: 0.0,
-                     bottom_right_growth_chance: 0.0,
-                     dead_cells: 0,
-                     left_growth_chance: 7.5,
-                     live_cells: 0,
-                     mutation_chance: 20.0,
-                     mutation_points: 5,
-                     mycotoxin_fungicide_chance: 0.0,
-                     regenerated_cells: 0,
-                     regeneration_chance: 0.0,
-                     right_growth_chance: 7.5,
-                     starved_cell_death_chance: 10.0,
-                     top_growth_chance: 7.5,
-                     top_left_growth_chance: 0.0,
-                     top_right_growth_chance: 0.0
+                     human: true,
+                     top_left_growth_chance: _,
+                     top_right_growth_chance: _,
                    }
                  ]
-               }
+               } = GameView.render("game.json", %{game: game})
     end
   end
 end

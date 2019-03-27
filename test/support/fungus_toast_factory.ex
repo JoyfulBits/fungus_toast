@@ -30,11 +30,10 @@ defmodule FungusToast.Factory do
             skills: [build(:player_skill)]
         }
     end
-
     def game_factory do
         %FungusToast.Games.Game{
             number_of_human_players: 1,
-            number_of_ai_players: 1,
+            number_of_ai_players: 0,
             players: [build(:player)]
         }
     end
