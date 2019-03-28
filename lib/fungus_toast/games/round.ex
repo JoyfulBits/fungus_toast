@@ -2,17 +2,17 @@ defmodule FungusToast.Games.Round do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @attrs [
+  @required_attrs [
     :number,
-    :starting_game_state,
-    :growth_cycles
+    :starting_game_state#,
+    #:growth_cycles
   ]
 
-  @derive {Jason.Encoder, only: [:id] ++ @attrs}
+  @derive {Jason.Encoder, only: [:id, :number]}
 
   schema "rounds" do
-    field :starting_game_state, :map, null: false
-    field :growth_cycles, {:array, :map}, null: false
+    embeds_one :starting_game_state, FungusToast.Games.GameState
+    embeds_many :growth_cycles, FungusToast.Games.GrowthCycle
     field :number, :integer, default: 1, null: false
 
     belongs_to :game, FungusToast.Games.Game
@@ -22,8 +22,15 @@ defmodule FungusToast.Games.Round do
 
   @doc false
   def changeset(round, attrs) do
+    IO.inspect round
+    IO.inspect attrs
     round
-    |> cast(attrs, @attrs)
-    |> validate_required(@attrs)
+    #|> change(attrs)
+    |> cast(attrs, [:number])
+    #|> IO.inspect
+    |> cast_embed(:starting_game_state)
+    |> cast_embed(:growth_cycles)
+    #|> put_embed(:growth_cycles, round.growth_cycles)
+    |> validate_required(@required_attrs)
   end
 end

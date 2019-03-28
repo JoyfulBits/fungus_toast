@@ -114,7 +114,7 @@ defmodule FungusToast.Games do
         growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
         first_round = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: %{}, round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
-        second_round = %{number: 1, growth_cycles: [], starting_game_state: starting_cells}
+        second_round = %Round{number: 1, growth_cycles: [], starting_game_state: starting_cells}
 
         Rounds.create_round(game.id, first_round)
         Rounds.create_round(game.id, second_round)
