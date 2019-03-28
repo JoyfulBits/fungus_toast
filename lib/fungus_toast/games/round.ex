@@ -22,7 +22,6 @@ defmodule FungusToast.Games.Round do
 
   @doc false
   def changeset(round, attrs) do
-    IO.inspect round
     IO.inspect attrs
     round
     #|> change(attrs)

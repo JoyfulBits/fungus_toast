@@ -8,6 +8,10 @@ defmodule FungusToast.Games.GameState do
     field :cells, :map
   end
 
+  def changeset(growth_cycle, %__MODULE__{} = attrs) do
+    changeset(growth_cycle, Map.from_struct(attrs))
+  end
+
   def changeset(growth_cycle, attrs) do
     growth_cycle
     |> change(attrs)

@@ -15,8 +15,11 @@ defmodule FungusToast.Games.GrowthCycle do
     field :mutation_points_earned, :map
   end
 
+  def changeset(growth_cycle, %__MODULE__{} = attrs) do
+    changeset(growth_cycle, Map.from_struct(attrs))
+  end
+
   def changeset(growth_cycle, attrs) do
-    IO.inspect growth_cycle
     growth_cycle
     |> change(attrs)
     |> validate_required(@attrs)
