@@ -1,7 +1,6 @@
 defmodule FungusToast.Games.RoundTest do
   use ExUnit.Case, async: true
   alias FungusToast.Games.Round
-  alias FungusToast.Games.GameState
   alias FungusToast.Games.GridCell
 
   describe "changeset/2" do
