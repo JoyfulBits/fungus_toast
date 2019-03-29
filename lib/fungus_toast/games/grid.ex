@@ -18,20 +18,15 @@ defmodule FungusToast.Games.Grid do
         {:error,
         "There needs to be at least 100 cells left over after placing starting cells, but there was only #{number_of_empty_cells_after_placing_start_cells}."}
       else
-        initial_grid_cells_map =
-        Enum.into(
+        Enum.map(
           1..number_of_players,
-          %{},
-          &{&1, get_start_cell_index(grid_size, number_of_players, &1)}
-        )
-
-        Enum.reduce(initial_grid_cells_map, %{}, fn {player_id, position}, map ->
-          Map.put(map, position, %GridCell{
-            index: position,
-            player_id: player_id,
-            live: true,
-            empty: false
-          })
+          fn player_number ->
+            %GridCell{
+              index: get_start_cell_index(grid_size, number_of_players, player_number),
+              player_id: Enum.at(player_ids, player_number - 1),
+              live: true,
+              empty: false
+            }
         end)
       end
     end
@@ -56,7 +51,7 @@ defmodule FungusToast.Games.Grid do
   # TODO: This doctest is flaky... look into this
   @doc ~S"""
   Returns the specified number of growth cycles, as well as the ending game state.
-  
+
   ##Examples
   iex> Grid.generate_growth_summary(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
   %{
