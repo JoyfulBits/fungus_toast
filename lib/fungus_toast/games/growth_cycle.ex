@@ -10,9 +10,9 @@ defmodule FungusToast.Games.GrowthCycle do
 
   @derive Jason.Encoder
   embedded_schema do
-    field :generation_number, :integer
-    field :toast_changes, :map
-    field :mutation_points_earned, :map
+    field :generation_number, :integer, default: 0
+    embeds_many :toast_changes, FungusToast.Games.GridCell
+    field :mutation_points_earned, :map, default: %{}
   end
 
   def changeset(growth_cycle, %__MODULE__{} = attrs) do
