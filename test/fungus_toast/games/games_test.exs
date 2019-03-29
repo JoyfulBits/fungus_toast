@@ -3,6 +3,8 @@ defmodule FungusToast.GamesTest do
 
   alias FungusToast.Accounts
   alias FungusToast.Games
+  alias FungusToast.Games.Game
+  alias FungusToast.Games.GameState
   alias FungusToast.Players
   alias FungusToast.Games.Player
 
@@ -99,9 +101,6 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "create_game_for_user" do
-    alias FungusToast.Games
-    alias FungusToast.Games.Game
-
     test "that it creates a game with a single player for the current user populated" do
       user = user_fixture()
       cs = Game.changeset(%Game{}, %{number_of_human_players: 1})
@@ -111,7 +110,7 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "rounds" do
-    @valid_attrs %{starting_game_state: %{"hello" => "world"}, growth_cycles: []}
+    @valid_attrs %{starting_game_state: %GameState{round_number: 1}, growth_cycles: []}
     @invalid_attrs %{starting_game_state: nil, growth_cycles: nil}
 
     def round_fixture(game_id, attrs \\ %{}) do
@@ -136,8 +135,7 @@ defmodule FungusToast.GamesTest do
       user_fixture()
       game = game_fixture()
       round = Games.create_round(game.id, @valid_attrs)
-      assert round.starting_game_state == %{"hello" => "world"}
-      assert round.growth_cycles == []
+      assert round.id >= 0
     end
 
     test "create_round/2 with invalid data returns error changeset" do
