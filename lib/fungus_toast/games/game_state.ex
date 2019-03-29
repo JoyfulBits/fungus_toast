@@ -5,7 +5,7 @@ defmodule FungusToast.Games.GameState do
   @derive Jason.Encoder
   embedded_schema do
     field :round_number, :integer
-    embeds_many :cells, FungusToast.Games.GridCell
+    embeds_many :cells, FungusToast.Games.GridCell, on_replace: :delete
   end
 
   def changeset(growth_cycle, %__MODULE__{} = attrs) do
