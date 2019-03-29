@@ -4,8 +4,7 @@ defmodule FungusToast.Games.Round do
 
   @required_attrs [
     :number,
-    :starting_game_state#,
-    #:growth_cycles
+    :starting_game_state
   ]
 
   @derive {Jason.Encoder, only: [:id, :number]}
@@ -22,14 +21,11 @@ defmodule FungusToast.Games.Round do
 
   @doc false
   def changeset(round, attrs) do
-    IO.inspect attrs
     round
-    #|> change(attrs)
+    |> change(attrs)
     |> cast(attrs, [:number])
-    #|> IO.inspect
     |> cast_embed(:starting_game_state)
     |> cast_embed(:growth_cycles)
-    #|> put_embed(:growth_cycles, round.growth_cycles)
     |> validate_required(@required_attrs)
   end
 end
