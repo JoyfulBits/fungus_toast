@@ -11,7 +11,7 @@ defmodule FungusToast.Games.GrowthCycle do
   @derive Jason.Encoder
   embedded_schema do
     field :generation_number, :integer, default: 0
-    embeds_many :toast_changes, FungusToast.Games.GridCell
+    embeds_many :toast_changes, FungusToast.Games.GridCell, on_replace: :delete
     field :mutation_points_earned, :map, default: %{}
   end
 
@@ -23,6 +23,7 @@ defmodule FungusToast.Games.GrowthCycle do
     growth_cycle
     |> change(attrs)
     |> cast_embed(:toast_changes)
+    #TODO validate_required isn't working here and I can't figure out why
     |> validate_required(@attrs)
   end
 end
