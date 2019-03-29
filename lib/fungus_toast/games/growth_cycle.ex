@@ -22,6 +22,7 @@ defmodule FungusToast.Games.GrowthCycle do
   def changeset(growth_cycle, attrs) do
     growth_cycle
     |> change(attrs)
+    |> cast_embed(:toast_changes)
     |> validate_required(@attrs)
   end
 end
