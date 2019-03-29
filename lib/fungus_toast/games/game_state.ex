@@ -5,7 +5,7 @@ defmodule FungusToast.Games.GameState do
   @derive Jason.Encoder
   embedded_schema do
     field :round_number, :integer
-    field :cells, :map
+    embeds_many :cells, FungusToast.Games.GridCell
   end
 
   def changeset(growth_cycle, %__MODULE__{} = attrs) do
@@ -15,6 +15,7 @@ defmodule FungusToast.Games.GameState do
   def changeset(growth_cycle, attrs) do
     growth_cycle
     |> change(attrs)
+    |> cast_embed(:cells)
     |> validate_required([:round_number, :cells])
   end
 end
