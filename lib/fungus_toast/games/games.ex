@@ -240,7 +240,8 @@ defmodule FungusToast.Games do
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
 
-    growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
+    starting_grid_map = Enum.into(current_game_state, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    growth_summary = Grid.generate_growth_summary(starting_grid_map, game.grid_size, player_id_to_player_map)
 
     #set the growth cycles on the latest around
     latest_round = Rounds.get_latest_round_for_game(game)

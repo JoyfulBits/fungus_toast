@@ -8,7 +8,7 @@ defmodule FungusToast.Games.GridCellTest do
     end
 
     test "a failing changeset" do
-       assert %{valid?: false} = GridCell.changeset(%GridCell{}, %{})
+       assert %{valid?: false} = GridCell.changeset(%GridCell{}, %{live: nil})
     end
   end
 end
