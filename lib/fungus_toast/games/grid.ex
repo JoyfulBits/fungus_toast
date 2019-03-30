@@ -58,27 +58,62 @@ defmodule FungusToast.Games.Grid do
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
         generation_number: 1,
-        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 2,
-        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 3,
-        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 4,
-        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 5,
-        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
         toast_changes: %{}
       }
     ],
