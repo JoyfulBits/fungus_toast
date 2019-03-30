@@ -78,7 +78,9 @@ defmodule FungusToast.Games.GridTest do
     defp has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, generation_number, player_id) do
       growth_cycle = Enum.find(growth_cycles, fn growth_cycle -> growth_cycle.generation_number == generation_number end)
 
-      if(growth_cycle != nil and growth_cycle.mutation_points_earned[player_id] > 0) do
+      points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
+        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
+      if(growth_cycle != nil and points_earned_map[player_id] > 0) do
         true
       else
         false
@@ -173,9 +175,12 @@ defmodule FungusToast.Games.GridTest do
       assert Enum.count(growth_cycles) == 1
 
       growth_cycle = Enum.at(growth_cycles, 0)
-      assert growth_cycle.mutation_points_earned[player_1.id] > 1
-      assert growth_cycle.mutation_points_earned[player_2.id] > 1
-      assert growth_cycle.mutation_points_earned[player_3.id] > 1
+
+      points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
+        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
+      assert points_earned_map[player_1.id] > 1
+      assert points_earned_map[player_2.id] > 1
+      assert points_earned_map[player_3.id] > 1
     end
 
     defp make_maximum_growth_player(id) do

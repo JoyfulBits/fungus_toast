@@ -2,6 +2,7 @@ defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GridCell
   alias FungusToast.Games.CellGrower
   alias FungusToast.Games.GrowthCycle
+  alias FungusToast.Games.MutationPointsEarned
   alias FungusToast.Random
   import :math
 
@@ -57,27 +58,27 @@ defmodule FungusToast.Games.Grid do
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
         generation_number: 1,
-        mutation_points_earned: %{1 => 1},
+        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 2,
-        mutation_points_earned: %{1 => 1},
+        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 3,
-        mutation_points_earned: %{1 => 1},
+        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 4,
-        mutation_points_earned: %{1 => 1},
+        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
         toast_changes: %{}
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 5,
-        mutation_points_earned: %{1 => 1},
+        mutation_points_earned: %FungusToast.Games.MutationPointsEarned{player_id: 1, mutation_points: 1},
         toast_changes: %{}
       }
     ],
@@ -93,10 +94,12 @@ defmodule FungusToast.Games.Grid do
     toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid_map, grid_size, player_id_to_player_map, grid_cell) end)
       |> Enum.reduce(%{}, fn(x, acc) -> Map.merge(x, acc) end)
 
-    mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
-      |> Enum.into(%{})
+    mutation_points = Enum.map(player_id_to_player_map,
+      fn{player_id, player}
+        -> %MutationPointsEarned{player_id: player_id, mutation_points: calculate_mutation_points(player)}
+      end)
 
-    growth_cycle = %GrowthCycle{ generation_number: generation_number, toast_changes: toast_changes, mutation_points_earned: mutation_points_earned }
+    growth_cycle = %GrowthCycle{ generation_number: generation_number, toast_changes: toast_changes, mutation_points_earned: mutation_points }
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
     Map.merge(starting_grid_map, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)

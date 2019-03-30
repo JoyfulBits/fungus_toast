@@ -27,8 +27,7 @@ defmodule FungusToast.Games.FullAiGameTest do
 
         game = Repo.get(Game, game.id) |> Repo.preload(:players)
 
-        #TODO leaving this commented out until we fix the atoms => string keys serialization issue.
-        #play_game(game)
+        play_game(game)
       end)
     end
 

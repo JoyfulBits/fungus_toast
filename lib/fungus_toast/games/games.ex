@@ -13,6 +13,7 @@ defmodule FungusToast.Games do
   alias FungusToast.Games.Grid
   alias FungusToast.Games.Round
   alias FungusToast.Games.GrowthCycle
+  alias FungusToast.Games.MutationPointsEarned
 
   @starting_mutation_points 5
 
@@ -122,8 +123,7 @@ defmodule FungusToast.Games do
   end
 
   def get_starting_mutation_points(players) do
-    Enum.map(players, fn player -> %{player.id => @starting_mutation_points} end)
-      |> Enum.reduce(fn (x, acc) -> Map.merge(x, acc) end)
+    Enum.map(players, fn player -> %MutationPointsEarned{player_id: player.id, mutation_points: @starting_mutation_points} end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
@@ -240,7 +240,7 @@ defmodule FungusToast.Games do
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
 
-    starting_grid_map = Enum.into(current_game_state, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    starting_grid_map = Enum.into(current_game_state.cells, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
     growth_summary = Grid.generate_growth_summary(starting_grid_map, game.grid_size, player_id_to_player_map)
 
     #set the growth cycles on the latest around
