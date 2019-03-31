@@ -66,7 +66,7 @@ defmodule FungusToast.Games.Grid do
             player_id: 1
           }
         ],
-        toast_changes: %{}
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 2,
@@ -78,7 +78,7 @@ defmodule FungusToast.Games.Grid do
             player_id: 1
           }
         ],
-        toast_changes: %{}
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 3,
@@ -90,7 +90,7 @@ defmodule FungusToast.Games.Grid do
             player_id: 1
           }
         ],
-        toast_changes: %{}
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 4,
@@ -102,7 +102,7 @@ defmodule FungusToast.Games.Grid do
             player_id: 1
           }
         ],
-        toast_changes: %{}
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 5,
@@ -114,10 +114,10 @@ defmodule FungusToast.Games.Grid do
             player_id: 1
           }
         ],
-        toast_changes: %{}
+        toast_changes: []
       }
     ],
-    new_game_state: %{}
+    new_game_state: []
   }
 
   """

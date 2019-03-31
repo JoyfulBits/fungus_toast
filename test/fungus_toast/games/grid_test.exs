@@ -72,7 +72,7 @@ defmodule FungusToast.Games.GridTest do
       assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 4, player1.id)
       assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 5, player1.id)
       assert result.new_game_state
-      assert (Map.keys(result.new_game_state) |> length) == 1
+      assert length(result.new_game_state) == 1
     end
 
     defp has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, generation_number, player_id) do
@@ -103,34 +103,34 @@ defmodule FungusToast.Games.GridTest do
       assert Enum.count(growth_cycles) == 5
 
       growth_cycle_1 = Enum.at(growth_cycles, 0)
-      number_of_toast_changes = Map.keys(growth_cycle_1.toast_changes) |> length
+      number_of_toast_changes = length(growth_cycle_1.toast_changes)
       # the least number of growths for a given cell would be 3 (if it's in the corner), therefore it should be impossible to have
       # less than 3 players x 3 cells = 9 toast changesin the first round
       assert number_of_toast_changes >= 9
 
       growth_cycle_2 = Enum.at(growth_cycles, 1)
-      number_of_toast_changes = Map.keys(growth_cycle_2.toast_changes) |> length
+      number_of_toast_changes = length(growth_cycle_2.toast_changes)
       # it should be impossible to generate less than 5 per player
       assert number_of_toast_changes >= 3 * 5
 
       growth_cycle_3 = Enum.at(growth_cycles, 2)
-      number_of_toast_changes = Map.keys(growth_cycle_3.toast_changes) |> length
+      number_of_toast_changes = length(growth_cycle_3.toast_changes)
       # it should be impossible to generate less than 7 per player
       assert number_of_toast_changes >= 3 * 7
 
       growth_cycle_4 = Enum.at(growth_cycles, 3)
-      number_of_toast_changes = Map.keys(growth_cycle_4.toast_changes) |> length
+      number_of_toast_changes = length(growth_cycle_4.toast_changes)
       # it should be impossible to generate less than 9 per player
       assert number_of_toast_changes >= 3 * 9
 
       growth_cycle_5 = Enum.at(growth_cycles, 4)
-      number_of_toast_changes = Map.keys(growth_cycle_5.toast_changes) |> length
+      number_of_toast_changes = length(growth_cycle_5.toast_changes)
       # it should be impossible to generate less than 11 per player
       assert number_of_toast_changes >= 3 * 11
 
       minimum_possible_toast_changes = 3 * 5 + 3 * 7 + 3 * 9 + 3 * 11
       number_of_starting_cells = 3
-      assert (Map.keys(result.new_game_state) |> length) > minimum_possible_toast_changes + number_of_starting_cells
+      assert length(result.new_game_state) > minimum_possible_toast_changes + number_of_starting_cells
     end
 
     test "that you cannot have more than the grid_size * grid_size number of cells in the new game state" do
