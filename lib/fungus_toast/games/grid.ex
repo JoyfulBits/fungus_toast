@@ -143,7 +143,10 @@ defmodule FungusToast.Games.Grid do
     |> generate_growth_summary(grid_size, player_id_to_player_map, generation_number + 1, acc ++ [growth_cycle])
   end
 
-  def generate_growth_summary(ending_grid, _, _, _, acc), do: %{growth_cycles: acc, new_game_state: ending_grid}
+  def generate_growth_summary(ending_grid, _, _, _, acc) do
+    cells_list = Enum.map(ending_grid, fn {_k, grid_cell} -> grid_cell end)
+    %{growth_cycles: acc, new_game_state: cells_list}
+  end
 
   def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)

@@ -151,10 +151,10 @@ defmodule FungusToast.Games.GridTest do
       growth_cycles = result.growth_cycles
       assert Enum.count(growth_cycles) == 50
 
-      assert (Map.keys(result.new_game_state) |> length) == grid_size * grid_size
+      assert length(result.new_game_state) == grid_size * grid_size
 
       last_growth_cycle = Enum.at(growth_cycles, 49)
-      number_of_live_cell_toast_changes = Enum.count(last_growth_cycle.toast_changes, fn {_, grid_cell} -> grid_cell.live end)
+      number_of_live_cell_toast_changes = Enum.count(last_growth_cycle.toast_changes, fn grid_cell -> grid_cell.live end)
       assert number_of_live_cell_toast_changes == 0
     end
 
