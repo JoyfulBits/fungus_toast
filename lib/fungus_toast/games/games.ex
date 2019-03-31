@@ -13,6 +13,7 @@ defmodule FungusToast.Games do
   alias FungusToast.Games.Grid
   alias FungusToast.Games.Round
   alias FungusToast.Games.GrowthCycle
+  alias FungusToast.Games.MutationPointsEarned
 
   @starting_mutation_points 5
 
@@ -112,18 +113,17 @@ defmodule FungusToast.Games do
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
         growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
-        first_round = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: %{}, round_number: 0}}
+        first_round_values = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: [], round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
-        second_round = %{number: 1, growth_cycles: [], starting_game_state: starting_cells}
+        second_round = %{number: 1, growth_cycles: [], starting_game_state: %GameState{cells: starting_cells, round_number: 1}}
 
-        Rounds.create_round(game.id, first_round)
+        Rounds.create_round(game.id, first_round_values)
         Rounds.create_round(game.id, second_round)
       end
   end
 
   def get_starting_mutation_points(players) do
-    Enum.map(players, fn player -> %{player.id => @starting_mutation_points} end)
-      |> Enum.reduce(fn (x, acc) -> Map.merge(x, acc) end)
+    Enum.map(players, fn player -> %MutationPointsEarned{player_id: player.id, mutation_points: @starting_mutation_points} end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
@@ -240,14 +240,16 @@ defmodule FungusToast.Games do
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
 
-    growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
+    starting_grid_map = Enum.into(current_game_state.cells, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    growth_summary = Grid.generate_growth_summary(starting_grid_map, game.grid_size, player_id_to_player_map)
 
     #set the growth cycles on the latest around
     latest_round = Rounds.get_latest_round_for_game(game)
       |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
     #set up the new round with only the starting game state
-    next_round = %Round{number: latest_round.number + 1, starting_game_state: growth_summary.new_game_state}
+    next_round_number = latest_round.number + 1
+    next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
     Rounds.create_round(game.id, next_round)
   end
 

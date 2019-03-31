@@ -27,7 +27,6 @@ defmodule FungusToast.Games.FullAiGameTest do
 
         game = Repo.get(Game, game.id) |> Repo.preload(:players)
 
-        #TODO leaving this commented out until we fix the atoms => string keys serialization issue.
         #play_game(game)
       end)
     end
@@ -42,7 +41,7 @@ defmodule FungusToast.Games.FullAiGameTest do
         IO.inspect "GAME OVER"
         IO.inspect game
       else
-        if(length(round.starting_game_state) == game.grid_size) do
+        if(length(round.starting_game_state.cells) == game.grid_size) do
           round_count_down = if(round_count_down == nil) do
             5
           else

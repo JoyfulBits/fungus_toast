@@ -5,7 +5,6 @@ defmodule FungusToast.Rounds do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Games
   alias FungusToast.Games.{Game, Round}
 
   @doc """
@@ -86,8 +85,7 @@ defmodule FungusToast.Rounds do
   end
 
   def create_round(game_id, attrs) when is_binary(game_id) do
-    game = Games.get_game!(game_id)
-    create_round(game.id, attrs)
+    create_round(game_id, attrs)
   end
 
   def create_round(game_id, attrs) when is_map(attrs) do
