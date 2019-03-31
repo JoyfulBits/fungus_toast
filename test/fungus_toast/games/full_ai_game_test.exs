@@ -1,11 +1,14 @@
 defmodule FungusToast.Games.FullAiGameTest do
   use FungusToast.DataCase
+  use Plug.Test
   alias FungusToast.{Games, Players, AiStrategies}
   alias FungusToast.Games.{Game, Player}
   alias FungusToast.Skills.SkillsSeed
   alias FungusToast.Repo
 
   describe "tests for playing out an entire AI game" do
+
+    @tag :skip
     test "that two AI players can finish a game" do
       SkillsSeed.seed_skills()
 
@@ -27,7 +30,7 @@ defmodule FungusToast.Games.FullAiGameTest do
 
         game = Repo.get(Game, game.id) |> Repo.preload(:players)
 
-        #play_game(game)
+        play_game(game)
       end)
     end
 
@@ -41,7 +44,9 @@ defmodule FungusToast.Games.FullAiGameTest do
         IO.inspect "GAME OVER"
         IO.inspect game
       else
-        if(length(round.starting_game_state.cells) == game.grid_size) do
+        number_of_cells = length(round.starting_game_state.cells)
+        IO.inspect "**ROUND NUMBER #{round.number}, NUMBER OF CELLS: #{number_of_cells}"
+        if(number_of_cells == game.grid_size * game.grid_size) do
           round_count_down = if(round_count_down == nil) do
             5
           else
