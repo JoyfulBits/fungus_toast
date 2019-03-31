@@ -5,7 +5,6 @@ defmodule FungusToast.Rounds do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Games
   alias FungusToast.Games.{Game, Round}
 
   @doc """

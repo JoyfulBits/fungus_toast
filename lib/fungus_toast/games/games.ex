@@ -248,7 +248,8 @@ defmodule FungusToast.Games do
       |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
     #set up the new round with only the starting game state
-    next_round = %Round{number: latest_round.number + 1, starting_game_state: growth_summary.new_game_state}
+    next_round_number = latest_round.number + 1
+    next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
     Rounds.create_round(game.id, next_round)
   end
 
