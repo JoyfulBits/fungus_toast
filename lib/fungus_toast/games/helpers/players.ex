@@ -52,10 +52,6 @@ defmodule FungusToast.Players do
     from(p in Player, where: p.id == ^id and p.game_id == ^game_id) |> Repo.one()
   end
 
-  defp get_ai_player_count() do
-    from(p in Player, where: p.human == false, select: count(p.id)) |> Repo.one()
-  end
-
   @doc """
   Creates a player for the given user and game
   """
