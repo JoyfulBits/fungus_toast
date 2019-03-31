@@ -125,6 +125,7 @@ defmodule FungusToast.Games.Grid do
   @spec generate_growth_summary(map(), integer(), map(), integer(), list()) :: any()
   def generate_growth_summary(starting_grid_map, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
     live_cells = Enum.filter(starting_grid_map, fn {_, grid_cell} -> grid_cell.live end)
+    |> Enum.into(%{})
 
     toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid_map, grid_size, player_id_to_player_map, grid_cell) end)
       |> Enum.reduce(%{}, fn(x, acc) -> Map.merge(x, acc) end)
@@ -134,7 +135,8 @@ defmodule FungusToast.Games.Grid do
         -> %MutationPointsEarned{player_id: player_id, mutation_points: calculate_mutation_points(player)}
       end)
 
-    growth_cycle = %GrowthCycle{ generation_number: generation_number, toast_changes: toast_changes, mutation_points_earned: mutation_points }
+    toast_changes_grid_cell_list = Enum.map(toast_changes, fn {_k, grid_cell} -> grid_cell end)
+    growth_cycle = %GrowthCycle{ generation_number: generation_number, toast_changes: toast_changes_grid_cell_list, mutation_points_earned: mutation_points }
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
     Map.merge(starting_grid_map, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)
