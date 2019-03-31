@@ -100,7 +100,7 @@ defmodule FungusToast.Games do
 
     with {:ok, game} <- create_game_for_user(changeset, user_name) do
       start_game(game)
-      preloaded_game = get_game!(game.id) |> preload_for_games()
+      preloaded_game = get_game!(game.id)
 
       {:ok, preloaded_game}
     end
@@ -187,7 +187,7 @@ defmodule FungusToast.Games do
 
   #Preloads the necessary data for games
   defp preload_for_games(games) do
-    games |> Repo.preload([:rounds, players: [skills: :skill]])
+    games |> Repo.preload([players: [skills: :skill]])
   end
 
   @doc """
