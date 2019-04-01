@@ -225,9 +225,9 @@ defmodule FungusToast.GamesTest do
 
       Games.trigger_next_round(game)
 
-      players = Players.list_players_for_game(game.id)
-
-      Enum.each(players, fn player -> assert player.mutation_points == 0 end)
+      Players.list_players_for_game(game.id)
+      |> Enum.filter(fn player -> !player.human end)
+      |> Enum.each(fn player -> assert player.mutation_points == 0 end)
     end
   end
 end

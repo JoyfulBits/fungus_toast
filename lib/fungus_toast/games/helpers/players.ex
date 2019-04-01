@@ -33,7 +33,7 @@ defmodule FungusToast.Players do
   Returns the list of players for a given game.
   """
   def list_players_for_game(game_id) do
-    from(p in Player, where: p.game_id == ^game_id)
+    from(p in Player, where: p.game_id == ^game_id) |> Repo.all
   end
 
   @doc """
