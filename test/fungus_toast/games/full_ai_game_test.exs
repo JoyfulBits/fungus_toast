@@ -10,7 +10,6 @@ defmodule FungusToast.Games.FullAiGameTest do
 
     @tag :skip
     test "that two AI players can finish a game" do
-      SkillsSeed.seed_skills()
 
       Repo.transaction(fn ->
         game_changeset = %Game{} |> Game.changeset(%{number_of_ai_players: 2, number_of_human_players: 0})

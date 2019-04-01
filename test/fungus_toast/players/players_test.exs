@@ -9,7 +9,6 @@ defmodule FungusToast.PlayersTest do
 
     describe "create_basic_player/2" do
         test "that it creates the player including at least the 5 basic skills" do
-            SkillsSeed.seed_skills()
 
             game_id = 2
             human = true
@@ -98,7 +97,6 @@ defmodule FungusToast.PlayersTest do
 
     describe "spend_ai_mutation_points/2" do
         test "that all mutation points are spent and skills are adjusted accordingly" do
-            SkillsSeed.seed_skills()
 
             mutation_points = 3
             game = Fixtures.Game.create!(%{number_of_ai_players: 1, number_of_human_players: 0})
