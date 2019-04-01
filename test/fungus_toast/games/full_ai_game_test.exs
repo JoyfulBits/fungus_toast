@@ -36,25 +36,34 @@ defmodule FungusToast.Games.FullAiGameTest do
     def play_game(game, round_count_down \\ nil) do
       round = Games.trigger_next_round(game)
 
-      game = Repo.get(Game, game.id) |> Repo.preload(:players)
+      game = Games.get_game!(game.id)
 
       if(round_count_down == 0) do
         IO.inspect "***************"
         IO.inspect "GAME OVER"
         IO.inspect game
       else
-        number_of_cells = length(round.starting_game_state.cells)
-        IO.inspect "**ROUND NUMBER #{round.number}, NUMBER OF CELLS: #{number_of_cells}"
-        if(number_of_cells == game.grid_size * game.grid_size) do
-          round_count_down = if(round_count_down == nil) do
-            5
-          else
-            round_count_down - 1
-          end
-          play_game(game, round_count_down)
+        if(round.number == 5) do
+          IO.inspect "***************"
+          IO.inspect "GAME TOOK TOO LONG TO FINISH"
+          #IO.inspect game
+          #IO.inspect "FINAL ROUND:"
+          #IO.inspect(round.starting_game_state, limit: :infinity)
         else
-          play_game(game)
+          number_of_cells = length(round.starting_game_state.cells)
+          IO.inspect "**ROUND NUMBER #{round.number}, NUMBER OF CELLS: #{number_of_cells}"
+          if(number_of_cells == game.grid_size * game.grid_size) do
+            round_count_down = if(round_count_down == nil) do
+              5
+            else
+              round_count_down - 1
+            end
+            play_game(game, round_count_down)
+          else
+            play_game(game)
+          end
         end
+
 
       end
     end

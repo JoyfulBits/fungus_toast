@@ -215,7 +215,6 @@ defmodule FungusToast.GamesTest do
     end
   end
 
-
   describe "trigger_next_round/1" do
     test "that AI player's mutation points get spent" do
       user = user_fixture(%{user_name: "user name"})
@@ -223,11 +222,50 @@ defmodule FungusToast.GamesTest do
 
       game = Games.get_game!(game.id)
 
+      previous_skills = Enum.map(game.players, fn player -> {player.id,
+        Enum.map(player.skills, fn player_skill ->
+          {player_skill.id, player_skill.skill_level}
+        end)
+        |> Enum.into(%{})}
+      end)
+      |> Enum.into(%{})
+
+      starting_mutation_points = Enum.map(game.players, fn player ->
+        {player.id, player.mutation_points}
+      end)
+      |> Enum.into(%{})
+
       Games.trigger_next_round(game)
+
+      game = Games.get_game!(game.id)
+
+      Enum.each(game.players, fn player ->
+        matching_skills = previous_skills[player.id]
+        if(!player.human) do
+          total_points_invested = Enum.reduce(player.skills, 0, fn player_skill, acc ->
+            acc + player_skill.skill_level
+          end)
+          assert total_points_invested == Player.default_starting_mutation_points
+        end
+      end)
 
       Players.list_players_for_game(game.id)
       |> Enum.filter(fn player -> !player.human end)
       |> Enum.each(fn player -> assert player.mutation_points == 0 end)
+    end
+
+    test "that AI and Human players are awarded their new mutation points" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
+
+      game = Games.get_game!(game.id)
+
+      Games.trigger_next_round(game)
+
+      Players.list_players_for_game(game.id)
+      |> Enum.each(fn player ->
+        assert (player.human or assert player.mutation_points == 0)
+      end)
     end
   end
 end

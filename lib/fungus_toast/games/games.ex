@@ -8,12 +8,7 @@ defmodule FungusToast.Games do
 
   alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
-  alias FungusToast.Games.Game
-  alias FungusToast.Games.GameState
-  alias FungusToast.Games.Grid
-  alias FungusToast.Games.Round
-  alias FungusToast.Games.GrowthCycle
-  alias FungusToast.Games.MutationPointsEarned
+  alias FungusToast.Games.{Game, Player, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
 
   @starting_mutation_points 5
 
@@ -243,9 +238,8 @@ defmodule FungusToast.Games do
 
     total_cells = game.grid_size * game.grid_size
     total_remaining_cells = total_cells - map_size(current_game_state)
-
-    Enum.filter(players, fn player -> !player.human end)
-    |> Enum.each(fn player ->
+    ai_players = Enum.filter(players, fn player -> !player.human end)
+    Enum.each(ai_players, fn player ->
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
 
@@ -256,10 +250,28 @@ defmodule FungusToast.Games do
     latest_round = Rounds.get_latest_round_for_game(game)
       |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
+    update_player_mutation_points(players, growth_summary.growth_cycles)
+
     #set up the new round with only the starting game state
     next_round_number = latest_round.number + 1
     next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
     Rounds.create_round(game.id, next_round)
+  end
+
+  defp update_player_mutation_points(players, growth_cycles) do
+    player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
+    |> Enum.into(%{})
+
+    mutation_points_map = Enum.reduce(growth_cycles, player_to_mutation_points_map, fn growth_cycle, acc ->
+      mutation_points_earned_map = Enum.map(growth_cycle.mutation_points_earned, fn mutuation_points_earned ->
+        {mutuation_points_earned.player_id, mutuation_points_earned.mutation_points}
+      end)
+      |> Enum.into(%{})
+
+      Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
+    end)
+
+    Enum.each(mutation_points_map, fn {player_id, mutation_points} -> Players.update_player(%Player{id: player_id}, %{mutation_points: mutation_points}) end)
   end
 
   defdelegate get_latest_round_for_game(game), to: Rounds
