@@ -75,7 +75,9 @@ defmodule FungusToast.Games do
       ** (Ecto.NoResultsError)
 
   """
-  def get_game!(id), do: Repo.get!(Game, id) |> preload_for_games()
+  def get_game!(id) do
+    Repo.get!(Game, id) |> preload_for_games()
+  end
 
   @doc """
   Creates a game.
@@ -83,7 +85,7 @@ defmodule FungusToast.Games do
   ## Examples
 
       iex> create_game("testUser", %{field: value})
-      {:ok, %Game{}}
+      %Game{}
 
       iex> create_game("testUser", %{field: bad_value})
       {:error, %Ecto.Changeset{}}
@@ -98,11 +100,12 @@ defmodule FungusToast.Games do
     end
     changeset = %Game{} |> Game.changeset(attrs)
 
-    with {:ok, game} <- create_game_for_user(changeset, user_name) do
-      start_game(game)
-      preloaded_game = get_game!(game.id)
+    game = create_game_for_user(changeset, user_name)
 
-      {:ok, preloaded_game}
+    if(start_game(game)) do
+      get_game!(game.id)
+    else
+      game
     end
   end
 
@@ -119,6 +122,9 @@ defmodule FungusToast.Games do
 
         Rounds.create_round(game.id, first_round_values)
         Rounds.create_round(game.id, second_round)
+        true
+      else
+        false
       end
   end
 
@@ -127,15 +133,17 @@ defmodule FungusToast.Games do
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
-    Repo.transaction(fn ->
+    {:ok, game} = Repo.transaction(fn ->
       {:ok, game} = Repo.insert(game_changeset)
 
       Players.create_player_for_user(game, user_name)
       Players.create_human_players(game, game.number_of_human_players - 1)
       Players.create_ai_players(game)
 
-      Repo.get(Game, game.id) |> Repo.preload(:players)
+      get_game!(game.id)
     end)
+
+    game
   end
 
   @doc """
@@ -161,15 +169,15 @@ defmodule FungusToast.Games do
 
   ## Examples
 
-      iex> delete_game(game)
-      {:ok, %Game{}}
+      iex> delete_game!(game)
+      game
 
-      iex> delete_game(game)
+      iex> delete_game!(game)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_game(%Game{} = game) do
-    Repo.delete(game)
+  def delete_game!(%Game{} = game) do
+    Repo.delete!(game)
   end
 
   @doc """
@@ -236,7 +244,8 @@ defmodule FungusToast.Games do
     total_cells = game.grid_size * game.grid_size
     total_remaining_cells = total_cells - map_size(current_game_state)
 
-    Enum.each(Enum.filter(players, fn player -> !player.human end), fn player ->
+    Enum.filter(players, fn player -> !player.human end)
+    |> Enum.each(fn player ->
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
 

@@ -19,9 +19,7 @@ defmodule FungusToast.GamesTest do
 
   #Creates a game with a human player for that user, as well as any AI players
   defp game_fixture(attrs \\ %{number_of_human_players: 1}) do
-    {:ok, game} = Games.create_game("testUser", attrs)
-
-    game
+    Games.create_game("testUser", attrs)
   end
 
   #creates a human player with a user
@@ -65,7 +63,7 @@ defmodule FungusToast.GamesTest do
       user = Fixtures.Accounts.User.create!()
       valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 2}
 
-      assert {:ok, game} = Games.create_game(user.user_name, valid_attrs)
+      game = Games.create_game(user.user_name, valid_attrs)
 
       assert game.number_of_human_players == 1
       assert game.number_of_ai_players == 2
@@ -83,13 +81,13 @@ defmodule FungusToast.GamesTest do
     test "update_game/2 with valid data updates the game" do
       user_fixture()
       game = game_fixture()
-      assert {:ok, %Game{} = game} = Games.update_game(game, @update_attrs)
+      assert Games.update_game(game, @update_attrs)
     end
 
     test "delete_game/1 deletes the game" do
       user_fixture()
       game = game_fixture()
-      assert {:ok, %Game{}} = Games.delete_game(game)
+      Games.delete_game!(game)
       assert_raise Ecto.NoResultsError, fn -> Games.get_game!(game.id) end
     end
 
@@ -104,7 +102,7 @@ defmodule FungusToast.GamesTest do
     test "that it creates a game with a single player for the current user populated" do
       user = user_fixture()
       cs = Game.changeset(%Game{}, %{number_of_human_players: 1})
-      {:ok, game} = Games.create_game_for_user(cs, user.user_name)
+      game = Games.create_game_for_user(cs, user.user_name)
       assert [player | _] = game.players
     end
   end
@@ -201,8 +199,7 @@ defmodule FungusToast.GamesTest do
     test "next_round_available/1 returns true if all players have spent their points" do
       user = user_fixture(%{user_name: "another user"})
 
-      game =
-        game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
+      game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
 
       human_player_with_user_fixture(user.user_name, game, 0)
       human_player_without_user_fixture(game)
@@ -215,6 +212,22 @@ defmodule FungusToast.GamesTest do
       game = Games.get_game!(game.id)
 
       assert Games.next_round_available?(game)
+    end
+  end
+
+
+  describe "trigger_next_round/1" do
+    test "that AI player's mutation points get spent" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 2})
+
+      game = Games.get_game!(game.id)
+
+      Games.trigger_next_round(game)
+
+      players = Players.list_players_for_game(game.id)
+
+      Enum.each(players, fn player -> assert player.mutation_points == 0 end)
     end
   end
 end

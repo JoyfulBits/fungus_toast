@@ -13,8 +13,7 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
   end
 
   def fixture(:game) do
-    {:ok, game} = Games.create_game("testUser", %{number_of_human_players: 1})
-    game
+    Games.create_game("testUser", %{number_of_human_players: 1})
   end
 
   def fixture(:skill) do
@@ -50,44 +49,7 @@ defmodule FungusToastWeb.PlayerSkillControllerTest do
 
     test "lists all skills", %{conn: conn, game: game, player: player} do
       conn = get(conn, Routes.game_player_skill_path(conn, :index, game, player))
-      assert json_response(conn, 200) == []
+      assert json_response(conn, 200) != []
     end
   end
-
-  #describe "POST" do
-  #  setup [:create_game_player]
-
-  #  test "next round not available if mutation points remain", %{
-  #    conn: conn,
-  #    game: game,
-  #    player: player
-  #  } do
-  #    skill = fixture(:skill)
-  #    skill_params = fixture(:skill_params, skill, 1)
-  #    conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), skill_params)
-  #    assert %{"nextRoundAvailable" => false} = json_response(conn, 200)
-  #  end
-
-  #  test "next round available if no mutation points remain", %{
-  #    conn: conn,
-  #    game: game,
-  #    player: player
-  #  } do
-  #    skill = fixture(:skill)
-  #    skill_params = fixture(:skill_params, skill, 5)
-  #    conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), skill_params)
-  #    assert %{"nextRoundAvailable" => true} = json_response(conn, 200)
-  #  end
-
-  #  test "renders errors when data is invalid", %{conn: conn, game: game, player: player} do
-  #    bad_attrs = %{
-  #      "skill_upgrades" => [
-  #        %{"id" => 3, "points_spent" => -1}
-  #      ]
-  #    }
-
-  #    conn = post(conn, Routes.game_player_skill_path(conn, :update, game, player), bad_attrs)
-  #    assert "Bad Request" = json_response(conn, 400)
-  #  end
-  #end
 end
