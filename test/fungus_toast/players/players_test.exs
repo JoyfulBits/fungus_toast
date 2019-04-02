@@ -1,15 +1,12 @@
 defmodule FungusToast.PlayersTest do
     use FungusToast.DataCase
-    alias FungusToast.Games.Grid
     alias FungusToast.Games.Player
     alias FungusToast.{Players, Skills, AiStrategies}
-    alias FungusToast.Skills.SkillsSeed
 
     doctest FungusToast.Players
 
     describe "create_basic_player/2" do
         test "that it creates the player including at least the 5 basic skills" do
-
             game_id = 2
             human = true
             user_name = "some user name"

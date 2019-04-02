@@ -230,11 +230,6 @@ defmodule FungusToast.GamesTest do
       end)
       |> Enum.into(%{})
 
-      starting_mutation_points = Enum.map(game.players, fn player ->
-        {player.id, player.mutation_points}
-      end)
-      |> Enum.into(%{})
-
       Games.trigger_next_round(game)
 
       game = Games.get_game!(game.id)
