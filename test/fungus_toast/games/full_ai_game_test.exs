@@ -43,10 +43,10 @@ defmodule FungusToast.Games.FullAiGameTest do
         IO.inspect "GAME OVER"
         IO.inspect game
       else
-        if(round.number == 5) do
+        if(round.number == 100) do
           IO.inspect "***************"
           IO.inspect "GAME TOOK TOO LONG TO FINISH"
-          #IO.inspect game
+          IO.inspect game.players
           #IO.inspect "FINAL ROUND:"
           #IO.inspect(round.starting_game_state, limit: :infinity)
         else
@@ -63,8 +63,6 @@ defmodule FungusToast.Games.FullAiGameTest do
             play_game(game)
           end
         end
-
-
       end
     end
   end
