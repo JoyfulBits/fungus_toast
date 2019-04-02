@@ -8,12 +8,7 @@ defmodule FungusToast.Games do
 
   alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
-  alias FungusToast.Games.Game
-  alias FungusToast.Games.GameState
-  alias FungusToast.Games.Grid
-  alias FungusToast.Games.Round
-  alias FungusToast.Games.GrowthCycle
-  alias FungusToast.Games.MutationPointsEarned
+  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
 
   @starting_mutation_points 5
 
@@ -75,7 +70,9 @@ defmodule FungusToast.Games do
       ** (Ecto.NoResultsError)
 
   """
-  def get_game!(id), do: Repo.get!(Game, id) |> preload_for_games()
+  def get_game!(id) do
+    Repo.get!(Game, id) |> preload_for_games()
+  end
 
   @doc """
   Creates a game.
@@ -83,7 +80,7 @@ defmodule FungusToast.Games do
   ## Examples
 
       iex> create_game("testUser", %{field: value})
-      {:ok, %Game{}}
+      %Game{}
 
       iex> create_game("testUser", %{field: bad_value})
       {:error, %Ecto.Changeset{}}
@@ -98,11 +95,12 @@ defmodule FungusToast.Games do
     end
     changeset = %Game{} |> Game.changeset(attrs)
 
-    with {:ok, game} <- create_game_for_user(changeset, user_name) do
-      start_game(game)
-      preloaded_game = get_game!(game.id) |> preload_for_games()
+    game = create_game_for_user(changeset, user_name)
 
-      {:ok, preloaded_game}
+    if(start_game(game)) do
+      get_game!(game.id)
+    else
+      game
     end
   end
 
@@ -119,6 +117,9 @@ defmodule FungusToast.Games do
 
         Rounds.create_round(game.id, first_round_values)
         Rounds.create_round(game.id, second_round)
+        true
+      else
+        false
       end
   end
 
@@ -127,15 +128,17 @@ defmodule FungusToast.Games do
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
-    Repo.transaction(fn ->
+    {:ok, game} = Repo.transaction(fn ->
       {:ok, game} = Repo.insert(game_changeset)
 
       Players.create_player_for_user(game, user_name)
       Players.create_human_players(game, game.number_of_human_players - 1)
       Players.create_ai_players(game)
 
-      Repo.get(Game, game.id) |> Repo.preload(:players)
+      get_game!(game.id)
     end)
+
+    game
   end
 
   @doc """
@@ -161,15 +164,15 @@ defmodule FungusToast.Games do
 
   ## Examples
 
-      iex> delete_game(game)
-      {:ok, %Game{}}
+      iex> delete_game!(game)
+      game
 
-      iex> delete_game(game)
+      iex> delete_game!(game)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_game(%Game{} = game) do
-    Repo.delete(game)
+  def delete_game!(%Game{} = game) do
+    Repo.delete!(game)
   end
 
   @doc """
@@ -187,7 +190,7 @@ defmodule FungusToast.Games do
 
   #Preloads the necessary data for games
   defp preload_for_games(games) do
-    games |> Repo.preload([:rounds, players: [skills: :skill]])
+    games |> Repo.preload([players: [skills: :skill]])
   end
 
   @doc """
@@ -235,8 +238,8 @@ defmodule FungusToast.Games do
 
     total_cells = game.grid_size * game.grid_size
     total_remaining_cells = total_cells - map_size(current_game_state)
-
-    Enum.each(Enum.filter(players, fn player -> !player.human end), fn player ->
+    ai_players = Enum.filter(players, fn player -> !player.human end)
+    Enum.each(ai_players, fn player ->
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
 
@@ -247,10 +250,33 @@ defmodule FungusToast.Games do
     latest_round = Rounds.get_latest_round_for_game(game)
       |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
+    update_player_mutation_points(players, growth_summary.growth_cycles)
+
     #set up the new round with only the starting game state
     next_round_number = latest_round.number + 1
     next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
     Rounds.create_round(game.id, next_round)
+  end
+
+  defp update_player_mutation_points(players, growth_cycles) do
+    player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
+    |> Enum.into(%{})
+
+    mutation_points_map = Enum.reduce(growth_cycles, player_to_mutation_points_map, fn growth_cycle, acc ->
+      mutation_points_earned_map = Enum.map(growth_cycle.mutation_points_earned, fn mutuation_points_earned ->
+        {mutuation_points_earned.player_id, mutuation_points_earned.mutation_points}
+      end)
+      |> Enum.into(%{})
+
+      Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
+    end)
+
+    Enum.each(players, fn player ->
+      mutation_points = mutation_points_map[player.id]
+      #TODO setting to -1 so there is always an update. What's a better way to do this?
+      player = %{player | mutation_points: -1}
+      Players.update_player(player, %{mutation_points: mutation_points})
+    end)
   end
 
   defdelegate get_latest_round_for_game(game), to: Rounds

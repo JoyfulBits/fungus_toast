@@ -33,7 +33,7 @@ defmodule FungusToast.Players do
   Returns the list of players for a given game.
   """
   def list_players_for_game(game_id) do
-    from(p in Player, where: p.game_id == ^game_id) |> Repo.one
+    from(p in Player, where: p.game_id == ^game_id) |> Repo.all
   end
 
   @doc """
@@ -50,10 +50,6 @@ defmodule FungusToast.Players do
 
   def get_player_for_game(game_id, id) do
     from(p in Player, where: p.id == ^id and p.game_id == ^game_id) |> Repo.one()
-  end
-
-  defp get_ai_player_count() do
-    from(p in Player, where: p.human == false, select: count(p.id)) |> Repo.one()
   end
 
   @doc """

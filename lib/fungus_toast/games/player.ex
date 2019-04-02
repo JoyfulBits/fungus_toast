@@ -20,6 +20,9 @@ defmodule FungusToast.Games.Player do
   @default_apoptosis_chance 5.0
   @default_starved_cell_death_chance 10.0
 
+  @default_starting_mutation_points 5
+  def default_starting_mutation_points, do: @default_starting_mutation_points
+
   @attrs [
     :name,
     :human,
@@ -49,7 +52,7 @@ defmodule FungusToast.Games.Player do
     field :human, :boolean, default: false, null: false
     field :ai_type, :string, null: true
 
-    field :mutation_points, :integer, default: 5, null: false
+    field :mutation_points, :integer, default: @default_starting_mutation_points, null: false
 
     field :top_left_growth_chance, :float, default: 0.0, null: false
     field :top_growth_chance, :float, default: @default_top_right_bottom_left_growth_chance, null: false
