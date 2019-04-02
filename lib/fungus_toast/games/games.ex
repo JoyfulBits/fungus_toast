@@ -8,7 +8,7 @@ defmodule FungusToast.Games do
 
   alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
-  alias FungusToast.Games.{Game, Player, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
 
   @starting_mutation_points 5
 
@@ -271,7 +271,12 @@ defmodule FungusToast.Games do
       Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
     end)
 
-    Enum.each(mutation_points_map, fn {player_id, mutation_points} -> Players.update_player(%Player{id: player_id}, %{mutation_points: mutation_points}) end)
+    Enum.each(players, fn player ->
+      mutation_points = mutation_points_map[player.id]
+      #TODO setting to -1 so there is always an update. What's a better way to do this?
+      player = %{player | mutation_points: -1}
+      Players.update_player(player, %{mutation_points: mutation_points})
+    end)
   end
 
   defdelegate get_latest_round_for_game(game), to: Rounds

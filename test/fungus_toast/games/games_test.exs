@@ -248,10 +248,6 @@ defmodule FungusToast.GamesTest do
           assert total_points_invested == Player.default_starting_mutation_points
         end
       end)
-
-      Players.list_players_for_game(game.id)
-      |> Enum.filter(fn player -> !player.human end)
-      |> Enum.each(fn player -> assert player.mutation_points == 0 end)
     end
 
     test "that AI and Human players are awarded their new mutation points" do
@@ -264,7 +260,7 @@ defmodule FungusToast.GamesTest do
 
       Players.list_players_for_game(game.id)
       |> Enum.each(fn player ->
-        assert (player.human or assert player.mutation_points == 0)
+        assert player.mutation_points >= Player.default_starting_mutation_points
       end)
     end
   end
