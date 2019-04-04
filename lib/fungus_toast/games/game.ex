@@ -9,6 +9,8 @@ defmodule FungusToast.Games.Game do
     :number_of_human_players,
     :number_of_ai_players,
     :grid_size,
+    :total_live_cells,
+    :total_dead_cells,
     :status
   ]
 
