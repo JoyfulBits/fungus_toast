@@ -218,14 +218,6 @@ defmodule FungusToast.GamesTest do
 
       game = Games.get_game!(game.id)
 
-      previous_skills = Enum.map(game.players, fn player -> {player.id,
-        Enum.map(player.skills, fn player_skill ->
-          {player_skill.id, player_skill.skill_level}
-        end)
-        |> Enum.into(%{})}
-      end)
-      |> Enum.into(%{})
-
       Games.trigger_next_round(game)
 
       game = Games.get_game!(game.id)
