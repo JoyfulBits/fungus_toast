@@ -38,4 +38,11 @@ defmodule FungusToast.Games.Game do
     |> validate_required([:number_of_human_players])
     |> validate_inclusion(:status, [@default_status] ++ @statuses)
   end
+
+  @doc """
+  Return the number of empty cells left on the grid
+  """
+  def number_of_empty_cells(game) do
+    game.grid_size * game.grid_size - game.total_live_cells - game.total_dead_dells
+  end
 end
