@@ -104,7 +104,7 @@ defmodule FungusToast.Games do
     end
   end
 
-  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
+  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
       if(number_of_human_players <= 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
@@ -117,10 +117,36 @@ defmodule FungusToast.Games do
 
         Rounds.create_round(game.id, first_round_values)
         Rounds.create_round(game.id, second_round)
+
+        update_aggregate_stats(game, starting_cells)
         true
       else
         false
       end
+  end
+
+  def update_aggregate_stats(game = %Game{players: players}, cells) do
+    stats_map = Enum.reduce(players, %{}, fn player, acc ->
+      Map.put(acc, player.id, %{live_cells: 0, dead_cells: 0})
+    end)
+
+    stats_map = Enum.reduce(cells, stats_map, fn grid_cell, acc ->
+      if(grid_cell.live) do
+        update_in(acc, [grid_cell.player_id, :live_cells], &(&1 + 1))
+      else
+        update_in(acc, [grid_cell.player_id, :dead_cells], &(&1 + 1))
+      end
+    end)
+    total_live_cells = Enum.reduce(stats_map, 0, fn {_k, v}, acc ->
+      acc + v.live_cells
+    end)
+
+    total_dead_cells = Enum.reduce(stats_map, 0, fn {_k, v}, acc ->
+      acc + v.dead_cells
+    end)
+
+    updated_game = update_game(game, %{total_live_cells: total_live_cells, total_dead_cells: total_dead_cells})
+    {updated_game, []}
   end
 
   def get_starting_mutation_points(players) do
@@ -147,16 +173,18 @@ defmodule FungusToast.Games do
   ## Examples
 
       iex> update_game(game, %{field: new_value})
-      {:ok, %Game{}}
+      game
 
       iex> update_game(game, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
   def update_game(%Game{} = game, attrs) do
-    game
+    {:ok, game} = game
     |> Game.changeset(attrs)
     |> Repo.update()
+
+    game
   end
 
   @doc """
