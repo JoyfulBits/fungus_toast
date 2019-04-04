@@ -20,6 +20,8 @@ defmodule FungusToast.Games.Game do
     field :grid_size, :integer, default: @default_grid_size, null: false
     field :number_of_human_players, :integer, null: false
     field :number_of_ai_players, :integer, default: 0, null: false
+    field :total_live_cells, :integer, default: 0, null: false
+    field :total_dead_cells, :integer, default: 0, null: false
 
     has_many :rounds, FungusToast.Games.Round, on_delete: :delete_all
     has_many :players, FungusToast.Games.Player, on_delete: :delete_all
