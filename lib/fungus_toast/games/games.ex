@@ -137,6 +137,18 @@ defmodule FungusToast.Games do
         update_in(acc, [grid_cell.player_id, :dead_cells], &(&1 + 1))
       end
     end)
+
+    total_live_and_dead_cells = get_live_and_dead_cell_aggregates(stats_map)
+
+    updated_players = update_players_aggregate_stats(players, stats_map)
+
+    updated_game = update_game(game, %{
+      total_live_cells: total_live_and_dead_cells.total_live_cells,
+      total_dead_cells: total_live_and_dead_cells.total_dead_cells})
+    {updated_game, updated_players}
+  end
+
+  defp get_live_and_dead_cell_aggregates(stats_map) do
     total_live_cells = Enum.reduce(stats_map, 0, fn {_k, v}, acc ->
       acc + v.live_cells
     end)
@@ -145,8 +157,17 @@ defmodule FungusToast.Games do
       acc + v.dead_cells
     end)
 
-    updated_game = update_game(game, %{total_live_cells: total_live_cells, total_dead_cells: total_dead_cells})
-    {updated_game, []}
+    %{total_live_cells: total_live_cells, total_dead_cells: total_dead_cells}
+  end
+
+  defp update_players_aggregate_stats(players, stats_map) do
+    Enum.map(players, fn player ->
+      player_stats = Enum.filter(stats_map, fn {player_id, _} -> player_id == player.id end)
+      player_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats)
+      Players.update_player(player, %{
+        live_cells: player_live_and_dead_cells.total_live_cells,
+        dead_cells: player_live_and_dead_cells.total_dead_cells})
+    end)
   end
 
   def get_starting_mutation_points(players) do

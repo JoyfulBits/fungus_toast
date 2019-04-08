@@ -268,13 +268,13 @@ defmodule FungusToast.GamesTest do
       assert updated_game.total_live_cells == 3
       assert updated_game.total_dead_cells == 2
 
-      # player1 = Enum.find(updated_players, fn player -> player.id == player_1_id end)
-      # assert player1.live_cells == 3
-      # assert player1.dead_cells == 0
+      player1 = Enum.find(updated_players, fn player -> player.id == player_1_id end)
+      assert player1.live_cells == 3
+      assert player1.dead_cells == 0
 
-      # player2 = Enum.find(updated_players, fn player -> player.id == player_2_id end)
-      # assert player2.live_cells == 0
-      # assert player2.dead_cells == 2
+      player2 = Enum.find(updated_players, fn player -> player.id == player_2_id end)
+      assert player2.live_cells == 0
+      assert player2.dead_cells == 2
     end
   end
 end
