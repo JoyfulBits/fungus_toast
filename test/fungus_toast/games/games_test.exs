@@ -1,12 +1,8 @@
 defmodule FungusToast.GamesTest do
   use FungusToast.DataCase
 
-  alias FungusToast.Accounts
-  alias FungusToast.Games
-  alias FungusToast.Games.Game
-  alias FungusToast.Games.GameState
-  alias FungusToast.Players
-  alias FungusToast.Games.Player
+  alias FungusToast.{Accounts, Games, Players}
+  alias FungusToast.Games.{Game, GameState, Player, GridCell}
 
   defp user_fixture(attrs \\ %{}) do
     {:ok, user} =
@@ -222,20 +218,11 @@ defmodule FungusToast.GamesTest do
 
       game = Games.get_game!(game.id)
 
-      previous_skills = Enum.map(game.players, fn player -> {player.id,
-        Enum.map(player.skills, fn player_skill ->
-          {player_skill.id, player_skill.skill_level}
-        end)
-        |> Enum.into(%{})}
-      end)
-      |> Enum.into(%{})
-
       Games.trigger_next_round(game)
 
       game = Games.get_game!(game.id)
 
       Enum.each(game.players, fn player ->
-        matching_skills = previous_skills[player.id]
         if(!player.human) do
           total_points_invested = Enum.reduce(player.skills, 0, fn player_skill, acc ->
             acc + player_skill.skill_level
@@ -257,6 +244,41 @@ defmodule FungusToast.GamesTest do
       |> Enum.each(fn player ->
         assert player.mutation_points >= Player.default_starting_mutation_points
       end)
+    end
+
+    test "that players' number of regenerated cells get updated" do
+      #TODO talk to Dave about how to test this. The setup seems too complicated
+    end
+  end
+
+  describe "update_aggregate_stats/3" do
+    test "that it updates the total live and dead cells for the game and players" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
+
+      player_1_id = Enum.at(game.players, 0).id
+      player_2_id = Enum.at(game.players, 1).id
+
+      grid_cells = [
+        %GridCell{player_id: player_1_id, live: true},
+        %GridCell{player_id: player_1_id, live: true},
+        %GridCell{player_id: player_1_id, live: true},
+        %GridCell{player_id: player_2_id, live: false},
+        %GridCell{player_id: player_2_id, live: false}
+      ]
+
+      {updated_game, updated_players} = Games.update_aggregate_stats(game, grid_cells)
+
+      assert updated_game.total_live_cells == 3
+      assert updated_game.total_dead_cells == 2
+
+      player1 = Enum.find(updated_players, fn player -> player.id == player_1_id end)
+      assert player1.live_cells == 3
+      assert player1.dead_cells == 0
+
+      player2 = Enum.find(updated_players, fn player -> player.id == player_2_id end)
+      assert player2.live_cells == 0
+      assert player2.dead_cells == 2
     end
   end
 end

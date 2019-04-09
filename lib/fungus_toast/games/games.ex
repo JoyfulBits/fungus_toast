@@ -104,7 +104,7 @@ defmodule FungusToast.Games do
     end
   end
 
-  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
+  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
       if(number_of_human_players <= 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
@@ -117,10 +117,57 @@ defmodule FungusToast.Games do
 
         Rounds.create_round(game.id, first_round_values)
         Rounds.create_round(game.id, second_round)
+
+        update_aggregate_stats(game, starting_cells)
         true
       else
         false
       end
+  end
+
+  def update_aggregate_stats(game = %Game{players: players}, cells) do
+    stats_map = Enum.reduce(players, %{}, fn player, acc ->
+      Map.put(acc, player.id, %{live_cells: 0, dead_cells: 0})
+    end)
+
+    stats_map = Enum.reduce(cells, stats_map, fn grid_cell, acc ->
+      if(grid_cell.live) do
+        update_in(acc, [grid_cell.player_id, :live_cells], &(&1 + 1))
+      else
+        update_in(acc, [grid_cell.player_id, :dead_cells], &(&1 + 1))
+      end
+    end)
+
+    total_live_and_dead_cells = get_live_and_dead_cell_aggregates(stats_map)
+
+    updated_players = update_players_aggregate_stats(players, stats_map)
+
+    updated_game = update_game(game, %{
+      total_live_cells: total_live_and_dead_cells.total_live_cells,
+      total_dead_cells: total_live_and_dead_cells.total_dead_cells})
+    {updated_game, updated_players}
+  end
+
+  defp get_live_and_dead_cell_aggregates(stats_map) do
+    total_live_cells = Enum.reduce(stats_map, 0, fn {_k, v}, acc ->
+      acc + v.live_cells
+    end)
+
+    total_dead_cells = Enum.reduce(stats_map, 0, fn {_k, v}, acc ->
+      acc + v.dead_cells
+    end)
+
+    %{total_live_cells: total_live_cells, total_dead_cells: total_dead_cells}
+  end
+
+  defp update_players_aggregate_stats(players, stats_map) do
+    Enum.map(players, fn player ->
+      player_stats = Enum.filter(stats_map, fn {player_id, _} -> player_id == player.id end)
+      player_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats)
+      Players.update_player(player, %{
+        live_cells: player_live_and_dead_cells.total_live_cells,
+        dead_cells: player_live_and_dead_cells.total_dead_cells})
+    end)
   end
 
   def get_starting_mutation_points(players) do
@@ -147,16 +194,18 @@ defmodule FungusToast.Games do
   ## Examples
 
       iex> update_game(game, %{field: new_value})
-      {:ok, %Game{}}
+      game
 
       iex> update_game(game, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
   def update_game(%Game{} = game, attrs) do
-    game
+    {:ok, game} = game
     |> Game.changeset(attrs)
     |> Repo.update()
+
+    game
   end
 
   @doc """
@@ -250,7 +299,7 @@ defmodule FungusToast.Games do
     latest_round = Rounds.get_latest_round_for_game(game)
       |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-    update_player_mutation_points(players, growth_summary.growth_cycles)
+      update_player_for_growth_cycles(players, growth_summary.growth_cycles)
 
     #set up the new round with only the starting game state
     next_round_number = latest_round.number + 1
@@ -258,7 +307,7 @@ defmodule FungusToast.Games do
     Rounds.create_round(game.id, next_round)
   end
 
-  defp update_player_mutation_points(players, growth_cycles) do
+  defp update_player_for_growth_cycles(players, growth_cycles) do
     player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
     |> Enum.into(%{})
 
@@ -275,7 +324,17 @@ defmodule FungusToast.Games do
       mutation_points = mutation_points_map[player.id]
       #TODO setting to -1 so there is always an update. What's a better way to do this?
       player = %{player | mutation_points: -1}
-      Players.update_player(player, %{mutation_points: mutation_points})
+      number_of_regenerated_cells = get_number_of_cells_regenerated_during_growth_cycles(player.id, growth_cycles)
+      Players.update_player(player, %{mutation_points: mutation_points, regenerated_cells: number_of_regenerated_cells})
+    end)
+  end
+
+  defp get_number_of_cells_regenerated_during_growth_cycles(player_id, growth_cycles) do
+    Enum.reduce(growth_cycles, 0, fn growth_cycle, acc ->
+      regenerated_cells_for_player = Enum.filter(growth_cycle.toast_changes, fn grid_cell ->
+        grid_cell.live and grid_cell.player_id == player_id and grid_cell.previous_player_id != nil
+      end)
+      acc + length(regenerated_cells_for_player)
     end)
   end
 

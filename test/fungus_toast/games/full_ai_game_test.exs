@@ -3,7 +3,6 @@ defmodule FungusToast.Games.FullAiGameTest do
   use Plug.Test
   alias FungusToast.{Games, Players, AiStrategies}
   alias FungusToast.Games.{Game, Player}
-  alias FungusToast.Skills.SkillsSeed
   alias FungusToast.Repo
 
   describe "tests for playing out an entire AI game" do

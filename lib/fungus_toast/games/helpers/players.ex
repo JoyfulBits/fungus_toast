@@ -130,9 +130,11 @@ defmodule FungusToast.Players do
   Updates a player.
   """
   def update_player(%Player{} = player, attrs) do
-    player
+    {:ok, player} = player
     |> Player.changeset(attrs)
     |> Repo.update()
+
+    player
   end
 
   @doc """
@@ -164,8 +166,7 @@ defmodule FungusToast.Players do
   end
 
   def spend_ai_mutation_points(player, mutation_points, _total_cells, _number_of_remaining_cells, acc) when mutation_points == 0 do
-    {:ok, updated_player} = update_player(player, acc)
-    updated_player
+    update_player(player, acc)
   end
 
   def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
