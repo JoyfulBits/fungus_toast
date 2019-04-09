@@ -299,7 +299,7 @@ defmodule FungusToast.Games do
     latest_round = Rounds.get_latest_round_for_game(game)
       |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-    update_player_mutation_points(players, growth_summary.growth_cycles)
+      update_player_for_growth_cycles(players, growth_summary.growth_cycles)
 
     #set up the new round with only the starting game state
     next_round_number = latest_round.number + 1
@@ -307,7 +307,7 @@ defmodule FungusToast.Games do
     Rounds.create_round(game.id, next_round)
   end
 
-  defp update_player_mutation_points(players, growth_cycles) do
+  defp update_player_for_growth_cycles(players, growth_cycles) do
     player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
     |> Enum.into(%{})
 
@@ -324,7 +324,17 @@ defmodule FungusToast.Games do
       mutation_points = mutation_points_map[player.id]
       #TODO setting to -1 so there is always an update. What's a better way to do this?
       player = %{player | mutation_points: -1}
-      Players.update_player(player, %{mutation_points: mutation_points})
+      number_of_regenerated_cells = get_number_of_cells_regenerated_during_growth_cycles(player.id, growth_cycles)
+      Players.update_player(player, %{mutation_points: mutation_points, regenerated_cells: number_of_regenerated_cells})
+    end)
+  end
+
+  defp get_number_of_cells_regenerated_during_growth_cycles(player_id, growth_cycles) do
+    Enum.reduce(growth_cycles, 0, fn growth_cycle, acc ->
+      regenerated_cells_for_player = Enum.filter(growth_cycle.toast_changes, fn grid_cell ->
+        grid_cell.live and grid_cell.player_id == player_id and grid_cell.previous_player_id != nil
+      end)
+      acc + length(regenerated_cells_for_player)
     end)
   end
 

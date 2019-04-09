@@ -245,6 +245,10 @@ defmodule FungusToast.GamesTest do
         assert player.mutation_points >= Player.default_starting_mutation_points
       end)
     end
+
+    test "that players' number of regenerated cells get updated" do
+      #TODO talk to Dave about how to test this. The setup seems too complicated
+    end
   end
 
   describe "update_aggregate_stats/3" do
