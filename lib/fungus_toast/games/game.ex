@@ -16,6 +16,8 @@ defmodule FungusToast.Games.Game do
   ]
 
   @default_grid_size 50
+  def default_grid_size, do: @default_grid_size
+
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "games" do
@@ -45,6 +47,6 @@ defmodule FungusToast.Games.Game do
   Return the number of empty cells left on the grid
   """
   def number_of_empty_cells(game) do
-    game.grid_size * game.grid_size - game.total_live_cells - game.total_dead_dells
+    game.grid_size * game.grid_size - game.total_live_cells - game.total_dead_cells
   end
 end
