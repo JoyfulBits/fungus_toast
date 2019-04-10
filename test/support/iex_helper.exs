@@ -1,5 +1,5 @@
 #This exists only as a convenience to copy/paste into iex
-alias FungusToast.{Repo, Accounts, Players, Games, Skills, PlayerSkills}
+alias FungusToast.{Repo, Accounts, Players, Games, Skills, PlayerSkills, Rounds}
 alias FungusToast.Accounts.User
 alias FungusToast.Games.{Game, Player, Grid, GridCell}
 
