@@ -31,9 +31,9 @@ defmodule FungusToast.Games do
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
   def list_games_for_user(%User{} = user),
-    do: list_games_for_user(user, ["Started", "Not Started"])
+    do: list_games_for_user(user, [Game.status_started, Game.status_not_started])
 
-  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, ["Started"])
+  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, [Game.status_started])
   def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
   def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
 
@@ -305,12 +305,18 @@ defmodule FungusToast.Games do
 
     {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
 
-    if(Game.number_of_empty_cells(updated_game) <= 0) do
+    updated_game = if(Game.number_of_empty_cells(updated_game) <= 0) do
       update_game(updated_game, %{end_of_game_count_down: @starting_end_of_game_count_down})
     else
       if(updated_game.end_of_game_count_down != nil) do
         update_game(updated_game, %{end_of_game_count_down: updated_game.end_of_game_count_down - 1})
+      else
+        updated_game
       end
+    end
+
+    if(updated_game.end_of_game_count_down == 0) do
+
     end
 
     #set up the new round with only the starting game state

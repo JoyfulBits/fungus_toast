@@ -21,7 +21,7 @@ defmodule FungusToastWeb.GameViewTest do
                  id: "fake",
                  number_of_ai_players: 1,
                  number_of_human_players: 1,
-                 status: "Not Started",
+                 status: Game.status_not_started,
                  players: [
                    %{
                      human: false,
