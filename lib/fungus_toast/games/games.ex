@@ -305,27 +305,31 @@ defmodule FungusToast.Games do
 
     {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
 
-    updated_game = if(Game.number_of_empty_cells(updated_game) <= 0) do
-      update_game(updated_game, %{end_of_game_count_down: @starting_end_of_game_count_down})
-    else
-      if(updated_game.end_of_game_count_down != nil) do
-        new_count_down_value = updated_game.end_of_game_count_down - 1
-        new_game_status = if(new_count_down_value > 0) do
-          Game.status_started
-        else
-          Game.status_finished
-        end
-        update_game(updated_game, %{end_of_game_count_down: updated_game.end_of_game_count_down - 1, status: new_game_status})
-      else
-        updated_game
-      end
-    end
+    updated_game = check_for_game_end(updated_game)
 
-    if(updated_game.status == Game.status_started) do
+    if(updated_game.status != Game.status_finished) do
       #set up the new round with only the starting game state
       next_round_number = latest_round.number + 1
       next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
       Rounds.create_round(game.id, next_round)
+    end
+  end
+
+  defp check_for_game_end(game) do
+    if(game.end_of_game_count_down != nil) do
+      new_count_down_value = game.end_of_game_count_down - 1
+      new_game_status = if(new_count_down_value > 0) do
+        Game.status_started
+      else
+        Game.status_finished
+      end
+      update_game(game, %{end_of_game_count_down: game.end_of_game_count_down - 1, status: new_game_status})
+    else
+      if(Game.number_of_empty_cells(game) <= 0) do
+        update_game(game, %{end_of_game_count_down: @starting_end_of_game_count_down})
+      else
+        game
+      end
     end
   end
 

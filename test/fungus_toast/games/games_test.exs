@@ -302,6 +302,19 @@ defmodule FungusToast.GamesTest do
       assert latest_round.starting_game_state != nil
       assert length(latest_round.growth_cycles) > 0
     end
+
+    test "that the the game status remains in progress and no countdown is started if there are still empty cells" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name,
+        %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: 1})
+
+      Games.trigger_next_round(game)
+
+      game = Games.get_game!(game.id)
+
+      assert game.end_of_game_count_down == nil
+      assert game.status == Game.status_started
+    end
   end
 
   describe "update_aggregate_stats/3" do
