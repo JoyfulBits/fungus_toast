@@ -283,6 +283,25 @@ defmodule FungusToast.GamesTest do
 
       assert game.end_of_game_count_down == number_of_rounds_left - 1
     end
+
+    test "that the the game status goes to finished if the round count down is over, and the last round has both starting state and growth cycles" do
+      user = user_fixture(%{user_name: "user name"})
+      number_of_cells_in_full_grid = Game.default_grid_size * Game.default_grid_size
+      number_of_rounds_left = 1
+      game = Games.create_game(user.user_name,
+        %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: number_of_cells_in_full_grid, end_of_game_count_down: number_of_rounds_left})
+
+      Games.trigger_next_round(game)
+
+      game = Games.get_game!(game.id)
+
+      assert game.end_of_game_count_down == 0
+      assert game.status == Game.status_finished
+
+      latest_round = Rounds.get_latest_round_for_game(game)
+      assert latest_round.starting_game_state != nil
+      assert length(latest_round.growth_cycles) > 0
+    end
   end
 
   describe "update_aggregate_stats/3" do

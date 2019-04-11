@@ -309,20 +309,24 @@ defmodule FungusToast.Games do
       update_game(updated_game, %{end_of_game_count_down: @starting_end_of_game_count_down})
     else
       if(updated_game.end_of_game_count_down != nil) do
-        update_game(updated_game, %{end_of_game_count_down: updated_game.end_of_game_count_down - 1})
+        new_count_down_value = updated_game.end_of_game_count_down - 1
+        new_game_status = if(new_count_down_value > 0) do
+          Game.status_started
+        else
+          Game.status_finished
+        end
+        update_game(updated_game, %{end_of_game_count_down: updated_game.end_of_game_count_down - 1, status: new_game_status})
       else
         updated_game
       end
     end
 
-    if(updated_game.end_of_game_count_down == 0) do
-
+    if(updated_game.status == Game.status_started) do
+      #set up the new round with only the starting game state
+      next_round_number = latest_round.number + 1
+      next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
+      Rounds.create_round(game.id, next_round)
     end
-
-    #set up the new round with only the starting game state
-    next_round_number = latest_round.number + 1
-    next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
-    Rounds.create_round(game.id, next_round)
   end
 
   defp update_players_for_growth_cycles(players, growth_cycles) do
