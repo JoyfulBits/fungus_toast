@@ -292,14 +292,13 @@ defmodule FungusToast.GamesTest do
       game = Games.create_game(user.user_name,
         %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: number_of_cells_in_full_grid, end_of_game_count_down: number_of_rounds_left})
 
-      Games.trigger_next_round(game)
+      latest_round = Games.trigger_next_round(game)
 
       game = Games.get_game!(game.id)
 
       assert game.end_of_game_count_down == 0
       assert game.status == Status.status_finished
 
-      latest_round = Rounds.get_latest_round_for_game(game)
       assert latest_round.starting_game_state != nil
       assert length(latest_round.growth_cycles) > 0
     end
@@ -315,6 +314,17 @@ defmodule FungusToast.GamesTest do
 
       assert game.end_of_game_count_down == nil
       assert game.status == Status.status_started
+    end
+
+    test "that a new round is created with a starting_game_state but no growth_cycles" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name,
+        %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: 1})
+
+      latest_round = Games.trigger_next_round(game)
+
+      assert length(latest_round.starting_game_state.cells) > 0
+      assert latest_round.growth_cycles == []
     end
   end
 

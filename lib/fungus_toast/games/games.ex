@@ -274,33 +274,40 @@ defmodule FungusToast.Games do
     total_cells = game.grid_size * game.grid_size
     total_remaining_cells = Game.number_of_empty_cells(game)
     ai_players = Enum.filter(players, fn player -> !player.human end)
-    Enum.each(ai_players, fn player ->
+
+    {:ok, latest_round} = Repo.transaction(fn ->
+      Enum.each(ai_players, fn player ->
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
 
-    #generate a new growth summary
-    latest_round = get_latest_round_for_game(game.id)
-    current_game_state = latest_round.starting_game_state
+      #generate a new growth summary
+      latest_round = get_latest_round_for_game(game.id)
+      current_game_state = latest_round.starting_game_state
 
-    starting_grid_map = Enum.into(current_game_state.cells, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-    growth_summary = Grid.generate_growth_summary(starting_grid_map, game.grid_size, player_id_to_player_map)
+      starting_grid_map = Enum.into(current_game_state.cells, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      growth_summary = Grid.generate_growth_summary(starting_grid_map, game.grid_size, player_id_to_player_map)
 
-    #set the growth cycles on the latest around
-    latest_round = Rounds.get_latest_round_for_game(game)
-      |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
+      #set the growth cycles on the latest around
+      latest_round = Rounds.get_latest_round_for_game(game)
+        |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-    update_players_for_growth_cycles(players, growth_summary.growth_cycles)
+      update_players_for_growth_cycles(players, growth_summary.growth_cycles)
 
-    {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
+      {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
 
-    updated_game = check_for_game_end(updated_game)
+      updated_game = check_for_game_end(updated_game)
 
-    if(updated_game.status != Status.status_finished) do
-      #set up the new round with only the starting game state
-      next_round_number = latest_round.number + 1
-      next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
-      Rounds.create_round(game.id, next_round)
-    end
+      if(updated_game.status == Status.status_finished) do
+        latest_round
+      else
+        #set up the new round with only the starting game state
+        next_round_number = latest_round.number + 1
+        next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
+        Rounds.create_round(game.id, next_round)
+      end
+    end)
+
+    latest_round
   end
 
   defp check_for_game_end(game) do
