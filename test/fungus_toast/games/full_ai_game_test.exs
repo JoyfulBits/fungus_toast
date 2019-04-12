@@ -12,7 +12,7 @@ defmodule FungusToast.Games.FullAiGameTest do
     test "that two AI players can finish a game" do
 
       Repo.transaction(fn ->
-        game_changeset = %Game{} |> Game.changeset(%{number_of_ai_players: 2, number_of_human_players: 0})
+        game_changeset = %Game{} |> Game.changeset(%{number_of_ai_players: 4, number_of_human_players: 0})
         {:ok, game} = Repo.insert(game_changeset)
 
         Players.create_basic_player(game.id, false, "Random AI", nil, AiStrategies.ai_type_random)
@@ -20,6 +20,14 @@ defmodule FungusToast.Games.FullAiGameTest do
         |> Repo.insert()
 
         Players.create_basic_player(game.id, false, "Growth AI", nil, AiStrategies.ai_type_growth)
+        |> Player.changeset(%{})
+        |> Repo.insert()
+
+        Players.create_basic_player(game.id, false, "Toxic AI", nil, AiStrategies.ai_type_toxic)
+        |> Player.changeset(%{})
+        |> Repo.insert()
+
+        Players.create_basic_player(game.id, false, "Long Term AI", nil, AiStrategies.ai_type_long_term)
         |> Player.changeset(%{})
         |> Repo.insert()
 
@@ -41,7 +49,9 @@ defmodule FungusToast.Games.FullAiGameTest do
       if(game.status == Status.status_finished) do
         IO.inspect "***************"
         IO.inspect "GAME OVER"
-        IO.inspect game
+        ranked_map = Enum.sort(game.players, &(&1.live_cells >= &2.live_cells))
+        |> Enum.map(fn player -> {player.ai_type, player.live_cells} end)
+        |> IO.inspect
       else
         if(round.number == 100) do
           IO.inspect "***************"
