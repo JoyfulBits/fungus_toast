@@ -16,4 +16,7 @@ defmodule FungusToast.Game.Status do
 
   @statuses [@status_not_started, @status_started, @status_finished, @status_abandoned, @status_archived]
   def statuses, do: @statuses
+
+  @active_statuses [@status_not_started, @status_started]
+  def active_statuses, do: @active_statuses
 end

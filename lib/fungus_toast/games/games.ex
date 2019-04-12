@@ -6,7 +6,7 @@ defmodule FungusToast.Games do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
+  alias FungusToast.{Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
   alias FungusToast.Game.Status
@@ -31,12 +31,8 @@ defmodule FungusToast.Games do
   @doc """
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
-  def list_games_for_user(%User{} = user),
-    do: list_games_for_user(user, [Status.status_started, Status.status_not_started])
-
-  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, [Status.status_started])
-  def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
-  def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
+  def list_active_games_for_user(%User{} = user),
+    do: list_games_for_user(user, Status.active_statuses)
 
   def list_games_for_user(%User{} = user, statuses) when is_list(statuses) do
     user = user |> Repo.preload(players: :game)
@@ -48,15 +44,6 @@ defmodule FungusToast.Games do
       |> preload_for_games
 
     {:ok, games}
-  end
-
-  def list_games_for_user(user_id, active) when is_boolean(active) do
-    user = Accounts.get_user!(user_id)
-    list_games_for_user(user, active)
-  end
-
-  def list_games_for_user(_, _) do
-    {:error, :bad_request}
   end
 
   @doc """
