@@ -8,7 +8,7 @@ defmodule FungusToast.Games.FullAiGameTest do
 
   describe "tests for playing out an entire AI game" do
 
-    @tag :skip
+    #@tag :skip
     test "that two AI players can finish a game" do
 
       game_changeset = %Game{} |> Game.changeset(%{number_of_ai_players: 5, number_of_human_players: 0})
@@ -18,11 +18,11 @@ defmodule FungusToast.Games.FullAiGameTest do
       |> Player.changeset(%{})
       |> Repo.insert()
 
-      Players.create_basic_player(game.id, false, "Growth AI", nil, AiStrategies.ai_type_growth)
+      Players.create_basic_player(game.id, false, "Toxic AI", nil, AiStrategies.ai_type_toxic)
       |> Player.changeset(%{})
       |> Repo.insert()
 
-      Players.create_basic_player(game.id, false, "Toxic AI", nil, AiStrategies.ai_type_toxic)
+      Players.create_basic_player(game.id, false, "Growth AI", nil, AiStrategies.ai_type_growth)
       |> Player.changeset(%{})
       |> Repo.insert()
 
@@ -40,10 +40,15 @@ defmodule FungusToast.Games.FullAiGameTest do
 
       game = Repo.get(Game, game.id) |> Repo.preload(:players)
 
-      play_game(game)
+      latest_round = Games.get_latest_round_for_game(game.id)
+      #capture each player's start grid cell index so we can see if there are any spots that are better than others
+      player_id_to_starting_cell_index_map = Enum.map(latest_round.starting_game_state.cells, fn grid_cell -> {grid_cell.player_id, grid_cell.index} end)
+      |> Enum.into(%{})
+
+      play_game(game, player_id_to_starting_cell_index_map)
     end
 
-    def play_game(game) do
+    def play_game(game, player_id_to_starting_cell_index_map) do
       round = Games.trigger_next_round(game)
 
       game = Games.get_game!(game.id)
@@ -53,6 +58,7 @@ defmodule FungusToast.Games.FullAiGameTest do
         IO.inspect "GAME OVER"
         Enum.sort(game.players, &(&1.live_cells >= &2.live_cells))
         |> Enum.map(fn player -> %{
+          starting_index: player_id_to_starting_cell_index_map[player.id],
           ai_type: player.ai_type,
           live_cells: player.live_cells,
           dead_cells: player.dead_cells,
@@ -61,7 +67,8 @@ defmodule FungusToast.Games.FullAiGameTest do
           regeneration_chance: player.regeneration_chance,
           top_right_growth_chance: player.top_right_growth_chance,
           mutation_chance: player.mutation_chance,
-          mycotoxin_fungicide_chance: player.mycotoxin_fungicide_chance
+          mycotoxin_fungicide_chance: player.mycotoxin_fungicide_chance,
+          total_points_spent: get_points_spent(player)
         }
             end)
         |> IO.inspect
@@ -71,11 +78,16 @@ defmodule FungusToast.Games.FullAiGameTest do
           IO.inspect "GAME TOOK TOO LONG TO FINISH"
         else
           number_of_cells = length(round.starting_game_state.cells)
-          IO.inspect "**ROUND NUMBER #{round.number}, NUMBER OF CELLS: #{number_of_cells}"
+          grid_percent_full = (number_of_cells / (game.grid_size * game.grid_size))
+          IO.inspect "**ROUND NUMBER #{round.number}, NUMBER OF CELLS: #{number_of_cells}, % full: #{grid_percent_full}"
 
-          play_game(game)
+          play_game(game, player_id_to_starting_cell_index_map)
         end
       end
+    end
+
+    defp get_points_spent(player) do
+      Enum.reduce(player.skills, 0, fn player_skill, acc -> player_skill.skill_level + acc end)
     end
   end
 end
