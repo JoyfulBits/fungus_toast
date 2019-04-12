@@ -59,15 +59,15 @@ defmodule FungusToast.AiStrategies do
 
   def candidate_skills_map, do: @candidate_skills_map
 
-  @early_game_threshold 0.33
-  @mid_game_threshold 0.66
+  @early_game_threshold 0.35
+  @mid_game_threshold 0.70
 
   @doc """
   Returns a semi-random skill name that the AI can spend points on
   """
   @spec get_skill_choice(String.t(), integer(), integer()) :: String.t()
   def get_skill_choice(ai_type, total_cells, number_of_remaining_cells) do
-    key = ai_type <> "|" <> case {number_of_remaining_cells / total_cells} do
+    key = ai_type <> "|" <> case { (number_of_remaining_cells / total_cells) } do
       {x} when x < @early_game_threshold -> "EarlyGame"
       {x} when x < @mid_game_threshold -> "MidGame"
       _ -> "LateGame"
