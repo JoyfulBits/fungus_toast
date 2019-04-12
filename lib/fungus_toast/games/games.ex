@@ -105,10 +105,13 @@ defmodule FungusToast.Games do
         #create the second round with a starting_game_state but no state change yet
         second_round = %{number: 1, growth_cycles: [], starting_game_state: %GameState{cells: starting_cells, round_number: 1}}
 
-        Rounds.create_round(game.id, first_round_values)
-        Rounds.create_round(game.id, second_round)
+        {:ok, _} = Repo.transaction(fn ->
+          Rounds.create_round(game.id, first_round_values)
+          Rounds.create_round(game.id, second_round)
 
-        update_aggregate_stats(game, starting_cells)
+          update_aggregate_stats(game, starting_cells)
+        end)
+
         true
       else
         false
