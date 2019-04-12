@@ -2,12 +2,19 @@ defmodule FungusToast.AiStrategies do
 
   @ai_type_random "Random"
   def ai_type_random, do:  @ai_type_random
+
   @ai_type_growth "Growth"
   def ai_type_growth, do:  @ai_type_growth
+
   @ai_type_toxic "Toxic"
   def ai_type_toxic, do:  @ai_type_toxic
+
+  @ai_type_experimental_1 "Experimental 1"
+  def ai_type_experimental_1, do:  @ai_type_experimental_1
+
   @ai_type_long_term "Long Term"
   def ai_type_long_term, do:  @ai_type_long_term
+
   @ai_types [@ai_type_random, @ai_type_growth, @ai_type_toxic, @ai_type_long_term]
 
   def get_ai_types, do: @ai_types
@@ -42,6 +49,9 @@ defmodule FungusToast.AiStrategies do
     "Toxic|EarlyGame" => [@skill_name_budding, @skill_name_hypermutation],
     "Toxic|MidGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],
     "Toxic|LateGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],
+    "Experimental 1|EarlyGame" => [@skill_name_budding],
+    "Experimental 1|MidGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],
+    "Experimental 1|LateGame" => [@skill_name_mycotoxicity],
     "Long Term|EarlyGame" => [@skill_name_hypermutation],
     "Long Term|MidGame" => [@skill_name_hypermutation, @skill_name_budding],
     "Long Term|LateGame" => [@skill_name_anti_apoptosis, @skill_name_regeneration, @skill_name_mycotoxicity],
