@@ -4,6 +4,7 @@ defmodule FungusToast.Games.FullAiGameTest do
   alias FungusToast.{Games, Players, AiStrategies}
   alias FungusToast.Games.{Game, Player}
   alias FungusToast.Repo
+  alias FungusToast.Game.Status
 
   describe "tests for playing out an entire AI game" do
 
@@ -32,12 +33,12 @@ defmodule FungusToast.Games.FullAiGameTest do
       end)
     end
 
-    def play_game(game, round_count_down \\ nil) do
+    def play_game(game) do
       round = Games.trigger_next_round(game)
 
       game = Games.get_game!(game.id)
 
-      if(round_count_down == 0) do
+      if(game.status == Status.status_finished) do
         IO.inspect "***************"
         IO.inspect "GAME OVER"
         IO.inspect game
@@ -45,22 +46,11 @@ defmodule FungusToast.Games.FullAiGameTest do
         if(round.number == 100) do
           IO.inspect "***************"
           IO.inspect "GAME TOOK TOO LONG TO FINISH"
-          IO.inspect game.players
-          #IO.inspect "FINAL ROUND:"
-          #IO.inspect(round.starting_game_state, limit: :infinity)
         else
           number_of_cells = length(round.starting_game_state.cells)
           IO.inspect "**ROUND NUMBER #{round.number}, NUMBER OF CELLS: #{number_of_cells}"
-          if(number_of_cells == game.grid_size * game.grid_size) do
-            round_count_down = if(round_count_down == nil) do
-              5
-            else
-              round_count_down - 1
-            end
-            play_game(game, round_count_down)
-          else
-            play_game(game)
-          end
+
+          play_game(game)
         end
       end
     end
