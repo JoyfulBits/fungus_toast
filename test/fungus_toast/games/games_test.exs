@@ -1,8 +1,9 @@
 defmodule FungusToast.GamesTest do
   use FungusToast.DataCase
 
-  alias FungusToast.{Accounts, Games, Players}
+  alias FungusToast.{Accounts, Games, Players, Rounds}
   alias FungusToast.Games.{Game, GameState, Player, GridCell}
+  alias FungusToast.Game.Status
 
   defp user_fixture(attrs \\ %{}) do
     {:ok, user} =
@@ -248,6 +249,72 @@ defmodule FungusToast.GamesTest do
 
     test "that players' number of regenerated cells get updated" do
       #TODO talk to Dave about how to test this. The setup seems too complicated
+    end
+
+    test "that the round count down starts at 5 if all cells have been consumed" do
+      user = user_fixture(%{user_name: "user name"})
+      number_of_cells_in_full_grid = Game.default_grid_size * Game.default_grid_size
+      game = Games.create_game(user.user_name,
+        %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: number_of_cells_in_full_grid})
+
+      a_player_id = hd(game.players).id
+      latest_round = Rounds.get_latest_round_for_game(game.id)
+      full_grid = Enum.map(0..number_of_cells_in_full_grid - 1, fn index -> %GridCell{index: index, empty: false, player_id: a_player_id} end)
+
+      #make the starting game state have all cells full
+      Rounds.update_round(latest_round, %{starting_game_state: %GameState{cells: full_grid}})
+
+      Games.trigger_next_round(game)
+
+      game = Games.get_game!(game.id)
+
+      assert game.end_of_game_count_down == 5
+    end
+
+    test "that the round count decrements each round if the count down has started (even if the grid is not full)" do
+      user = user_fixture(%{user_name: "user name"})
+      number_of_cells_in_full_grid = Game.default_grid_size * Game.default_grid_size
+      number_of_rounds_left = 5
+      game = Games.create_game(user.user_name,
+        %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: number_of_cells_in_full_grid, end_of_game_count_down: number_of_rounds_left})
+
+      Games.trigger_next_round(game)
+
+      game = Games.get_game!(game.id)
+
+      assert game.end_of_game_count_down == number_of_rounds_left - 1
+    end
+
+    test "that the the game status goes to finished if the round count down is over, and the last round has both starting state and growth cycles" do
+      user = user_fixture(%{user_name: "user name"})
+      number_of_cells_in_full_grid = Game.default_grid_size * Game.default_grid_size
+      number_of_rounds_left = 1
+      game = Games.create_game(user.user_name,
+        %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: number_of_cells_in_full_grid, end_of_game_count_down: number_of_rounds_left})
+
+      Games.trigger_next_round(game)
+
+      game = Games.get_game!(game.id)
+
+      assert game.end_of_game_count_down == 0
+      assert game.status == Status.status_finished
+
+      latest_round = Rounds.get_latest_round_for_game(game)
+      assert latest_round.starting_game_state != nil
+      assert length(latest_round.growth_cycles) > 0
+    end
+
+    test "that the the game status remains in progress and no countdown is started if there are still empty cells" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name,
+        %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: 1})
+
+      Games.trigger_next_round(game)
+
+      game = Games.get_game!(game.id)
+
+      assert game.end_of_game_count_down == nil
+      assert game.status == Status.status_started
     end
   end
 

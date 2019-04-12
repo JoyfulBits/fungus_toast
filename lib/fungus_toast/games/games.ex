@@ -6,11 +6,14 @@ defmodule FungusToast.Games do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
+  alias FungusToast.{Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.Game.Status
 
   @starting_mutation_points 5
+  @starting_end_of_game_count_down 5
+  def starting_end_of_game_count_down, do: @starting_end_of_game_count_down
 
   @doc """
   Returns the list of games.
@@ -28,12 +31,8 @@ defmodule FungusToast.Games do
   @doc """
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
-  def list_games_for_user(%User{} = user),
-    do: list_games_for_user(user, ["Started", "Not Started"])
-
-  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, ["Started"])
-  def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
-  def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
+  def list_active_games_for_user(%User{} = user),
+    do: list_games_for_user(user, Status.active_statuses)
 
   def list_games_for_user(%User{} = user, statuses) when is_list(statuses) do
     user = user |> Repo.preload(players: :game)
@@ -45,15 +44,6 @@ defmodule FungusToast.Games do
       |> preload_for_games
 
     {:ok, games}
-  end
-
-  def list_games_for_user(user_id, active) when is_boolean(active) do
-    user = Accounts.get_user!(user_id)
-    list_games_for_user(user, active)
-  end
-
-  def list_games_for_user(_, _) do
-    {:error, :bad_request}
   end
 
   @doc """
@@ -278,19 +268,19 @@ defmodule FungusToast.Games do
   Executes a full round of growth cycles and creates a new round for this game
   """
   def trigger_next_round(%Game{players: players} = game) do
-    latest_round = get_latest_round_for_game(game.id)
-
-    current_game_state = latest_round.starting_game_state
-
     player_id_to_player_map = players
       |> Map.new(fn x -> {x.id, x} end)
 
     total_cells = game.grid_size * game.grid_size
-    total_remaining_cells = total_cells - map_size(current_game_state)
+    total_remaining_cells = Game.number_of_empty_cells(game)
     ai_players = Enum.filter(players, fn player -> !player.human end)
     Enum.each(ai_players, fn player ->
         Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
       end)
+
+    #generate a new growth summary
+    latest_round = get_latest_round_for_game(game.id)
+    current_game_state = latest_round.starting_game_state
 
     starting_grid_map = Enum.into(current_game_state.cells, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
     growth_summary = Grid.generate_growth_summary(starting_grid_map, game.grid_size, player_id_to_player_map)
@@ -299,15 +289,39 @@ defmodule FungusToast.Games do
     latest_round = Rounds.get_latest_round_for_game(game)
       |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-      update_player_for_growth_cycles(players, growth_summary.growth_cycles)
+    update_players_for_growth_cycles(players, growth_summary.growth_cycles)
 
-    #set up the new round with only the starting game state
-    next_round_number = latest_round.number + 1
-    next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
-    Rounds.create_round(game.id, next_round)
+    {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
+
+    updated_game = check_for_game_end(updated_game)
+
+    if(updated_game.status != Status.status_finished) do
+      #set up the new round with only the starting game state
+      next_round_number = latest_round.number + 1
+      next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
+      Rounds.create_round(game.id, next_round)
+    end
   end
 
-  defp update_player_for_growth_cycles(players, growth_cycles) do
+  defp check_for_game_end(game) do
+    if(game.end_of_game_count_down != nil) do
+      new_count_down_value = game.end_of_game_count_down - 1
+      new_game_status = if(new_count_down_value > 0) do
+        Status.status_started
+      else
+        Status.status_finished
+      end
+      update_game(game, %{end_of_game_count_down: game.end_of_game_count_down - 1, status: new_game_status})
+    else
+      if(Game.number_of_empty_cells(game) <= 0) do
+        update_game(game, %{end_of_game_count_down: @starting_end_of_game_count_down})
+      else
+        game
+      end
+    end
+  end
+
+  defp update_players_for_growth_cycles(players, growth_cycles) do
     player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
     |> Enum.into(%{})
 

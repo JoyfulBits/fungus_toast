@@ -4,6 +4,7 @@ defmodule FungusToastWeb.GameViewTest do
   alias FungusToast.Games.Game
   alias FungusToast.Games.Player
   alias FungusToast.Games.Round
+  alias FungusToast.Game.Status
 
   describe "game.json" do
     @stub_game %Game{
@@ -21,7 +22,7 @@ defmodule FungusToastWeb.GameViewTest do
                  id: "fake",
                  number_of_ai_players: 1,
                  number_of_human_players: 1,
-                 status: "Not Started",
+                 status: Status.status_not_started,
                  players: [
                    %{
                      human: false,
