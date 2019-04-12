@@ -3,6 +3,7 @@ defmodule FungusToast.GamesTest do
 
   alias FungusToast.{Accounts, Games, Players, Rounds}
   alias FungusToast.Games.{Game, GameState, Player, GridCell}
+  alias FungusToast.Game.Status
 
   defp user_fixture(attrs \\ %{}) do
     {:ok, user} =
@@ -296,7 +297,7 @@ defmodule FungusToast.GamesTest do
       game = Games.get_game!(game.id)
 
       assert game.end_of_game_count_down == 0
-      assert game.status == Game.status_finished
+      assert game.status == Status.status_finished
 
       latest_round = Rounds.get_latest_round_for_game(game)
       assert latest_round.starting_game_state != nil
@@ -313,7 +314,7 @@ defmodule FungusToast.GamesTest do
       game = Games.get_game!(game.id)
 
       assert game.end_of_game_count_down == nil
-      assert game.status == Game.status_started
+      assert game.status == Status.status_started
     end
   end
 

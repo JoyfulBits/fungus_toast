@@ -2,23 +2,6 @@ defmodule FungusToast.Games.Game do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @status_not_started "Not Started"
-  def status_not_started, do: @status_not_started
-
-  @status_started "Started"
-  def status_started, do: @status_started
-
-  @status_finished "Finished"
-  def status_finished, do: @status_finished
-
-  @status_abandoned "Abandoned"
-  def status_abandoned, do: @status_abandoned
-
-  @status_archived "Archived"
-  def status_archived, do: @status_archived
-
-  @statuses [@status_not_started, @status_started, @status_finished, @status_abandoned, @status_archived]
-
   @attrs [
     :number_of_human_players,
     :number_of_ai_players,
@@ -35,7 +18,7 @@ defmodule FungusToast.Games.Game do
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
   schema "games" do
-    field :status, :string, default: @status_not_started
+    field :status, :string, default: FungusToast.Game.Status.status_not_started
     field :grid_size, :integer, default: @default_grid_size, null: false
     field :number_of_human_players, :integer, null: false
     field :number_of_ai_players, :integer, default: 0, null: false
@@ -54,7 +37,7 @@ defmodule FungusToast.Games.Game do
     game
     |> cast(attrs, @attrs)
     |> validate_required([:number_of_human_players])
-    |> validate_inclusion(:status, @statuses)
+    |> validate_inclusion(:status, FungusToast.Game.Status.statuses)
   end
 
   @doc """

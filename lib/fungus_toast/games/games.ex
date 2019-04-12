@@ -9,6 +9,7 @@ defmodule FungusToast.Games do
   alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.Game.Status
 
   @starting_mutation_points 5
   @starting_end_of_game_count_down 5
@@ -31,9 +32,9 @@ defmodule FungusToast.Games do
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
   def list_games_for_user(%User{} = user),
-    do: list_games_for_user(user, [Game.status_started, Game.status_not_started])
+    do: list_games_for_user(user, [Status.status_started, Status.status_not_started])
 
-  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, [Game.status_started])
+  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, [Status.status_started])
   def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
   def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
 
@@ -307,7 +308,7 @@ defmodule FungusToast.Games do
 
     updated_game = check_for_game_end(updated_game)
 
-    if(updated_game.status != Game.status_finished) do
+    if(updated_game.status != Status.status_finished) do
       #set up the new round with only the starting game state
       next_round_number = latest_round.number + 1
       next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
@@ -319,9 +320,9 @@ defmodule FungusToast.Games do
     if(game.end_of_game_count_down != nil) do
       new_count_down_value = game.end_of_game_count_down - 1
       new_game_status = if(new_count_down_value > 0) do
-        Game.status_started
+        Status.status_started
       else
-        Game.status_finished
+        Status.status_finished
       end
       update_game(game, %{end_of_game_count_down: game.end_of_game_count_down - 1, status: new_game_status})
     else
