@@ -105,19 +105,21 @@ defmodule FungusToast.AiStrategies do
   @spec maxed_out_skill?(String.t(), %Player{}) :: boolean()
   def maxed_out_skill?(skill_name, player) do
     attribute_to_check = hd(get_player_attributes_for_skill_name(skill_name))
-    percentage_change = Map.get(player, attribute_to_check)
-    if(Enum.member?(@skills_that_bottom_out_at_0_percent, skill_name)) do
-      if(percentage_change <= 0) do
+    percentage_chance = Map.get(player, attribute_to_check)
+    return_value = if(Enum.member?(@skills_that_bottom_out_at_0_percent, skill_name)) do
+      if(percentage_chance <= 0) do
         true
       else
         false
       end
     else
-      if(percentage_change >= 100) do
+      if(percentage_chance >= 100) do
         true
       else
         false
       end
     end
+
+    return_value
   end
 end
