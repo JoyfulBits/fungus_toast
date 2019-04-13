@@ -151,7 +151,7 @@ defmodule FungusToast.Players do
   @spec spend_ai_mutation_points(%Player{}, integer(), integer(), integer()) :: any()
   def spend_ai_mutation_points(player, mutation_points, total_cells, number_of_remaining_cells, acc \\ %{})
   def spend_ai_mutation_points(%Player{} = player, mutation_points, total_cells, number_of_remaining_cells, acc) when mutation_points > 0 do
-    skill = AiStrategies.get_skill_choice(player.ai_type, total_cells, number_of_remaining_cells)
+    skill = AiStrategies.get_skill_choice(player, total_cells, number_of_remaining_cells)
     |> FungusToast.Skills.get_skill_by_name()
 
     player_skill = PlayerSkills.get_player_skill(player.id, skill.id)

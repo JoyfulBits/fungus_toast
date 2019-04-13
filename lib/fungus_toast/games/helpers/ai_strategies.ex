@@ -1,4 +1,5 @@
 defmodule FungusToast.AiStrategies do
+  alias FungusToast.Games.Player
 
   @ai_type_random "Random"
   def ai_type_random, do:  @ai_type_random
@@ -35,6 +36,12 @@ defmodule FungusToast.AiStrategies do
 
   def skill_name_to_player_attribute_map, do: @skill_name_to_player_attribute_map
 
+  @skills_that_max_out_at_100_percent [@skill_name_budding, @skill_name_hypermutation, @skill_name_regeneration, @skill_name_mycotoxicity]
+  def skills_that_max_out_at_100_percent, do: @skills_that_max_out_at_100_percent
+
+  @skills_that_bottom_out_at_0_percent [@skill_name_anti_apoptosis]
+  def skills_that_bottom_out_at_0_percent, do: @skills_that_bottom_out_at_0_percent
+
   def get_player_attributes_for_skill_name(skill_name) do
     Map.get(@skill_name_to_player_attribute_map, skill_name)
   end
@@ -55,25 +62,62 @@ defmodule FungusToast.AiStrategies do
     "Long Term|EarlyGame" => [@skill_name_hypermutation],
     "Long Term|MidGame" => [@skill_name_hypermutation, @skill_name_budding],
     "Long Term|LateGame" => [@skill_name_anti_apoptosis, @skill_name_regeneration, @skill_name_mycotoxicity],
+    "TEST|EarlyGame" => [@skill_name_anti_apoptosis],
+    "TEST|MidGame" => [@skill_name_budding],
+    "TEST|LateGame" => [@skill_name_regeneration]
   }
 
   def candidate_skills_map, do: @candidate_skills_map
 
   @early_game_threshold 0.35
+  #TODO exposing this for tests... is there a better way?
+  def early_game_treshhold, do: @early_game_threshold
+
   @mid_game_threshold 0.70
+  def mid_game_threshold, do: @mid_game_threshold
 
   @doc """
   Returns a semi-random skill name that the AI can spend points on
   """
-  @spec get_skill_choice(String.t(), integer(), integer()) :: String.t()
-  def get_skill_choice(ai_type, total_cells, number_of_remaining_cells) do
-    key = ai_type <> "|" <> case { (number_of_remaining_cells / total_cells) } do
+  @spec get_skill_choice(%Player{}, integer(), integer()) :: String.t()
+  def get_skill_choice(ai_player, total_cells, number_of_remaining_cells) do
+    get_candidate_skills(ai_player, total_cells, number_of_remaining_cells)
+    |> Enum.random
+  end
+
+  def get_candidate_skills(ai_player, total_cells, number_of_remaining_cells) do
+    key = ai_player.ai_type <> "|" <> case { ((total_cells - number_of_remaining_cells) / total_cells) } do
       {x} when x < @early_game_threshold -> "EarlyGame"
       {x} when x < @mid_game_threshold -> "MidGame"
       _ -> "LateGame"
     end
 
-    Map.get(candidate_skills_map(), key)
-    |> Enum.random()
+    candidate_skills = Map.get(candidate_skills_map(), key)
+    |> Enum.filter(fn skill_name -> !maxed_out_skill?(skill_name, ai_player) end)
+
+    if(length(candidate_skills) > 0) do
+      candidate_skills
+    else
+      [@skill_name_anti_apoptosis]
+    end
+  end
+
+  @spec maxed_out_skill?(String.t(), %Player{}) :: boolean()
+  def maxed_out_skill?(skill_name, player) do
+    attribute_to_check = hd(get_player_attributes_for_skill_name(skill_name))
+    percentage_change = Map.get(player, attribute_to_check)
+    if(Enum.member?(@skills_that_bottom_out_at_0_percent, skill_name)) do
+      if(percentage_change <= 0) do
+        true
+      else
+        false
+      end
+    else
+      if(percentage_change >= 100) do
+        true
+      else
+        false
+      end
+    end
   end
 end
