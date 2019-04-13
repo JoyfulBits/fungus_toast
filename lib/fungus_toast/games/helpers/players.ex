@@ -151,7 +151,9 @@ defmodule FungusToast.Players do
   @spec spend_ai_mutation_points(%Player{}, integer(), integer(), integer()) :: any()
   def spend_ai_mutation_points(player, mutation_points, total_cells, number_of_remaining_cells, acc \\ %{})
   def spend_ai_mutation_points(%Player{} = player, mutation_points, total_cells, number_of_remaining_cells, acc) when mutation_points > 0 do
-    skill = AiStrategies.get_skill_choice(player, total_cells, number_of_remaining_cells)
+    #get a version of the player with the latest updates so AI players can pick the best skills based on current attributes
+    player_with_unsaved_updates = Map.merge(player, acc, fn _, _, v2 -> v2 end)
+    skill = AiStrategies.get_skill_choice(player_with_unsaved_updates, total_cells, number_of_remaining_cells)
     |> FungusToast.Skills.get_skill_by_name()
 
     player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
