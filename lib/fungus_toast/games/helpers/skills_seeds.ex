@@ -6,7 +6,7 @@ defmodule FungusToast.Skills.SkillsSeed do
       name: "Hypermutation",
       description:
         "Increases the chance that you will generate a bonus mutation point during each growth cycle.",
-      increase_per_point: 1.0,
+      increase_per_point: 3.0,
       up_is_good: true
     })
 
@@ -14,14 +14,14 @@ defmodule FungusToast.Skills.SkillsSeed do
       name: "Budding",
       description:
         "Increases the chance that your live cells will bud into a corner (top-left, top-right, bottom-left, bottom-right) cell.",
-      increase_per_point: 1.0,
+      increase_per_point: 0.4,
       up_is_good: true
     })
 
     Games.create_skill(%{
       name: "Anti-Apoptosis",
       description: "Decreases the chance that your cells will die at random.",
-      increase_per_point: 0.5,
+      increase_per_point: 0.25,
       up_is_good: false
     })
 
@@ -29,7 +29,7 @@ defmodule FungusToast.Skills.SkillsSeed do
       name: "Regeneration",
       description:
         "Increases the chance that your live cell will regenerate an adjacent dead cell (from any player).",
-      increase_per_point: 0.5,
+      increase_per_point: 0.25,
       up_is_good: true
     })
 
@@ -37,7 +37,7 @@ defmodule FungusToast.Skills.SkillsSeed do
       name: "Mycotoxicity",
       description:
         "Increases the chance that your live cell will kill an adjacent living cell of another player.",
-      increase_per_point: 1.0,
+      increase_per_point: 0.25,
       up_is_good: true
     })
   end
