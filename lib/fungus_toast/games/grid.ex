@@ -157,6 +157,35 @@ defmodule FungusToast.Games.Grid do
     Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
   end
 
+  @doc ~S"""
+  Returns a map of player id to a map of number of grown, regenerated, and perished cells
+
+  ## Examples
+
+    iex(83)> Grid.get_player_growth_cycles_stats([1], [])
+    %{1 => %{grown_cells: 0, perished_cells: 0, regenerated_cells: 0}}
+
+  """
+  @spec get_player_growth_cycles_stats(list(), [%GrowthCycle{}]) :: any()
+  def get_player_growth_cycles_stats(player_ids, growth_cycles) do
+    acc = Enum.map(player_ids,  fn player_id -> {player_id, %{regenerated_cells: 0, grown_cells: 0, perished_cells: 0}} end)
+    |> Enum.into(%{})
+
+    Enum.reduce(growth_cycles, acc, fn growth_cycle, acc ->
+      Enum.reduce(growth_cycle.toast_changes, acc, fn grid_cell, acc ->
+        if(grid_cell.live) do
+          if(grid_cell.previous_player_id) do
+            update_in(acc, [grid_cell.player_id, :regenerated_cells], &(&1 + 1))
+          else
+            update_in(acc, [grid_cell.player_id, :grown_cells], &(&1 + 1))
+          end
+        else
+          update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
+        end
+      end)
+    end)
+  end
+
   def get_surrounding_cells(grid, grid_size, cell_index) do
     %{
       :top_left_cell => get_top_left_cell(grid, grid_size, cell_index),

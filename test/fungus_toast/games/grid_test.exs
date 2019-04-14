@@ -1,7 +1,6 @@
 defmodule FungusToast.Games.GridTest do
   use ExUnit.Case, async: true
-  alias FungusToast.Games.Grid
-  alias FungusToast.Games.Player
+  alias FungusToast.Games.{Grid, GridCell, Player, GrowthCycle}
 
   doctest FungusToast.Games.Grid
 
@@ -200,6 +199,78 @@ defmodule FungusToast.Games.GridTest do
       %Player{id: id, mutation_chance: 100}
     end
 
+  end
+
+  describe "get_player_growth_cycles_stats/2" do
+    test "that it returns an empty map for each player if there are no growth_cycles" do
+      player_id_1 = 1
+      player_id_2 = 2
+      growth_cycles = []
+
+      result = Grid.get_player_growth_cycles_stats([player_id_1, player_id_2], growth_cycles)
+
+      assert map_size(result) == 2
+
+      assert Map.has_key?(result, player_id_1)
+      player_map = result[player_id_1]
+      assert player_map[:grown_cells] == 0
+      assert player_map[:regenerated_cells] == 0
+      assert player_map[:perished_cells] == 0
+
+      assert Map.has_key?(result, player_id_2)
+      player_map = result[player_id_2]
+      assert player_map[:grown_cells] == 0
+      assert player_map[:regenerated_cells] == 0
+      assert player_map[:perished_cells] == 0
+    end
+
+    test "that it totals the cells that died" do
+      player_id_1 = 1
+      dead_cell = %GridCell{live: false, player_id: player_id_1}
+      growth_cycle_1 = %GrowthCycle{toast_changes: [dead_cell, dead_cell]}
+      growth_cycle_2 = %GrowthCycle{toast_changes: [dead_cell]}
+      growth_cycles = [growth_cycle_1, growth_cycle_2]
+
+      result = Grid.get_player_growth_cycles_stats([player_id_1], growth_cycles)
+
+      assert map_size(result) == 1
+
+      assert Map.has_key?(result, player_id_1)
+      player_map = result[player_id_1]
+      assert player_map[:perished_cells] == 3
+    end
+
+    test "that it totals the cells that were grown" do
+      player_id_1 = 1
+      live_cell = %GridCell{live: true, player_id: player_id_1}
+      growth_cycle_1 = %GrowthCycle{toast_changes: [live_cell, live_cell]}
+      growth_cycle_2 = %GrowthCycle{toast_changes: [live_cell]}
+      growth_cycles = [growth_cycle_1, growth_cycle_2]
+
+      result = Grid.get_player_growth_cycles_stats([player_id_1], growth_cycles)
+
+      assert map_size(result) == 1
+
+      assert Map.has_key?(result, player_id_1)
+      player_map = result[player_id_1]
+      assert player_map[:grown_cells] == 3
+    end
+
+    test "that it totals the cells that were regenerated" do
+      player_id_1 = 1
+      regenerated_cell = %GridCell{live: true, previous_player_id: 1, player_id: player_id_1}
+      growth_cycle_1 = %GrowthCycle{toast_changes: [regenerated_cell, regenerated_cell]}
+      growth_cycle_2 = %GrowthCycle{toast_changes: [regenerated_cell]}
+      growth_cycles = [growth_cycle_1, growth_cycle_2]
+
+      result = Grid.get_player_growth_cycles_stats([player_id_1], growth_cycles)
+
+      assert map_size(result) == 1
+
+      assert Map.has_key?(result, player_id_1)
+      player_map = result[player_id_1]
+      assert player_map[:regenerated_cells] == 3
+    end
   end
 
 end
