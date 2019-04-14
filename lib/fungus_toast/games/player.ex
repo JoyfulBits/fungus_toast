@@ -15,7 +15,7 @@ defmodule FungusToast.Games.Player do
 
   def position_to_attribute_map, do: @position_to_attribute_map
 
-  @default_top_right_bottom_left_growth_chance 7.0
+  @default_top_right_bottom_left_growth_chance 6.0
   @default_mutation_chance 10.0
   @default_apoptosis_chance 5.0
   @default_starved_cell_death_chance 10.0
