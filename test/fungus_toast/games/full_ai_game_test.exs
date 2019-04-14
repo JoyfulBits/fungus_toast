@@ -1,7 +1,7 @@
 defmodule FungusToast.Games.FullAiGameTest do
   use FungusToast.DataCase
   use Plug.Test
-  alias FungusToast.{Games, Players, AiStrategies}
+  alias FungusToast.{Games, Players, AiStrategies, Rounds}
   alias FungusToast.Games.{Game, Player}
   alias FungusToast.Repo
   alias FungusToast.Game.Status
@@ -58,11 +58,14 @@ defmodule FungusToast.Games.FullAiGameTest do
         IO.inspect "GAME OVER"
         Enum.sort(game.players, &(&1.live_cells >= &2.live_cells))
         |> Enum.map(fn player -> %{
+          player_id: player.id,
           starting_index: player_id_to_starting_cell_index_map[player.id],
           ai_type: player.ai_type,
           live_cells: player.live_cells,
           dead_cells: player.dead_cells,
           regenerated_cells: player.regenerated_cells,
+          grown_cells: player.grown_cells,
+          perished_cells: player.perished_cells,
           apoptosis_chance: player.apoptosis_chance,
           regeneration_chance: player.regeneration_chance,
           top_right_growth_chance: player.top_right_growth_chance,

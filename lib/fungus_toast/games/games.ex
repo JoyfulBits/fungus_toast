@@ -348,22 +348,21 @@ defmodule FungusToast.Games do
       Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
     end)
 
+    player_ids = Enum.map(players, fn player -> player.id end)
+    player_stats_map = Grid.get_player_growth_cycles_stats(player_ids, growth_cycles)
+
     Enum.each(players, fn player ->
       mutation_points = mutation_points_map[player.id]
       #TODO setting to -1 so there is always an update. What's a better way to do this?
       player = %{player | mutation_points: -1}
-      number_of_regenerated_cells = get_number_of_cells_regenerated_during_growth_cycles(player.id, growth_cycles)
-      Players.update_player(player, %{mutation_points: mutation_points, regenerated_cells: number_of_regenerated_cells})
-    end)
-  end
+      existing_stats = %{mutation_points: mutation_points,
+        grown_cells: player.grown_cells,
+        regenerated_cells: player.regenerated_cells,
+        perished_cells: player.perished_cells}
+      new_stats = player_stats_map[player.id]
+      |> Map.merge(existing_stats, fn _, v1, v2 -> v1 + v2 end)
 
-  #TODO should probably sum up grown and killed cells here as well?
-  defp get_number_of_cells_regenerated_during_growth_cycles(player_id, growth_cycles) do
-    Enum.reduce(growth_cycles, 0, fn growth_cycle, acc ->
-      regenerated_cells_for_player = Enum.filter(growth_cycle.toast_changes, fn grid_cell ->
-        grid_cell.live and grid_cell.player_id == player_id and grid_cell.previous_player_id != nil
-      end)
-      acc + length(regenerated_cells_for_player)
+      Players.update_player(player, new_stats)
     end)
   end
 
