@@ -26,13 +26,13 @@ defmodule FungusToastWeb.PlayerSkillController do
       player
       |> Games.update_player(%{mutation_points: player.mutation_points - spent_points})
 
-      game = Games.get_game!(game_id) |> FungusToast.Repo.preload(:players)
+      game = Games.get_game!(game_id)
       new_round = Games.next_round_available?(game)
 
       if(new_round) do
         Games.trigger_next_round(game)
       end
-      
+
       # How can we do this with Jason? It wants a struct and we don't have one here
       json(conn, %{nextRoundAvailable: new_round})
     end

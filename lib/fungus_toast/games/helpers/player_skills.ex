@@ -10,16 +10,6 @@ defmodule FungusToast.PlayerSkills do
   alias FungusToast.Games.{Player, PlayerSkill, Skill}
   alias FungusToast.Skills
 
-  @basic_player_skills %{
-    "Anti-Apoptosis" => [:apoptosis_chance],
-    "Budding" => [:top_left_growth_chance, :top_right_growth_chance, :bottom_right_growth_chance, :bottom_left_growth_chance],
-    "Hypermutation" => [:mutation_chance],
-    "Regeneration" => [:regeneration_chance],
-    "Mycotoxicity" => [:mycotoxin_fungicide_chance]
-  }
-
-  def basic_player_skills, do: @basic_player_skills
-
   @spec get_default_starting_skills() :: [%PlayerSkill{}, ...]
   def get_default_starting_skills() do
     Skills.list_skills

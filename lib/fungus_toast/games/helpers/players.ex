@@ -6,9 +6,10 @@ defmodule FungusToast.Players do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Accounts, Skills, PlayerSkills}
+  alias FungusToast.{Accounts, PlayerSkills, AiStrategies}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, Player}
+
 
   @doc """
   Returns the list of players.
@@ -32,7 +33,7 @@ defmodule FungusToast.Players do
   Returns the list of players for a given game.
   """
   def list_players_for_game(game_id) do
-    from(p in Player, where: p.game_id == ^game_id) |> Repo.one
+    from(p in Player, where: p.game_id == ^game_id) |> Repo.all
   end
 
   @doc """
@@ -51,38 +52,31 @@ defmodule FungusToast.Players do
     from(p in Player, where: p.id == ^id and p.game_id == ^game_id) |> Repo.one()
   end
 
-  defp get_ai_player_count() do
-    from(p in Player, where: p.human == false, select: count(p.id)) |> Repo.one()
-  end
-
-  @doc """
-  Creates the requested number of AI players for the given game
-  """
-  def create_ai_players(_, 0) do
-    :ok
-  end
-
   @doc """
   Creates a player for the given user and game
   """
   @spec create_player_for_user(%Game{}, String.t()) :: %Player{}
   def create_player_for_user(game = %Game{}, user_name) do
     user = Accounts.get_user_for_name(user_name)
-    create_basic_player(game.id, true, user.user_name, user.id)
+    {:ok, player} = create_basic_player(game.id, true, user.user_name, user.id)
     |> Player.changeset(%{})
     |> Repo.insert()
+
+    player
   end
 
   @doc """
   Creates the requested number of AI players for the given game. AI players have no user associated with them
   """
-  @spec create_ai_players(%Game{}) :: [%Player{}]
-  def create_ai_players(game) do
+  @spec create_ai_players(%Game{}, String.t()) :: [%Player{}]
+  def create_ai_players(game, ai_type \\ nil) do
     if(game.number_of_ai_players > 0) do
       Enum.map(1..game.number_of_ai_players, fn x ->
-        create_basic_player(game.id, false, "Fungal Mutation #{x}")
+        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}", nil, ai_type)
         |> Player.changeset(%{})
         |> Repo.insert()
+
+        player
       end)
     else
       []
@@ -96,31 +90,51 @@ defmodule FungusToast.Players do
   def create_human_players(game, number_of_human_players) do
     if(number_of_human_players > 0) do
       Enum.map(1..number_of_human_players, fn x ->
-        create_basic_player(game.id, true, "Unknown Player #{x}")
+        {:ok, player} = create_basic_player(game.id, true, "Unknown Player #{x}")
         |> Player.changeset(%{})
         |> Repo.insert()
+
+        player
       end)
     else
       []
     end
   end
 
-  @spec create_basic_player(integer(), boolean(), String.t(), integer()) :: %Player{}
-  def create_basic_player(game_id, human, name, user_id \\ nil) do
+  @doc """
+  Creates a player with teh default skills populated. If it is an AI player, it will set the AI type to whatever is specified, or choose one
+  at random if not specified.
+  """
+  @spec create_basic_player(integer(), boolean(), String.t(), integer(), String.t()) :: %Player{}
+  def create_basic_player(game_id, human, name, user_id \\ nil, ai_type \\ nil) do
     if(!human and user_id != nil) do
       raise ArgumentError, message: "AI players cannot have a user_id"
     end
     default_skills = PlayerSkills.get_default_starting_skills()
-    %Player{game_id: game_id, human: human, name: name, user_id: user_id, skills: default_skills}
+    ai_type = if(ai_type == nil) do
+      get_ai_type(human)
+    else
+      ai_type
+    end
+
+    %Player{game_id: game_id, human: human, name: name, user_id: user_id, ai_type: ai_type, skills: default_skills}
+  end
+
+  defp get_ai_type(human) do
+    if(!human) do
+      Enum.random(AiStrategies.get_ai_types())
+    end
   end
 
   @doc """
   Updates a player.
   """
   def update_player(%Player{} = player, attrs) do
-    player
+    {:ok, player} = player
     |> Player.changeset(attrs)
     |> Repo.update()
+
+    player
   end
 
   @doc """
@@ -132,38 +146,45 @@ defmodule FungusToast.Players do
   end
 
   @doc """
-  Makes the AI player spend it's mutation points in accordance with it's ai_type
+  Makes the AI player spend its mutation points in accordance with it's ai_type
   """
-  @spec spend_ai_mutation_points(%Player{}, integer()) :: any()
-  def spend_ai_mutation_points(%Player{ai_type: "Random"} = player, mutation_points)  when mutation_points > 0 do
-    skill_tuple = Enum.random(PlayerSkills.basic_player_skills)
-    skill_name = elem(skill_tuple, 0)
-
-    skill = Skills.get_skill_by_name(skill_name)
+  @spec spend_ai_mutation_points(%Player{}, integer(), integer(), integer()) :: any()
+  def spend_ai_mutation_points(player, mutation_points, total_cells, number_of_remaining_cells, acc \\ %{})
+  def spend_ai_mutation_points(%Player{} = player, mutation_points, total_cells, number_of_remaining_cells, acc) when mutation_points > 0 do
+    #get a version of the player with the latest updates so AI players can pick the best skills based on current attributes
+    player_with_unsaved_updates = Map.merge(player, acc, fn _, _, v2 -> v2 end)
+    skill = AiStrategies.get_skill_choice(player_with_unsaved_updates, total_cells, number_of_remaining_cells)
+    |> FungusToast.Skills.get_skill_by_name()
 
     player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
     PlayerSkills.update_player_skill(player_skill, %{skill_level: player_skill.skill_level + 1})
 
-    attributes_to_update = elem(skill_tuple, 1)
+    attributes_to_update = AiStrategies.get_player_attributes_for_skill_name(skill.name)
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
-    player = update_attribute(attributes_to_update, skill_change, player)
-    player = %{player | mutation_points: mutation_points - 1, }
-    spend_ai_mutation_points(player, mutation_points - 1)
+    acc = update_attribute(player, skill_change, attributes_to_update, acc)
+    |> Map.put(:mutation_points, mutation_points - 1)
+    spend_ai_mutation_points(player, mutation_points - 1, total_cells, number_of_remaining_cells, acc)
   end
 
-  def spend_ai_mutation_points(player, mutation_points) when mutation_points == 0 do
-    player
+  def spend_ai_mutation_points(player, mutation_points, _total_cells, _number_of_remaining_cells, acc) when mutation_points == 0 do
+    update_player(player, acc)
   end
 
-  def update_attribute(%Player{} = player, skill_change, attributes) when length(attributes) > 0 do
+  def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
     [attribute | remaining_attributes] = attributes
-    existing_value = player[attribute]
-    updated_player = Map.put(player, attribute, existing_value + skill_change)
-    update_attribute(updated_player, skill_change, remaining_attributes)
+    existing_value = Map.get(acc, attribute)
+    existing_value =
+      if(existing_value == nil) do
+        Map.get(player, attribute)
+      else
+        existing_value
+      end
+    acc = Map.put(acc, attribute, existing_value + skill_change)
+    update_attribute(player, skill_change, remaining_attributes, acc)
   end
 
-  def update_attribute(%Player{} = player, _, attributes) when length(attributes) == 0 do
-    player
+  def update_attribute(_player, _skill_change, attributes, acc) when length(attributes) == 0 do
+    acc
   end
 end
