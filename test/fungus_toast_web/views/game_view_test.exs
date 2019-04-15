@@ -13,7 +13,7 @@ defmodule FungusToastWeb.GameViewTest do
     # TODO: run through this piece by piece until we swagger or something else:
     # https://docs.google.com/document/d/1e7jwVzMLy4Ob9T36gQxmDFHR36xtcbk78mJdzlt9mqM/edit
     #TODO this test is fragile as the *_chance starting values are subject to change as we balance the game
-    @tag :skip
+    #@tag :skip
     test "the transformation of data model to json" do
       game = insert(:game)
 
@@ -23,7 +23,6 @@ defmodule FungusToastWeb.GameViewTest do
                  number_of_ai_players: 0,
                  grid_size: 50,
                  status: "Not Started",
-                 status: Status.status_not_started,
                  players: [
                    %{
                      name: _,

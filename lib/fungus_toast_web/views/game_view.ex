@@ -1,6 +1,7 @@
 defmodule FungusToastWeb.GameView do
   use FungusToastWeb, :view
   alias FungusToastWeb.GameView
+  alias FungusToast.Games.Game
 
   def render("index.json", %{games: games}) do
     render_many(games, GameView, "game.json")
@@ -12,7 +13,7 @@ defmodule FungusToastWeb.GameView do
 
   def render("game.json", %{game: game}), do: game_json(game)
 
-  defp game_json(game) do
+  defp game_json(game = %Game{players: players}) do
     %{
       id: game.id,
       grid_size: game.grid_size,
