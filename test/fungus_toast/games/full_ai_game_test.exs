@@ -8,7 +8,7 @@ defmodule FungusToast.Games.FullAiGameTest do
 
   describe "tests for playing out an entire AI game" do
 
-    #@tag :skip
+    @tag :skip
     test "that two AI players can finish a game" do
 
       game_changeset = %Game{} |> Game.changeset(%{number_of_ai_players: 5, number_of_human_players: 0})
