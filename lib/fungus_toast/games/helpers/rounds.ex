@@ -65,7 +65,7 @@ defmodule FungusToast.Rounds do
   end
 
   def get_latest_completed_round_for_game(game_id) do
-    from(r in Round, where: r.game_id == ^game_id and r.growth_cycles != [], order_by: [desc: r.number], limit: 1)
+    from(r in Round, where: r.game_id == ^game_id and fragment("? != '[]'", r.growth_cycles), order_by: [desc: r.number], limit: 1)
     |> Repo.one()
   end
 
