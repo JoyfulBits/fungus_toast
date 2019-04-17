@@ -41,6 +41,8 @@ defmodule FungusToastWeb.GameView do
       dead_cells: player.dead_cells,
       live_cells: player.live_cells,
       regenerated_cells: player.regenerated_cells,
+      perished_cells: player.perished_cells,
+      grown_cells: player.grown_cells,
       apoptosis_chance: player.apoptosis_chance,
       starved_cell_death_chance: player.starved_cell_death_chance,
       mutation_chance: player.mutation_chance,

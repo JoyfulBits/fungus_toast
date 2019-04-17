@@ -27,10 +27,26 @@ defmodule FungusToastWeb.GameViewTest do
                    %{
                      name: _,
                      id: _,
-                     mutation_points: 5,
+                     mutation_points: _,
                      human: true,
                      top_left_growth_chance: _,
+                     top_growth_chance: _,
                      top_right_growth_chance: _,
+                     right_growth_chance: _,
+                     bottom_right_growth_chance: _,
+                     bottom_growth_chance: _,
+                     bottom_left_growth_chance: _,
+                     left_growth_chance: _,
+                     dead_cells: _,
+                     live_cells: _,
+                     regenerated_cells: _,
+                     perished_cells: _,
+                     grown_cells: _,
+                     apoptosis_chance: _,
+                     starved_cell_death_chance: _,
+                     mutation_chance: _,
+                     regeneration_chance: _,
+                     mycotoxin_fungicide_chance: _
                    }
                  ]
                } = GameView.render("game.json", %{game: game})
