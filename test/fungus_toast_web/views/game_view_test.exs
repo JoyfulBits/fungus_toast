@@ -2,20 +2,16 @@ defmodule FungusToastWeb.GameViewTest do
   use FungusToastWeb.ConnCase, async: true
   use Plug.Test
   alias FungusToastWeb.GameView
-  alias FungusToast.Games.Game
-  alias FungusToast.Games.Player
-  alias FungusToast.Games.Round
-  alias FungusToast.Game.Status
 
   import FungusToast.Factory
 
   describe "game.json" do
     # TODO: run through this piece by piece until we swagger or something else:
     # https://docs.google.com/document/d/1e7jwVzMLy4Ob9T36gQxmDFHR36xtcbk78mJdzlt9mqM/edit
-    #TODO this test is fragile as the *_chance starting values are subject to change as we balance the game
     #@tag :skip
     test "the transformation of data model to json" do
       game = insert(:game)
+      game_map = %{game: game, latest_completed_round: nil}
 
       assert %{
                  id: _,
@@ -49,7 +45,7 @@ defmodule FungusToastWeb.GameViewTest do
                      mycotoxin_fungicide_chance: _
                    }
                  ]
-               } = GameView.render("game.json", %{game: game})
+               } = GameView.render("game.json", %{game: game_map})
     end
   end
 end

@@ -15,15 +15,17 @@ defmodule FungusToastWeb.GameController do
   def show(conn, %{"id" => id}) do
     game = Games.get_game!(id)
     latest_completed_round = Rounds.get_latest_completed_round_for_game(game.id)
-    render(conn, "show.json", game: game, latest_completed_round: latest_completed_round)
+    render(conn, "show.json", game: %{game: game, latest_completed_round: latest_completed_round})
   end
 
   def create(conn, %{"user_name" => user_name} = game) do
     #TODO should the user id be passed in or the user name?
     #TODO return a better error code when the user can't be found
     game = Games.create_game(user_name, game)
+    latest_completed_round = Rounds.get_latest_completed_round_for_game(game.id)
+    game_with_round = %{game: game, latest_completed_round: latest_completed_round}
     conn
     |> put_status(:created)
-    |> render("show.json", game: game)
+    |> render("show.json", game: game_with_round)
   end
 end
