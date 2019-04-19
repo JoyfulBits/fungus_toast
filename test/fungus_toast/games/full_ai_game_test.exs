@@ -1,7 +1,7 @@
 defmodule FungusToast.Games.FullAiGameTest do
   use FungusToast.DataCase
   use Plug.Test
-  alias FungusToast.{Games, Players, AiStrategies, Rounds}
+  alias FungusToast.{Games, Players, AiStrategies}
   alias FungusToast.Games.{Game, Player}
   alias FungusToast.Repo
   alias FungusToast.Game.Status
