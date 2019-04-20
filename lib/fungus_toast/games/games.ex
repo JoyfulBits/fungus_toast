@@ -16,19 +16,6 @@ defmodule FungusToast.Games do
   def starting_end_of_game_count_down, do: @starting_end_of_game_count_down
 
   @doc """
-  Returns the list of games.
-
-  ## Examples
-
-      iex> list_games()
-      [%Game{}, ...]
-
-  """
-  def list_games do
-    Repo.all(Game)
-  end
-
-  @doc """
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
   def list_active_games_for_user(%User{} = user),
@@ -76,7 +63,6 @@ defmodule FungusToast.Games do
       {:error, %Ecto.Changeset{}}
 
   """
-  #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
   def create_game(user_name, attrs) do
     attrs = if(Map.get(attrs, :number_of_human_players) < 2) do
       Map.put(attrs, :status, "Started")
@@ -372,8 +358,6 @@ defmodule FungusToast.Games do
     alias FungusToast.Games.Round
     Repo.get!(Round, id) |> Repo.preload(:game)
   end
-
-  defdelegate create_round(game, attrs), to: Rounds
 
   defdelegate list_players_for_game(game), to: Players
   defdelegate get_player_for_game(game_id, id), to: Players
