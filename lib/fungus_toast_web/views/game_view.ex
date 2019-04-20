@@ -15,6 +15,7 @@ defmodule FungusToastWeb.GameView do
   defp game_json(game_with_round) do
     game = game_with_round.game
     latest_completed_round = game_with_round.latest_completed_round
+    game_totals = get_game_totals(game.players)
     %{
       id: game.id,
       grid_size: game.grid_size,
@@ -24,8 +25,19 @@ defmodule FungusToastWeb.GameView do
       round_number: if(latest_completed_round == nil) do 0 else latest_completed_round.number + 1 end,
       players: Enum.map(game.players, &player_json(&1)),
       starting_game_state: starting_game_state_json(latest_completed_round),
-      growth_cycles: growth_cycles_json(latest_completed_round)
+      growth_cycles: growth_cycles_json(latest_completed_round),
+      total_live_cells: game_totals.total_live_cells,
+      total_dead_cells: game_totals.total_dead_cells,
+      total_regenerated_cells: game_totals.total_regenerated_cells
     }
+  end
+
+  defp get_game_totals(players) do
+    Enum.reduce(players, %{total_live_cells: 0, total_dead_cells: 0, total_regenerated_cells: 0}, fn player, acc ->
+      update_in(acc, [:total_live_cells], &(&1 + player.live_cells))
+      |> update_in([:total_dead_cells], &(&1 + player.dead_cells))
+      |> update_in([:total_regenerated_cells], &(&1 + player.regenerated_cells))
+    end)
   end
 
   defp player_json(player) do

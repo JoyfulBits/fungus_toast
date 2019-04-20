@@ -13,7 +13,7 @@ defmodule FungusToastWeb.GameViewTest do
     #@tag :skip
     test "that the game and player information gets added to the model" do
       game = insert(:game)
-      player = %Player{
+      player_1 = %Player{
         name: "player name",
         id: 1,
         mutation_points: 2,
@@ -38,7 +38,15 @@ defmodule FungusToastWeb.GameViewTest do
         mycotoxin_fungicide_chance: 20,
         user_id: 21
       }
-      game = Map.put(game, :players, [player])
+
+      player_2 = %Player{
+        id: 2,
+        dead_cells: 50,
+        live_cells: 51,
+        regenerated_cells: 52
+      }
+
+      game = Map.put(game, :players, [player_1, player_2])
       game_with_round = %{game: game, latest_completed_round: nil}
 
       result = GameView.render("game.json", %{game: game_with_round})
@@ -48,27 +56,32 @@ defmodule FungusToastWeb.GameViewTest do
       assert result.number_of_ai_players == game.number_of_ai_players
       assert result.grid_size == game.grid_size
       assert result.status == Status.status_not_started
-      assert length(result.players) == 1
-      actual_player_info = hd(result.players)
+      assert length(result.players) == 2
+      actual_player_1_info = Enum.filter(result.players, fn player -> player.id == player_1.id end) |> hd
 
-      assert actual_player_info.id == player.id
-      assert actual_player_info.top_left_growth_chance == player.top_left_growth_chance
-      assert actual_player_info.top_growth_chance == player.top_growth_chance
-      assert actual_player_info.top_right_growth_chance == player.top_right_growth_chance
-      assert actual_player_info.right_growth_chance == player.right_growth_chance
-      assert actual_player_info.bottom_right_growth_chance == player.bottom_right_growth_chance
-      assert actual_player_info.bottom_growth_chance == player.bottom_growth_chance
-      assert actual_player_info.bottom_left_growth_chance == player.bottom_left_growth_chance
-      assert actual_player_info.dead_cells == player.dead_cells
-      assert actual_player_info.live_cells == player.live_cells
-      assert actual_player_info.regenerated_cells == player.regenerated_cells
-      assert actual_player_info.perished_cells == player.perished_cells
-      assert actual_player_info.grown_cells == player.grown_cells
-      assert actual_player_info.apoptosis_chance == player.apoptosis_chance
-      assert actual_player_info.starved_cell_death_chance == player.starved_cell_death_chance
-      assert actual_player_info.mutation_chance == player.mutation_chance
-      assert actual_player_info.regeneration_chance == player.regeneration_chance
-      assert actual_player_info.mycotoxin_fungicide_chance == player.mycotoxin_fungicide_chance
+      assert actual_player_1_info.id == player_1.id
+      assert actual_player_1_info.top_left_growth_chance == player_1.top_left_growth_chance
+      assert actual_player_1_info.top_growth_chance == player_1.top_growth_chance
+      assert actual_player_1_info.top_right_growth_chance == player_1.top_right_growth_chance
+      assert actual_player_1_info.right_growth_chance == player_1.right_growth_chance
+      assert actual_player_1_info.bottom_right_growth_chance == player_1.bottom_right_growth_chance
+      assert actual_player_1_info.bottom_growth_chance == player_1.bottom_growth_chance
+      assert actual_player_1_info.bottom_left_growth_chance == player_1.bottom_left_growth_chance
+      assert actual_player_1_info.dead_cells == player_1.dead_cells
+      assert actual_player_1_info.live_cells == player_1.live_cells
+      assert actual_player_1_info.regenerated_cells == player_1.regenerated_cells
+      assert actual_player_1_info.perished_cells == player_1.perished_cells
+      assert actual_player_1_info.grown_cells == player_1.grown_cells
+      assert actual_player_1_info.apoptosis_chance == player_1.apoptosis_chance
+      assert actual_player_1_info.starved_cell_death_chance == player_1.starved_cell_death_chance
+      assert actual_player_1_info.mutation_chance == player_1.mutation_chance
+      assert actual_player_1_info.regeneration_chance == player_1.regeneration_chance
+      assert actual_player_1_info.mycotoxin_fungicide_chance == player_1.mycotoxin_fungicide_chance
+
+      #make sure that the game totals are the sum of the player info
+      assert result.total_dead_cells == player_1.dead_cells + player_2.dead_cells
+      assert result.total_live_cells == player_1.live_cells + player_2.live_cells
+      assert result.total_regenerated_cells  == player_1.regenerated_cells + player_2.regenerated_cells
     end
 
     test "that AI players and players with user ids have a status of Joined and humans without user ids are Not Joined" do
