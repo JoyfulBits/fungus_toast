@@ -27,6 +27,11 @@ defmodule FungusToastWeb.GameView do
   end
 
   defp player_json(player) do
+    status = if(!player.human or ((player.human and player.user_id != nil))) do
+      "Joined"
+    else
+      "Not Joined"
+    end
     %{
       id: player.id,
       name: player.name,
@@ -49,7 +54,8 @@ defmodule FungusToastWeb.GameView do
       starved_cell_death_chance: player.starved_cell_death_chance,
       mutation_chance: player.mutation_chance,
       regeneration_chance: player.regeneration_chance,
-      mycotoxin_fungicide_chance: player.mycotoxin_fungicide_chance
+      mycotoxin_fungicide_chance: player.mycotoxin_fungicide_chance,
+      status: status
     }
   end
 
