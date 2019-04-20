@@ -46,7 +46,6 @@ defmodule FungusToast.GamesTest do
     end
   end
 
-
   describe "create_game/2" do
     test "that the game is created with valid data" do
       user = Fixtures.Accounts.User.create!()
@@ -83,6 +82,43 @@ defmodule FungusToast.GamesTest do
 
     test "that an error is raised if an invalid status is passed" do
       assert catch_error Games.create_game("some user name", %{status: "Nope", number_of_human_players: 2})
+    end
+  end
+
+  describe "start_game/1" do
+    test "that it returns false if there is more than one human player since that means the game can't start yet" do
+      result = Games.start_game(%Game{number_of_human_players: 2})
+
+      refute result
+    end
+
+    test "that it returns true if there is only one human in the game since the game can start" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1}
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      result = Games.start_game(game)
+
+      assert result
+    end
+
+    test "that creates the first round with a blank starting state and a single growth cycle with a toast change per player to place the starting cell" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 1}
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      game = Games.get_game!(game.id)
+
+      Games.start_game(game)
+
+      latest_completed_round = Rounds.get_latest_completed_round_for_game(game.id)
+
+      assert latest_completed_round.starting_game_state != nil
+      assert length(latest_completed_round.starting_game_state.cells) == 0
+
+      assert length(latest_completed_round.growth_cycles) == 1
+      actual_growth_cycle = hd(latest_completed_round.growth_cycles)
+      assert length(actual_growth_cycle.toast_changes) == 2
     end
   end
 

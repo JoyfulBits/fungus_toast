@@ -91,7 +91,7 @@ defmodule FungusToast.Games do
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
-        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
+        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, toast_changes: starting_cells }
         first_round_values = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: [], round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
         second_round = %{number: 1, growth_cycles: [], starting_game_state: %GameState{cells: starting_cells, round_number: 1}}
