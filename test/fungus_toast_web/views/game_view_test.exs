@@ -181,7 +181,7 @@ defmodule FungusToastWeb.GameViewTest do
       assert length(actual_growth_cycle_2_toast_changes) == length(growth_cycle_2_toast_changes)
     end
 
-    test "that growth cycles are empty of the game has not started" do
+    test "that growth cycles are empty and round number is 0 if the game has not started" do
       game = %Game{players: []}
 
       game_with_round = %{game: game, latest_completed_round: nil}
@@ -189,6 +189,19 @@ defmodule FungusToastWeb.GameViewTest do
       result = GameView.render("game.json", %{game: game_with_round})
 
       assert result.growth_cycles == []
+      assert result.round_number == 0
+    end
+
+    test "that the round number is one higher than the latest completed round" do
+      game = %Game{players: []}
+
+      last_completed_round_number = 2
+      latest_completed_round = %Round{starting_game_state: %GameState{cells: []}, growth_cycles: [%GrowthCycle{}], number: last_completed_round_number}
+      game_with_round = %{game: game, latest_completed_round: latest_completed_round}
+
+      result = GameView.render("game.json", %{game: game_with_round})
+
+      assert result.round_number == last_completed_round_number + 1
     end
 
     defp get_all_cell_types() do

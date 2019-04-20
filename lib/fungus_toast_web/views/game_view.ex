@@ -21,6 +21,7 @@ defmodule FungusToastWeb.GameView do
       number_of_ai_players: game.number_of_ai_players,
       number_of_human_players: game.number_of_human_players,
       status: game.status,
+      round_number: if(latest_completed_round == nil) do 0 else latest_completed_round.number + 1 end,
       players: Enum.map(game.players, &player_json(&1)),
       starting_game_state: starting_game_state_json(latest_completed_round),
       growth_cycles: growth_cycles_json(latest_completed_round)
