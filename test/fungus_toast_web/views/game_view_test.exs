@@ -217,6 +217,16 @@ defmodule FungusToastWeb.GameViewTest do
       assert result.round_number == last_completed_round_number + 1
     end
 
+    test "that starting game state is nil if there hasn't been a completed round yet" do
+      game = %Game{players: []}
+
+      game_with_round = %{game: game, latest_completed_round: nil}
+
+      result = GameView.render("game.json", %{game: game_with_round})
+
+      assert result.starting_game_state == nil
+    end
+
     defp get_all_cell_types() do
       live_cell =  %GridCell{
         index: 1,

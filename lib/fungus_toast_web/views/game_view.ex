@@ -75,7 +75,7 @@ defmodule FungusToastWeb.GameView do
 
   defp starting_game_state_json(round) do
     if(round == nil) do
-      []
+      nil
     else
       %{
         round_number: round.number,
