@@ -22,7 +22,8 @@ defmodule FungusToastWeb.GameView do
       number_of_human_players: game.number_of_human_players,
       status: game.status,
       players: Enum.map(game.players, &player_json(&1)),
-      starting_game_state: starting_game_state_json(latest_completed_round)
+      starting_game_state: starting_game_state_json(latest_completed_round),
+      growth_cycles: growth_cycles_json(latest_completed_round)
     }
   end
 
@@ -65,10 +66,26 @@ defmodule FungusToastWeb.GameView do
     else
       %{
         round_number: round.number,
-        fungal_cells: Enum.map(round.starting_game_state.cells, fn grid_cell ->
-          %{index: grid_cell.index, player_id: grid_cell.player_id, live: grid_cell.live, previous_player_id: grid_cell.previous_player_id}
-        end)
+        fungal_cells: Enum.map(round.starting_game_state.cells, fn grid_cell -> make_api_fungal_cell(grid_cell) end)
       }
+    end
+  end
+
+  defp make_api_fungal_cell(grid_cell) do
+    %{index: grid_cell.index, player_id: grid_cell.player_id, live: grid_cell.live, previous_player_id: grid_cell.previous_player_id}
+  end
+
+  defp growth_cycles_json(round) do
+    if(round == nil) do
+      nil
+    else
+      Enum.map(round.growth_cycles, fn growth_cycle ->
+        toast_changes = Enum.map(growth_cycle.toast_changes, fn grid_cell -> make_api_fungal_cell(grid_cell) end)
+        mutation_points_earned = Enum.map(growth_cycle.mutation_points_earned, fn mutation_points_earned ->
+          {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
+        |> Enum.into(%{})
+        %{toast_changes: toast_changes, mutation_points_earned: mutation_points_earned}
+      end)
     end
   end
 end
