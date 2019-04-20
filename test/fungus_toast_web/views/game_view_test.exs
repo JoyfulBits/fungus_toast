@@ -149,7 +149,7 @@ defmodule FungusToastWeb.GameViewTest do
       %GridCell{}
     ]
 
-    growth_cycle_2 = %GrowthCycle{generation_number: 2, toast_changes: growth_cycle_2_toast_changes}
+    growth_cycle_2 = %GrowthCycle{generation_number: 2, toast_changes: growth_cycle_2_toast_changes, mutation_points_earned: mutation_points_earned}
 
     growth_cycles = [growth_cycle_1, growth_cycle_2]
     latest_completed_round = %Round{starting_game_state: %GameState{cells: []}, growth_cycles: growth_cycles}
@@ -176,6 +176,10 @@ defmodule FungusToastWeb.GameViewTest do
     actual_mutation_points_earned = actual_growth_cycle_1.mutation_points_earned
     assert actual_mutation_points_earned[player_1_mutation_points_earned.player_id] == player_1_mutation_points_earned.mutation_points
     assert actual_mutation_points_earned[player_2_mutation_points_earned.player_id] == player_2_mutation_points_earned.mutation_points
+
+    actual_growth_cycle_2 = Enum.at(actual_growth_cycles, 1)
+    actual_growth_cycle_2_toast_changes = actual_growth_cycle_2.toast_changes
+    assert length(actual_growth_cycle_2_toast_changes) == length(growth_cycle_2_toast_changes)
   end
 
   defp get_all_cell_types() do
