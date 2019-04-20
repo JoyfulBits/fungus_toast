@@ -62,7 +62,7 @@ defmodule FungusToastWeb.GameView do
 
   defp starting_game_state_json(round) do
     if(round == nil) do
-      nil
+      []
     else
       %{
         round_number: round.number,
@@ -77,7 +77,7 @@ defmodule FungusToastWeb.GameView do
 
   defp growth_cycles_json(round) do
     if(round == nil) do
-      nil
+      []
     else
       Enum.map(round.growth_cycles, fn growth_cycle ->
         toast_changes = Enum.map(growth_cycle.toast_changes, fn grid_cell -> make_api_fungal_cell(grid_cell) end)

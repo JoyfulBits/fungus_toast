@@ -122,93 +122,103 @@ defmodule FungusToastWeb.GameViewTest do
       actual_regenerated_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == regenerated_cell.index end) |> hd
       assert_cells_match(actual_regenerated_cell, regenerated_cell)
     end
-  end
 
-  test "that growth cycles are returned" do
-    game = %Game{players: []}
+    test "that growth cycles are returned" do
+      game = %Game{players: []}
 
-    cells_map = get_all_cell_types()
-    live_cell = cells_map.live_cell
-    dead_cell = cells_map.dead_cell
-    regenerated_cell = cells_map.regenerated_cell
+      cells_map = get_all_cell_types()
+      live_cell = cells_map.live_cell
+      dead_cell = cells_map.dead_cell
+      regenerated_cell = cells_map.regenerated_cell
 
-    growth_cycle_1_toast_changes = [
-      live_cell,
-      dead_cell,
-      regenerated_cell
-    ]
+      growth_cycle_1_toast_changes = [
+        live_cell,
+        dead_cell,
+        regenerated_cell
+      ]
 
-    player_1_mutation_points_earned = %MutationPointsEarned{player_id: 1, mutation_points: 20}
-    player_2_mutation_points_earned = %MutationPointsEarned{player_id: 2, mutation_points: 30}
-    mutation_points_earned = [player_1_mutation_points_earned, player_2_mutation_points_earned]
+      player_1_mutation_points_earned = %MutationPointsEarned{player_id: 1, mutation_points: 20}
+      player_2_mutation_points_earned = %MutationPointsEarned{player_id: 2, mutation_points: 30}
+      mutation_points_earned = [player_1_mutation_points_earned, player_2_mutation_points_earned]
 
-    growth_cycle_1 = %GrowthCycle{generation_number: 1, toast_changes: growth_cycle_1_toast_changes, mutation_points_earned: mutation_points_earned}
+      growth_cycle_1 = %GrowthCycle{generation_number: 1, toast_changes: growth_cycle_1_toast_changes, mutation_points_earned: mutation_points_earned}
 
-    #just have one additional growth cycle to make sure it works with multiple growth cycles
-    growth_cycle_2_toast_changes = [
-      %GridCell{}
-    ]
+      #just have one additional growth cycle to make sure it works with multiple growth cycles
+      growth_cycle_2_toast_changes = [
+        %GridCell{}
+      ]
 
-    growth_cycle_2 = %GrowthCycle{generation_number: 2, toast_changes: growth_cycle_2_toast_changes, mutation_points_earned: mutation_points_earned}
+      growth_cycle_2 = %GrowthCycle{generation_number: 2, toast_changes: growth_cycle_2_toast_changes, mutation_points_earned: mutation_points_earned}
 
-    growth_cycles = [growth_cycle_1, growth_cycle_2]
-    latest_completed_round = %Round{starting_game_state: %GameState{cells: []}, growth_cycles: growth_cycles}
-    game_with_round = %{game: game, latest_completed_round: latest_completed_round}
+      growth_cycles = [growth_cycle_1, growth_cycle_2]
+      latest_completed_round = %Round{starting_game_state: %GameState{cells: []}, growth_cycles: growth_cycles}
+      game_with_round = %{game: game, latest_completed_round: latest_completed_round}
 
-    result = GameView.render("game.json", %{game: game_with_round})
+      result = GameView.render("game.json", %{game: game_with_round})
 
-    actual_growth_cycles = result.growth_cycles
-    assert length(actual_growth_cycles) == length(growth_cycles)
+      actual_growth_cycles = result.growth_cycles
+      assert length(actual_growth_cycles) == length(growth_cycles)
 
-    actual_growth_cycle_1 = Enum.at(actual_growth_cycles, 0)
-    actual_growth_cycle_1_toast_changes = actual_growth_cycle_1.toast_changes
-    assert length(actual_growth_cycle_1_toast_changes) == length(growth_cycle_1_toast_changes)
+      actual_growth_cycle_1 = Enum.at(actual_growth_cycles, 0)
+      actual_growth_cycle_1_toast_changes = actual_growth_cycle_1.toast_changes
+      assert length(actual_growth_cycle_1_toast_changes) == length(growth_cycle_1_toast_changes)
 
-    actual_newly_grown_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == live_cell.index end) |> hd
-    assert_cells_match(actual_newly_grown_cell, live_cell)
+      actual_newly_grown_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == live_cell.index end) |> hd
+      assert_cells_match(actual_newly_grown_cell, live_cell)
 
-    actual_newly_dead_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == dead_cell.index end) |> hd
-    assert_cells_match(actual_newly_dead_cell, dead_cell)
+      actual_newly_dead_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == dead_cell.index end) |> hd
+      assert_cells_match(actual_newly_dead_cell, dead_cell)
 
-    actual_newly_regenerated_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == regenerated_cell.index end) |> hd
-    assert_cells_match(actual_newly_regenerated_cell, regenerated_cell)
+      actual_newly_regenerated_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == regenerated_cell.index end) |> hd
+      assert_cells_match(actual_newly_regenerated_cell, regenerated_cell)
 
-    actual_mutation_points_earned = actual_growth_cycle_1.mutation_points_earned
-    assert actual_mutation_points_earned[player_1_mutation_points_earned.player_id] == player_1_mutation_points_earned.mutation_points
-    assert actual_mutation_points_earned[player_2_mutation_points_earned.player_id] == player_2_mutation_points_earned.mutation_points
+      actual_mutation_points_earned = actual_growth_cycle_1.mutation_points_earned
+      assert actual_mutation_points_earned[player_1_mutation_points_earned.player_id] == player_1_mutation_points_earned.mutation_points
+      assert actual_mutation_points_earned[player_2_mutation_points_earned.player_id] == player_2_mutation_points_earned.mutation_points
 
-    actual_growth_cycle_2 = Enum.at(actual_growth_cycles, 1)
-    actual_growth_cycle_2_toast_changes = actual_growth_cycle_2.toast_changes
-    assert length(actual_growth_cycle_2_toast_changes) == length(growth_cycle_2_toast_changes)
-  end
+      actual_growth_cycle_2 = Enum.at(actual_growth_cycles, 1)
+      actual_growth_cycle_2_toast_changes = actual_growth_cycle_2.toast_changes
+      assert length(actual_growth_cycle_2_toast_changes) == length(growth_cycle_2_toast_changes)
+    end
 
-  defp get_all_cell_types() do
-    live_cell =  %GridCell{
-      index: 1,
-      player_id: 10,
-      live: true
-    }
+    test "that growth cycles are empty of the game has not started" do
+      game = %Game{players: []}
 
-    dead_cell =  %GridCell{
-      index: 2,
-      player_id: 10,
-      live: false
-    }
+      game_with_round = %{game: game, latest_completed_round: nil}
 
-    regenerated_cell =  %GridCell{
-      index: 3,
-      player_id: 10,
-      live: true,
-      previous_player_id: 11
-    }
+      result = GameView.render("game.json", %{game: game_with_round})
 
-    %{live_cell: live_cell, dead_cell: dead_cell, regenerated_cell: regenerated_cell}
-  end
+      assert result.growth_cycles == []
+    end
 
-  defp assert_cells_match(actual_cell, expected_cell) do
-    assert actual_cell.index == expected_cell.index
-    assert actual_cell.player_id == expected_cell.player_id
-    assert actual_cell.live == expected_cell.live
-    assert actual_cell.previous_player_id == expected_cell.previous_player_id
+    defp get_all_cell_types() do
+      live_cell =  %GridCell{
+        index: 1,
+        player_id: 10,
+        live: true
+      }
+
+      dead_cell =  %GridCell{
+        index: 2,
+        player_id: 10,
+        live: false
+      }
+
+      regenerated_cell =  %GridCell{
+        index: 3,
+        player_id: 10,
+        live: true,
+        previous_player_id: 11
+      }
+
+      %{live_cell: live_cell, dead_cell: dead_cell, regenerated_cell: regenerated_cell}
+    end
+
+    defp assert_cells_match(actual_cell, expected_cell) do
+      assert actual_cell.index == expected_cell.index
+      assert actual_cell.player_id == expected_cell.player_id
+      assert actual_cell.live == expected_cell.live
+      assert actual_cell.previous_player_id == expected_cell.previous_player_id
+    end
   end
 end
