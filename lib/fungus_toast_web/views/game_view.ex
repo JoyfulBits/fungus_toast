@@ -65,8 +65,8 @@ defmodule FungusToastWeb.GameView do
     else
       %{
         round_number: round.number,
-        fungal_cells: Enum.map(round.game_state.cells, fn grid_cell ->
-          %{cell_index: grid_cell.index, player_id: grid_cell.player_id, dead: !grid_cell.live, previous_player_id: grid_cell.previous_player_id}
+        fungal_cells: Enum.map(round.starting_game_state.cells, fn grid_cell ->
+          %{index: grid_cell.index, player_id: grid_cell.player_id, live: grid_cell.live, previous_player_id: grid_cell.previous_player_id}
         end)
       }
     end

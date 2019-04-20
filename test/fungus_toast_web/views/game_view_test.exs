@@ -2,7 +2,7 @@ defmodule FungusToastWeb.GameViewTest do
   use FungusToastWeb.ConnCase, async: true
   use Plug.Test
   alias FungusToastWeb.GameView
-  alias FungusToast.Games.{Game, Player}
+  alias FungusToast.Games.{Game, Player, GridCell, GameState, Round}
   alias FungusToast.Game.Status
 
   import FungusToast.Factory
@@ -11,7 +11,7 @@ defmodule FungusToastWeb.GameViewTest do
     # TODO: run through this piece by piece until we swagger or something else:
     # https://docs.google.com/document/d/1e7jwVzMLy4Ob9T36gQxmDFHR36xtcbk78mJdzlt9mqM/edit
     #@tag :skip
-    test "the transformation of data model to json" do
+    test "that the game and player information gets added to the model" do
       game = insert(:game)
       player = %Player{
         name: "player name",
@@ -91,6 +91,55 @@ defmodule FungusToastWeb.GameViewTest do
 
       not_joined_human_player = Enum.filter(result.players, fn player -> player.id == joined_human_player.id end) |> hd
       assert not_joined_human_player.status == "Joined"
+    end
+
+    test "that the starting game state gets added" do
+      game = %Game{players: []}
+      live_cell =  %GridCell{
+        index: 1,
+        player_id: 10,
+        live: true
+      }
+
+      dead_cell =  %GridCell{
+        index: 2,
+        player_id: 10,
+        live: false
+      }
+
+      regenerated_cell =  %GridCell{
+        index: 3,
+        player_id: 10,
+        live: true,
+        previous_player_id: 11
+      }
+
+      cells = [live_cell, dead_cell, regenerated_cell]
+
+      starting_game_state = %GameState{round_number: 1, cells: cells}
+      latest_completed_round = %Round{starting_game_state: starting_game_state}
+      game_with_round = %{game: game, latest_completed_round: latest_completed_round}
+
+      result = GameView.render("game.json", %{game: game_with_round})
+
+      assert result.starting_game_state != nil
+      actual_starting_game_state = result.starting_game_state
+      assert length(actual_starting_game_state.fungal_cells) == length(cells)
+
+      actual_live_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == live_cell.index end) |> hd
+      assert actual_live_cell.index == live_cell.index
+      assert actual_live_cell.player_id == live_cell.player_id
+      assert actual_live_cell.live == live_cell.live
+
+      actual_dead_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == dead_cell.index end) |> hd
+      assert actual_dead_cell.index == dead_cell.index
+      assert actual_dead_cell.player_id == dead_cell.player_id
+      assert actual_dead_cell.live == dead_cell.live
+
+      actual_regenerated_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == regenerated_cell.index end) |> hd
+      assert actual_regenerated_cell.index == regenerated_cell.index
+      assert actual_regenerated_cell.player_id == regenerated_cell.player_id
+      assert actual_regenerated_cell.live == regenerated_cell.live
     end
   end
 end
