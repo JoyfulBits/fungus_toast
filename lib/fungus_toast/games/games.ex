@@ -65,7 +65,7 @@ defmodule FungusToast.Games do
   """
   def create_game(user_name, attrs) do
     attrs = if(Map.get(attrs, :number_of_human_players) < 2) do
-      Map.put(attrs, :status, "Started")
+      Map.put(attrs, :status, Status.status_started)
     else
       attrs
     end

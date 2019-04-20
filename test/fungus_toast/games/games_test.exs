@@ -59,6 +59,24 @@ defmodule FungusToast.GamesTest do
       assert length(game.players) == 3
     end
 
+    test "that the game is started if there are no human players without a user id" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 1}
+
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      assert game.status == Status.status_started
+    end
+
+    test "that the game is not started if there is at least one human player who hasn't joined (and hence has no user_id)" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 2, number_of_ai_players: 0}
+
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      assert game.status == Status.status_not_started
+    end
+
     test "that an error is raised if required fields are missing" do
       assert catch_error Games.create_game("some user name", %{})
     end
