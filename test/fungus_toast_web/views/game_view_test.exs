@@ -124,6 +124,7 @@ defmodule FungusToastWeb.GameViewTest do
 
       assert result.starting_game_state != nil
       actual_starting_game_state = result.starting_game_state
+      assert actual_starting_game_state.round_number == starting_game_state.round_number
       assert length(actual_starting_game_state.fungal_cells) == length(cells)
 
       actual_live_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == live_cell.index end) |> hd
