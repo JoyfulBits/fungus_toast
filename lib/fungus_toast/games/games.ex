@@ -64,10 +64,15 @@ defmodule FungusToast.Games do
 
   """
   def create_game(user_name, attrs) do
-    attrs = if(Map.get(attrs, :number_of_human_players) < 2) do
-      Map.put(attrs, :status, Status.status_started)
+    #since changesets can have only all atoms or all strings, keep it consistent
+    attrs = if(Map.get(attrs, "number_of_human_players")) do
+      Map.put(attrs, "status", Status.status_started)
     else
-      attrs
+      if(Map.get(attrs, :number_of_human_players) < 2) do
+        Map.put(attrs, :status, Status.status_started)
+      else
+        attrs
+      end
     end
     changeset = %Game{} |> Game.changeset(attrs)
 
