@@ -216,7 +216,7 @@ defmodule FungusToast.GamesTest do
         game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
 
       Enum.each(game.players, fn player ->
-        Games.update_player(player, %{mutation_points: 0}) end)
+        Players.update_player(player, %{mutation_points: 0}) end)
 
       game = Games.get_game!(game.id)
 
@@ -255,7 +255,7 @@ defmodule FungusToast.GamesTest do
       game = Games.get_game!(game.id)
 
       Enum.each(game.players, fn player ->
-        Games.update_player(player, %{mutation_points: 0}) end)
+        Players.update_player(player, %{mutation_points: 0}) end)
 
       game = Games.get_game!(game.id)
 
