@@ -32,7 +32,7 @@ defmodule FungusToastWeb.PlayerSkillController do
         Games.trigger_next_round(game)
       end
 
-      render(conn, "player_update.json", model: %{next_round_available: new_round, updated_player: updated_player})
+      render(conn, "player_skill_update.json", model: %{next_round_available: new_round, updated_player: updated_player})
     end
   end
 end
