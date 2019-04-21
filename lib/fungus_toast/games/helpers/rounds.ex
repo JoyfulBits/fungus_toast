@@ -56,8 +56,16 @@ defmodule FungusToast.Rounds do
     get_latest_round_for_game(game.id)
   end
 
+  @doc """
+  Gets the most recent completed round (including growth) for the specified game.
+  """
   def get_latest_round_for_game(game_id) do
     from(r in Round, where: r.game_id == ^game_id, order_by: [desc: r.number], limit: 1)
+    |> Repo.one()
+  end
+
+  def get_latest_completed_round_for_game(game_id) do
+    from(r in Round, where: r.game_id == ^game_id and fragment("? != '[]'", r.growth_cycles), order_by: [desc: r.number], limit: 1)
     |> Repo.one()
   end
 

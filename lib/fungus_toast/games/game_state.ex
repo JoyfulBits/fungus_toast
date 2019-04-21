@@ -4,6 +4,7 @@ defmodule FungusToast.Games.GameState do
 
   @derive Jason.Encoder
   embedded_schema do
+    #TODO remove round_number here. It is redundant with Round.round_number
     field :round_number, :integer
     embeds_many :cells, FungusToast.Games.GridCell, on_replace: :delete
   end

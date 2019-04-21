@@ -1,14 +1,14 @@
 defmodule FungusToast.Games.FullAiGameTest do
   use FungusToast.DataCase
   use Plug.Test
-  alias FungusToast.{Games, Players, AiStrategies, Rounds}
+  alias FungusToast.{Games, Players, AiStrategies}
   alias FungusToast.Games.{Game, Player}
   alias FungusToast.Repo
   alias FungusToast.Game.Status
 
   describe "tests for playing out an entire AI game" do
 
-    #@tag :skip
+    @tag :skip
     test "that two AI players can finish a game" do
 
       game_changeset = %Game{} |> Game.changeset(%{number_of_ai_players: 5, number_of_human_players: 0})

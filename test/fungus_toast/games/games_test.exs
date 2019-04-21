@@ -39,24 +39,15 @@ defmodule FungusToast.GamesTest do
       |> Repo.insert()
   end
 
-  describe "games" do
-    alias FungusToast.Games.Game
-
-    # TODO: Evaluate if this is the best way to do this
-    @valid_attrs %{user_name: "testUser", number_of_human_players: 1, number_of_ai_players: 2}
-    @update_attrs %{active: true}
-
-    test "list_games/0 returns all games" do
-      game = Fixtures.Game.create!
-      assert Games.list_games() == [game]
-    end
-
-    test "get_game!/1 returns the game with given id" do
+  describe "get_game!/1" do
+    test "that it returns the game with given id" do
       %Game{id: id} = Fixtures.Game.create!
       assert %{id: id} = Games.get_game!(id)
     end
+  end
 
-    test "create_game/2 with valid data creates a game" do
+  describe "create_game/2" do
+    test "that the game is created with valid data" do
       user = Fixtures.Accounts.User.create!()
       valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 2}
 
@@ -67,28 +58,125 @@ defmodule FungusToast.GamesTest do
       assert length(game.players) == 3
     end
 
-    test "create_game/2 with missing data does not create a game" do
+    test "that the game is started if there are no human players without a user id (using atom keys)" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 1}
+
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      assert game.status == Status.status_started
+    end
+
+    test "that the game is started if there are no human players without a user id  (using string keys)" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{"number_of_human_players" => 1, "number_of_ai_players" => 1}
+
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      assert game.status == Status.status_started
+    end
+
+    test "that the game is not started if there is at least one human player who hasn't joined (and hence has no user_id) - (atom keys)" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 2, number_of_ai_players: 0}
+
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      assert game.status == Status.status_not_started
+    end
+
+    test "that the game is not started if there is at least one human player who hasn't joined (and hence has no user_id) - (string keys)" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{"number_of_human_players" => 2, "number_of_ai_players" => 0}
+
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      assert game.status == Status.status_not_started
+    end
+
+    test "that an error is raised if required fields are missing" do
       assert catch_error Games.create_game("some user name", %{})
     end
 
-    test "create_game/2 with invalid status does not create a game" do
+    test "that an error is raised if an invalid status is passed" do
       assert catch_error Games.create_game("some user name", %{status: "Nope", number_of_human_players: 2})
     end
+  end
 
-    test "update_game/2 with valid data updates the game" do
+  describe "start_game/1" do
+    test "that it returns false if there is more than one human player since that means the game can't start yet" do
+      result = Games.start_game(%Game{number_of_human_players: 2})
+
+      refute result
+    end
+
+    test "that it returns true if there is only one human in the game since the game can start" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 1}
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      result = Games.start_game(game)
+
+      assert result
+    end
+
+    test "that ai players spend their initial mutation points as soon as the game starts" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 2}
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      Games.start_game(game)
+
+      game = Games.get_game!(game.id)
+
+      Enum.each(game.players, fn player ->
+        if(!player.human) do
+          assert player.mutation_points == 0
+        end
+      end)
+    end
+
+    test "that creates the first round with a blank starting state and a single growth cycle with a toast change per player to place the starting cell" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 1}
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      game = Games.get_game!(game.id)
+
+      Games.start_game(game)
+
+      latest_completed_round = Rounds.get_latest_completed_round_for_game(game.id)
+
+      assert latest_completed_round.starting_game_state != nil
+      assert length(latest_completed_round.starting_game_state.cells) == 0
+
+      assert length(latest_completed_round.growth_cycles) == 1
+      actual_growth_cycle = hd(latest_completed_round.growth_cycles)
+      assert length(actual_growth_cycle.toast_changes) == 2
+    end
+  end
+
+  describe "update_game/2" do
+    @update_attrs %{active: true}
+
+    test "that no error is raised when updating with valid attributes" do
       user_fixture()
       game = game_fixture()
       assert Games.update_game(game, @update_attrs)
     end
+  end
 
-    test "delete_game/1 deletes the game" do
+  describe "delete_game/1" do
+    test "that it deletes the game" do
       user_fixture()
       game = game_fixture()
       Games.delete_game!(game)
       assert_raise Ecto.NoResultsError, fn -> Games.get_game!(game.id) end
     end
+  end
 
-    test "change_game/1 returns a game changeset" do
+  describe "change_game/1" do
+    test "that it returns a game changeset" do
       user_fixture()
       game = game_fixture()
       assert %Ecto.Changeset{} = Games.change_game(game)
@@ -101,42 +189,6 @@ defmodule FungusToast.GamesTest do
       cs = Game.changeset(%Game{}, %{number_of_human_players: 1})
       game = Games.create_game_for_user(cs, user.user_name)
       assert [player | _] = game.players
-    end
-  end
-
-  describe "rounds" do
-    @valid_attrs %{starting_game_state: %GameState{round_number: 1}, growth_cycles: []}
-    @invalid_attrs %{starting_game_state: nil, growth_cycles: nil}
-
-    def round_fixture(game_id, attrs \\ %{}) do
-      adjusted_attrs =
-        attrs
-        |> Enum.into(@valid_attrs)
-
-      {:ok, round} = Games.create_round(game_id, adjusted_attrs)
-
-      round
-    end
-
-    # TODO: Revisit this test setup
-    #test "get_round!/1 returns the round with given id" do
-    #  user_fixture()
-    #  game = game_fixture()
-    #  round = round_fixture(game.id)
-    #  assert Games.get_round!(round.id) == round
-    #end
-
-    test "create_round/2 with valid data creates a round" do
-      user_fixture()
-      game = game_fixture()
-      round = Games.create_round(game.id, @valid_attrs)
-      assert round.id >= 0
-    end
-
-    test "create_round/2 with invalid data returns error changeset" do
-      user_fixture()
-      game = game_fixture()
-      assert_raise MatchError, fn -> Games.create_round(game.id, @invalid_attrs) end
     end
   end
 
@@ -164,10 +216,9 @@ defmodule FungusToast.GamesTest do
         game_fixture(%{number_of_human_players: 1, number_of_ai_players: 1})
 
       Enum.each(game.players, fn player ->
-        Games.update_player(player, %{mutation_points: 0}) end)
+        Players.update_player(player, %{mutation_points: 0}) end)
 
-      game =
-        Games.get_game!(game.id)
+      game = Games.get_game!(game.id)
 
       assert Games.next_round_available?(game)
     end
@@ -181,7 +232,7 @@ defmodule FungusToast.GamesTest do
       refute Games.next_round_available?(game)
     end
 
-    test "next_round_available/1 returns false if at least one ai player has unspent points" do
+    test "that it returns false if at least one ai player has unspent points" do
       user_fixture(%{user_name: "someOtherUser"})
       game = game_fixture(%{number_of_human_players: 1, number_of_ai_players: 0})
       ai_player_fixture(game, 1)
@@ -193,7 +244,7 @@ defmodule FungusToast.GamesTest do
       refute Games.next_round_available?(game)
     end
 
-    test "next_round_available/1 returns true if all players have spent their points" do
+    test "that it returns true if all players have spent their points" do
       user = user_fixture(%{user_name: "another user"})
 
       game = game_fixture(%{number_of_human_players: 2, number_of_ai_players: 1})
@@ -204,7 +255,7 @@ defmodule FungusToast.GamesTest do
       game = Games.get_game!(game.id)
 
       Enum.each(game.players, fn player ->
-        Games.update_player(player, %{mutation_points: 0}) end)
+        Players.update_player(player, %{mutation_points: 0}) end)
 
       game = Games.get_game!(game.id)
 

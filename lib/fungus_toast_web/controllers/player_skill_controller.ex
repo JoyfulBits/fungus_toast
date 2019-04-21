@@ -1,7 +1,7 @@
 defmodule FungusToastWeb.PlayerSkillController do
   use FungusToastWeb, :controller
 
-  alias FungusToast.Games
+  alias FungusToast.{Games, Players}
 
   action_fallback FungusToastWeb.FallbackController
 
@@ -23,8 +23,7 @@ defmodule FungusToastWeb.PlayerSkillController do
     with {:ok, _} <- Games.update_player_skills(player, upgrade_attrs) do
       spent_points = Games.sum_skill_upgrades(upgrade_attrs)
 
-      player
-      |> Games.update_player(%{mutation_points: player.mutation_points - spent_points})
+      updated_player = Players.update_player(player, %{mutation_points: player.mutation_points - spent_points})
 
       game = Games.get_game!(game_id)
       new_round = Games.next_round_available?(game)
@@ -33,8 +32,7 @@ defmodule FungusToastWeb.PlayerSkillController do
         Games.trigger_next_round(game)
       end
 
-      # How can we do this with Jason? It wants a struct and we don't have one here
-      json(conn, %{nextRoundAvailable: new_round})
+      render(conn, "player_skill_update.json", model: %{next_round_available: new_round, updated_player: updated_player})
     end
   end
 end

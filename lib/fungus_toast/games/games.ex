@@ -16,19 +16,6 @@ defmodule FungusToast.Games do
   def starting_end_of_game_count_down, do: @starting_end_of_game_count_down
 
   @doc """
-  Returns the list of games.
-
-  ## Examples
-
-      iex> list_games()
-      [%Game{}, ...]
-
-  """
-  def list_games do
-    Repo.all(Game)
-  end
-
-  @doc """
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
   def list_active_games_for_user(%User{} = user),
@@ -76,31 +63,48 @@ defmodule FungusToast.Games do
       {:error, %Ecto.Changeset{}}
 
   """
-  #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
   def create_game(user_name, attrs) do
-    attrs = if(Map.get(attrs, :number_of_human_players) < 2) do
-      Map.put(attrs, :status, "Started")
+    #since changesets can have only all atoms or all strings, keep it consistent
+    attrs = if(Map.get(attrs, "number_of_human_players") < 2) do
+      Map.put(attrs, "status", Status.status_started)
     else
-      attrs
+      if(Map.get(attrs, :number_of_human_players) < 2) do
+        Map.put(attrs, :status, Status.status_started)
+      else
+        attrs
+      end
     end
     changeset = %Game{} |> Game.changeset(attrs)
 
-    game = create_game_for_user(changeset, user_name)
+    {:ok, game} = Repo.transaction(fn ->
+      game = create_game_for_user(changeset, user_name)
 
-    if(start_game(game)) do
-      get_game!(game.id)
-    else
-      game
-    end
+      if(start_game(game)) do
+        get_game!(game.id)
+      else
+        game
+      end
+    end)
+
+    game
   end
 
-  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
-      if(number_of_human_players <= 1) do
+  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players, number_of_ai_players: number_of_ai_players}) do
+    if(number_of_ai_players > 0) do
+      total_cells = grid_size * grid_size
+      Enum.each(players, fn player ->
+        if(!player.human) do
+          Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_cells)
+        end
+      end)
+    end
+
+    if(number_of_human_players <= 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
-        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
+        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, toast_changes: starting_cells }
         first_round_values = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: [], round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
         second_round = %{number: 1, growth_cycles: [], starting_game_state: %GameState{cells: starting_cells, round_number: 1}}
@@ -373,12 +377,9 @@ defmodule FungusToast.Games do
     Repo.get!(Round, id) |> Repo.preload(:game)
   end
 
-  defdelegate create_round(game, attrs), to: Rounds
-
   defdelegate list_players_for_game(game), to: Players
   defdelegate get_player_for_game(game_id, id), to: Players
   defdelegate get_player!(id), to: Players
-  defdelegate update_player(player, attrs), to: Players
 
   defdelegate get_player_skills(player), to: PlayerSkills
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
