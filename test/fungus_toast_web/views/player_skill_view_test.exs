@@ -11,7 +11,7 @@ defmodule FungusToastWeb.PlayerSkillViewTest do
       player = %Player{}
       expected_transformed_player = GameView.player_json(player)
 
-      result = PlayerSkillView.render("updated_player.json", %{model: %{next_round_available: expected_next_round_available, updated_player: player}})
+      result = PlayerSkillView.render("player_skill_update.json", %{model: %{next_round_available: expected_next_round_available, updated_player: player}})
 
       assert result.next_round_available == expected_next_round_available
       assert result.updated_player == expected_transformed_player
