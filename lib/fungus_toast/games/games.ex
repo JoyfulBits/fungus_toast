@@ -76,17 +76,30 @@ defmodule FungusToast.Games do
     end
     changeset = %Game{} |> Game.changeset(attrs)
 
-    game = create_game_for_user(changeset, user_name)
+    {:ok, game} = Repo.transaction(fn ->
+      game = create_game_for_user(changeset, user_name)
 
-    if(start_game(game)) do
-      get_game!(game.id)
-    else
-      game
-    end
+      if(start_game(game)) do
+        get_game!(game.id)
+      else
+        game
+      end
+    end)
+
+    game
   end
 
-  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
-      if(number_of_human_players <= 1) do
+  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players, number_of_ai_players: number_of_ai_players}) do
+    if(number_of_ai_players > 0) do
+      total_cells = grid_size * grid_size
+      Enum.each(players, fn player ->
+        if(!player.human) do
+          Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_cells)
+        end
+      end)
+    end
+
+    if(number_of_human_players <= 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells

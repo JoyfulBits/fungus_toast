@@ -112,12 +112,28 @@ defmodule FungusToast.GamesTest do
 
     test "that it returns true if there is only one human in the game since the game can start" do
       user = Fixtures.Accounts.User.create!()
-      valid_attrs = %{number_of_human_players: 1}
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 1}
       game = Games.create_game(user.user_name, valid_attrs)
 
       result = Games.start_game(game)
 
       assert result
+    end
+
+    test "that ai players spend their initial mutation points as soon as the game starts" do
+      user = Fixtures.Accounts.User.create!()
+      valid_attrs = %{number_of_human_players: 1, number_of_ai_players: 2}
+      game = Games.create_game(user.user_name, valid_attrs)
+
+      Games.start_game(game)
+
+      game = Games.get_game!(game.id)
+
+      Enum.each(game.players, fn player ->
+        if(!player.human) do
+          assert player.mutation_points == 0
+        end
+      end)
     end
 
     test "that creates the first round with a blank starting state and a single growth cycle with a toast change per player to place the starting cell" do
@@ -202,8 +218,7 @@ defmodule FungusToast.GamesTest do
       Enum.each(game.players, fn player ->
         Games.update_player(player, %{mutation_points: 0}) end)
 
-      game =
-        Games.get_game!(game.id)
+      game = Games.get_game!(game.id)
 
       assert Games.next_round_available?(game)
     end
