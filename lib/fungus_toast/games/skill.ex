@@ -12,9 +12,9 @@ defmodule FungusToast.Games.Skill do
 
   schema "skills" do
     field :description, :string, size: 512
-    field :increase_per_point, :float
+    field :increase_per_point, :float #make this non-nullable
     field :name, :string, size: 64
-    field :up_is_good, :boolean
+    field :up_is_good, :boolean #should this be nullable?
 
     timestamps()
   end

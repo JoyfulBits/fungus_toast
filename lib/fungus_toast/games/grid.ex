@@ -2,6 +2,7 @@ defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GridCell
   alias FungusToast.Games.CellGrower
   alias FungusToast.Games.GrowthCycle
+  alias FungusToast.Games.MutationPointsEarned
   alias FungusToast.Random
   import :math
 
@@ -18,20 +19,15 @@ defmodule FungusToast.Games.Grid do
         {:error,
         "There needs to be at least 100 cells left over after placing starting cells, but there was only #{number_of_empty_cells_after_placing_start_cells}."}
       else
-        initial_grid_cells_map =
-        Enum.into(
+        Enum.map(
           1..number_of_players,
-          %{},
-          &{&1, get_start_cell_index(grid_size, number_of_players, &1)}
-        )
-
-        Enum.reduce(initial_grid_cells_map, %{}, fn {player_id, position}, map ->
-          Map.put(map, position, %GridCell{
-            index: position,
-            player_id: player_id,
-            live: true,
-            empty: false
-          })
+          fn player_number ->
+            %GridCell{
+              index: get_start_cell_index(grid_size, number_of_players, player_number),
+              player_id: Enum.at(player_ids, player_number - 1),
+              live: true,
+              empty: false
+            }
         end)
       end
     end
@@ -53,64 +49,104 @@ defmodule FungusToast.Games.Grid do
     trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
-  # TODO: This doctest is flaky... look into this
   @doc ~S"""
   Returns the specified number of growth cycles, as well as the ending game state.
-  
+
   ##Examples
   iex> Grid.generate_growth_summary(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
   %{
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
         generation_number: 1,
-        mutation_points_earned: %{1 => 1},
-        toast_changes: %{}
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 2,
-        mutation_points_earned: %{1 => 1},
-        toast_changes: %{}
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 3,
-        mutation_points_earned: %{1 => 1},
-        toast_changes: %{}
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 4,
-        mutation_points_earned: %{1 => 1},
-        toast_changes: %{}
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
+        toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 5,
-        mutation_points_earned: %{1 => 1},
-        toast_changes: %{}
+        id: nil,
+        mutation_points_earned: [
+          %FungusToast.Games.MutationPointsEarned{
+            id: nil,
+            mutation_points: 1,
+            player_id: 1
+          }
+        ],
+        toast_changes: []
       }
     ],
-    new_game_state: %{}
+    new_game_state: []
   }
 
   """
   def generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, generation_number \\ 1, acc \\ [])
   @spec generate_growth_summary(map(), integer(), map(), integer(), list()) :: any()
-  def generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
-    live_cells = Enum.filter(starting_grid, fn {_, grid_cell} -> grid_cell.live end)
-      |> Enum.into(%{})
+  def generate_growth_summary(starting_grid_map, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
+    live_cells = Enum.filter(starting_grid_map, fn {_, grid_cell} -> grid_cell.live end)
+    |> Enum.into(%{})
 
-    toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) end)
+    toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid_map, grid_size, player_id_to_player_map, grid_cell) end)
       |> Enum.reduce(%{}, fn(x, acc) -> Map.merge(x, acc) end)
 
-    mutation_points_earned = Enum.map(player_id_to_player_map, fn{player_id, player} -> {player_id, calculate_mutation_points(player)} end)
-      |> Enum.into(%{})
+    mutation_points = Enum.map(player_id_to_player_map,
+      fn{player_id, player}
+        -> %MutationPointsEarned{player_id: player_id, mutation_points: calculate_mutation_points(player)}
+      end)
 
-    growth_cycle = %GrowthCycle{ generation_number: generation_number, toast_changes: toast_changes, mutation_points_earned: mutation_points_earned }
+    toast_changes_grid_cell_list = Enum.map(toast_changes, fn {_k, grid_cell} -> grid_cell end)
+    growth_cycle = %GrowthCycle{ generation_number: generation_number, toast_changes: toast_changes_grid_cell_list, mutation_points_earned: mutation_points }
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
-    Map.merge(starting_grid, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)
+    Map.merge(starting_grid_map, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)
     |> generate_growth_summary(grid_size, player_id_to_player_map, generation_number + 1, acc ++ [growth_cycle])
   end
 
-  def generate_growth_summary(ending_grid, _, _, _, acc), do: %{growth_cycles: acc, new_game_state: ending_grid}
+  def generate_growth_summary(ending_grid, _, _, _, acc) do
+    cells_list = Enum.map(ending_grid, fn {_k, grid_cell} -> grid_cell end)
+    %{growth_cycles: acc, new_game_state: cells_list}
+  end
 
   def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
@@ -119,6 +155,35 @@ defmodule FungusToast.Games.Grid do
     cell_changes = CellGrower.calculate_cell_growth(surrounding_cells, player)
     #check if the cell dies from apoptosis or starvation
     Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
+  end
+
+  @doc ~S"""
+  Returns a map of player id to a map of number of grown, regenerated, and perished cells
+
+  ## Examples
+
+    iex(83)> Grid.get_player_growth_cycles_stats([1], [])
+    %{1 => %{grown_cells: 0, perished_cells: 0, regenerated_cells: 0}}
+
+  """
+  @spec get_player_growth_cycles_stats(list(), [%GrowthCycle{}]) :: any()
+  def get_player_growth_cycles_stats(player_ids, growth_cycles) do
+    acc = Enum.map(player_ids,  fn player_id -> {player_id, %{regenerated_cells: 0, grown_cells: 0, perished_cells: 0}} end)
+    |> Enum.into(%{})
+
+    Enum.reduce(growth_cycles, acc, fn growth_cycle, acc ->
+      Enum.reduce(growth_cycle.toast_changes, acc, fn grid_cell, acc ->
+        if(grid_cell.live) do
+          if(grid_cell.previous_player_id) do
+            update_in(acc, [grid_cell.player_id, :regenerated_cells], &(&1 + 1))
+          else
+            update_in(acc, [grid_cell.player_id, :grown_cells], &(&1 + 1))
+          end
+        else
+          update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
+        end
+      end)
+    end)
   end
 
   def get_surrounding_cells(grid, grid_size, cell_index) do

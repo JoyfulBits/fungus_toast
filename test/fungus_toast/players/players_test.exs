@@ -1,16 +1,12 @@
 defmodule FungusToast.PlayersTest do
     use FungusToast.DataCase
-    alias FungusToast.Games.Grid
     alias FungusToast.Games.Player
-    alias FungusToast.{Players, Skills, PlayerSkills, AiStrategies}
-    alias FungusToast.Skills.SkillsSeed
+    alias FungusToast.{Players, Skills, AiStrategies}
 
     doctest FungusToast.Players
 
     describe "create_basic_player/2" do
         test "that it creates the player including at least the 5 basic skills" do
-            SkillsSeed.seed_skills()
-
             game_id = 2
             human = true
             user_name = "some user name"
@@ -30,10 +26,17 @@ defmodule FungusToast.PlayersTest do
             assert player.user_id == nil
         end
 
-        test "that it sets the ai_type for AI players" do
+        test "that it sets the ai_type for AI players when not specified" do
             player = Players.create_basic_player(-1, false, "some user name")
 
             assert player.ai_type != nil
+        end
+
+        test "that it sets the ai_type to the specified value" do
+            expected_ai_type = "some ai type"
+            player = Players.create_basic_player(-1, false, "some user name", nil, expected_ai_type)
+
+            assert player.ai_type == expected_ai_type
         end
 
         test "that it raises an error if trying to create an AI player with a user_id" do
@@ -91,7 +94,6 @@ defmodule FungusToast.PlayersTest do
 
     describe "spend_ai_mutation_points/2" do
         test "that all mutation points are spent and skills are adjusted accordingly" do
-            SkillsSeed.seed_skills()
 
             mutation_points = 3
             game = Fixtures.Game.create!(%{number_of_ai_players: 1, number_of_human_players: 0})

@@ -5,7 +5,6 @@ defmodule FungusToast.Rounds do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Games
   alias FungusToast.Games.{Game, Round}
 
   @doc """
@@ -57,8 +56,16 @@ defmodule FungusToast.Rounds do
     get_latest_round_for_game(game.id)
   end
 
+  @doc """
+  Gets the most recent completed round (including growth) for the specified game.
+  """
   def get_latest_round_for_game(game_id) do
     from(r in Round, where: r.game_id == ^game_id, order_by: [desc: r.number], limit: 1)
+    |> Repo.one()
+  end
+
+  def get_latest_completed_round_for_game(game_id) do
+    from(r in Round, where: r.game_id == ^game_id and fragment("? != '[]'", r.growth_cycles), order_by: [desc: r.number], limit: 1)
     |> Repo.one()
   end
 
@@ -80,26 +87,28 @@ defmodule FungusToast.Rounds do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_round(game, attrs \\ %{})
 
   def create_round(%Game{} = game, attrs) when is_map(attrs) do
     create_round(game.id, attrs)
   end
 
   def create_round(game_id, attrs) when is_binary(game_id) do
-    game = Games.get_game!(game_id)
-    create_round(game.id, attrs)
+    create_round(game_id, attrs)
   end
 
   def create_round(game_id, attrs) when is_map(attrs) do
-    %Round{game_id: game_id}
+    {:ok, round} = %Round{game_id: game_id}
     |> Round.changeset(attrs)
     |> Repo.insert()
+
+    round
   end
 
   def update_round(%Round{} = round, attrs) do
-    round
+    {:ok, round} = round
     |> Round.changeset(attrs)
     |> Repo.update()
+
+    round
   end
 end

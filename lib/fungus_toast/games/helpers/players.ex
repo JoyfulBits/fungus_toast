@@ -33,7 +33,7 @@ defmodule FungusToast.Players do
   Returns the list of players for a given game.
   """
   def list_players_for_game(game_id) do
-    from(p in Player, where: p.game_id == ^game_id) |> Repo.one
+    from(p in Player, where: p.game_id == ^game_id) |> Repo.all
   end
 
   @doc """
@@ -52,17 +52,6 @@ defmodule FungusToast.Players do
     from(p in Player, where: p.id == ^id and p.game_id == ^game_id) |> Repo.one()
   end
 
-  defp get_ai_player_count() do
-    from(p in Player, where: p.human == false, select: count(p.id)) |> Repo.one()
-  end
-
-  @doc """
-  Creates the requested number of AI players for the given game
-  """
-  def create_ai_players(_, 0) do
-    :ok
-  end
-
   @doc """
   Creates a player for the given user and game
   """
@@ -79,11 +68,11 @@ defmodule FungusToast.Players do
   @doc """
   Creates the requested number of AI players for the given game. AI players have no user associated with them
   """
-  @spec create_ai_players(%Game{}) :: [%Player{}]
-  def create_ai_players(game) do
+  @spec create_ai_players(%Game{}, String.t()) :: [%Player{}]
+  def create_ai_players(game, ai_type \\ nil) do
     if(game.number_of_ai_players > 0) do
       Enum.map(1..game.number_of_ai_players, fn x ->
-        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}")
+        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}", nil, ai_type)
         |> Player.changeset(%{})
         |> Repo.insert()
 
@@ -112,13 +101,21 @@ defmodule FungusToast.Players do
     end
   end
 
-  @spec create_basic_player(integer(), boolean(), String.t(), integer()) :: %Player{}
-  def create_basic_player(game_id, human, name, user_id \\ nil) do
+  @doc """
+  Creates a player with teh default skills populated. If it is an AI player, it will set the AI type to whatever is specified, or choose one
+  at random if not specified.
+  """
+  @spec create_basic_player(integer(), boolean(), String.t(), integer(), String.t()) :: %Player{}
+  def create_basic_player(game_id, human, name, user_id \\ nil, ai_type \\ nil) do
     if(!human and user_id != nil) do
       raise ArgumentError, message: "AI players cannot have a user_id"
     end
     default_skills = PlayerSkills.get_default_starting_skills()
-    ai_type = get_ai_type(human)
+    ai_type = if(ai_type == nil) do
+      get_ai_type(human)
+    else
+      ai_type
+    end
 
     %Player{game_id: game_id, human: human, name: name, user_id: user_id, ai_type: ai_type, skills: default_skills}
   end
@@ -133,9 +130,11 @@ defmodule FungusToast.Players do
   Updates a player.
   """
   def update_player(%Player{} = player, attrs) do
-    player
+    {:ok, player} = player
     |> Player.changeset(attrs)
     |> Repo.update()
+
+    player
   end
 
   @doc """
@@ -152,7 +151,9 @@ defmodule FungusToast.Players do
   @spec spend_ai_mutation_points(%Player{}, integer(), integer(), integer()) :: any()
   def spend_ai_mutation_points(player, mutation_points, total_cells, number_of_remaining_cells, acc \\ %{})
   def spend_ai_mutation_points(%Player{} = player, mutation_points, total_cells, number_of_remaining_cells, acc) when mutation_points > 0 do
-    skill = AiStrategies.get_skill_choice(player.ai_type, total_cells, number_of_remaining_cells)
+    #get a version of the player with the latest updates so AI players can pick the best skills based on current attributes
+    player_with_unsaved_updates = Map.merge(player, acc, fn _, _, v2 -> v2 end)
+    skill = AiStrategies.get_skill_choice(player_with_unsaved_updates, total_cells, number_of_remaining_cells)
     |> FungusToast.Skills.get_skill_by_name()
 
     player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
@@ -167,8 +168,7 @@ defmodule FungusToast.Players do
   end
 
   def spend_ai_mutation_points(player, mutation_points, _total_cells, _number_of_remaining_cells, acc) when mutation_points == 0 do
-    {:ok, updated_player} = update_player(player, acc)
-    updated_player
+    update_player(player, acc)
   end
 
   def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do

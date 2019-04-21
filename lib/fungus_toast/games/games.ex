@@ -6,38 +6,20 @@ defmodule FungusToast.Games do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Accounts, Players, PlayerSkills, Rounds, Skills}
+  alias FungusToast.{Players, PlayerSkills, Rounds, Skills}
   alias FungusToast.Accounts.User
-  alias FungusToast.Games.Game
-  alias FungusToast.Games.GameState
-  alias FungusToast.Games.Grid
-  alias FungusToast.Games.Round
-  alias FungusToast.Games.GrowthCycle
+  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.Game.Status
 
   @starting_mutation_points 5
-
-  @doc """
-  Returns the list of games.
-
-  ## Examples
-
-      iex> list_games()
-      [%Game{}, ...]
-
-  """
-  def list_games do
-    Repo.all(Game)
-  end
+  @starting_end_of_game_count_down 5
+  def starting_end_of_game_count_down, do: @starting_end_of_game_count_down
 
   @doc """
   Returns a list of games for a given user. The "active" parameter determines which games are returned
   """
-  def list_games_for_user(%User{} = user),
-    do: list_games_for_user(user, ["Started", "Not Started"])
-
-  def list_games_for_user(%User{} = user, true), do: list_games_for_user(user, ["Started"])
-  def list_games_for_user(%User{} = user, false), do: list_games_for_user(user)
-  def list_games_for_user(%User{} = user, nil), do: list_games_for_user(user)
+  def list_active_games_for_user(%User{} = user),
+    do: list_games_for_user(user, Status.active_statuses)
 
   def list_games_for_user(%User{} = user, statuses) when is_list(statuses) do
     user = user |> Repo.preload(players: :game)
@@ -49,15 +31,6 @@ defmodule FungusToast.Games do
       |> preload_for_games
 
     {:ok, games}
-  end
-
-  def list_games_for_user(user_id, active) when is_boolean(active) do
-    user = Accounts.get_user!(user_id)
-    list_games_for_user(user, active)
-  end
-
-  def list_games_for_user(_, _) do
-    {:error, :bad_request}
   end
 
   @doc """
@@ -74,7 +47,9 @@ defmodule FungusToast.Games do
       ** (Ecto.NoResultsError)
 
   """
-  def get_game!(id), do: Repo.get!(Game, id) |> preload_for_games()
+  def get_game!(id) do
+    Repo.get!(Game, id) |> preload_for_games()
+  end
 
   @doc """
   Creates a game.
@@ -82,60 +57,136 @@ defmodule FungusToast.Games do
   ## Examples
 
       iex> create_game("testUser", %{field: value})
-      {:ok, %Game{}}
+      %Game{}
 
       iex> create_game("testUser", %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  #TODO Dave says there may be some opportunities here... need to run all updates in a transaction, and pulling values from the attrs might be odd
   def create_game(user_name, attrs) do
-    attrs = if(Map.get(attrs, :number_of_human_players) < 2) do
-      Map.put(attrs, :status, "Started")
+    #since changesets can have only all atoms or all strings, keep it consistent
+    attrs = if(Map.get(attrs, "number_of_human_players") < 2) do
+      Map.put(attrs, "status", Status.status_started)
     else
-      attrs
+      if(Map.get(attrs, :number_of_human_players) < 2) do
+        Map.put(attrs, :status, Status.status_started)
+      else
+        attrs
+      end
     end
     changeset = %Game{} |> Game.changeset(attrs)
 
-    with {:ok, game} <- create_game_for_user(changeset, user_name) do
-      start_game(game)
-      preloaded_game = get_game!(game.id) |> preload_for_games()
+    {:ok, game} = Repo.transaction(fn ->
+      game = create_game_for_user(changeset, user_name)
 
-      {:ok, preloaded_game}
-    end
+      if(start_game(game)) do
+        get_game!(game.id)
+      else
+        game
+      end
+    end)
+
+    game
   end
 
-  def start_game(game = %Game{players: players, grid_size: grid_size, number_of_human_players: number_of_human_players}) do
-      if(number_of_human_players == 1) do
+  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players, number_of_ai_players: number_of_ai_players}) do
+    if(number_of_ai_players > 0) do
+      total_cells = grid_size * grid_size
+      Enum.each(players, fn player ->
+        if(!player.human) do
+          Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_cells)
+        end
+      end)
+    end
+
+    if(number_of_human_players <= 1) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
-        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned }
-        first_round = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: %{}, round_number: 0}}
+        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, toast_changes: starting_cells }
+        first_round_values = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: [], round_number: 0}}
         #create the second round with a starting_game_state but no state change yet
-        second_round = %{number: 1, starting_game_state: starting_cells}
+        second_round = %{number: 1, growth_cycles: [], starting_game_state: %GameState{cells: starting_cells, round_number: 1}}
 
-        Rounds.create_round(game.id, first_round)
-        Rounds.create_round(game.id, second_round)
+        {:ok, _} = Repo.transaction(fn ->
+          Rounds.create_round(game.id, first_round_values)
+          Rounds.create_round(game.id, second_round)
+
+          update_aggregate_stats(game, starting_cells)
+        end)
+
+        true
+      else
+        false
       end
   end
 
+  def update_aggregate_stats(game = %Game{players: players}, cells) do
+    stats_map = get_aggregate_stats_map(players, cells)
+
+    total_live_and_dead_cells = get_live_and_dead_cell_aggregates(stats_map)
+    updated_game = update_game(game, %{
+      total_live_cells: total_live_and_dead_cells.total_live_cells,
+      total_dead_cells: total_live_and_dead_cells.total_dead_cells})
+
+    updated_players = update_players_aggregate_stats(players, stats_map)
+
+    {updated_game, updated_players}
+  end
+
+  def get_aggregate_stats_map(players, cells) do
+    stats_map = Enum.reduce(players, %{}, fn player, acc ->
+      Map.put(acc, player.id, %{live_cells: 0, dead_cells: 0})
+    end)
+
+    Enum.reduce(cells, stats_map, fn grid_cell, acc ->
+      if(grid_cell.live) do
+        update_in(acc, [grid_cell.player_id, :live_cells], &(&1 + 1))
+      else
+        update_in(acc, [grid_cell.player_id, :dead_cells], &(&1 + 1))
+      end
+    end)
+  end
+
+  defp get_live_and_dead_cell_aggregates(stats_map) do
+    total_live_cells = Enum.reduce(stats_map, 0, fn {_k, v}, acc ->
+      acc + v.live_cells
+    end)
+
+    total_dead_cells = Enum.reduce(stats_map, 0, fn {_k, v}, acc ->
+      acc + v.dead_cells
+    end)
+
+    %{total_live_cells: total_live_cells, total_dead_cells: total_dead_cells}
+  end
+
+  defp update_players_aggregate_stats(players, stats_map) do
+    Enum.map(players, fn player ->
+      player_stats = Enum.filter(stats_map, fn {player_id, _} -> player_id == player.id end)
+      player_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats)
+      Players.update_player(player, %{
+        live_cells: player_live_and_dead_cells.total_live_cells,
+        dead_cells: player_live_and_dead_cells.total_dead_cells})
+    end)
+  end
+
   def get_starting_mutation_points(players) do
-    Enum.map(players, fn player -> %{player.id => @starting_mutation_points} end)
-      |> Enum.reduce(fn (x, acc) -> Map.merge(x, acc) end)
+    Enum.map(players, fn player -> %MutationPointsEarned{player_id: player.id, mutation_points: @starting_mutation_points} end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
-    Repo.transaction(fn ->
+    {:ok, game} = Repo.transaction(fn ->
       {:ok, game} = Repo.insert(game_changeset)
 
       Players.create_player_for_user(game, user_name)
       Players.create_human_players(game, game.number_of_human_players - 1)
       Players.create_ai_players(game)
 
-      Repo.get(Game, game.id) |> Repo.preload(:players)
+      get_game!(game.id)
     end)
+
+    game
   end
 
   @doc """
@@ -144,16 +195,18 @@ defmodule FungusToast.Games do
   ## Examples
 
       iex> update_game(game, %{field: new_value})
-      {:ok, %Game{}}
+      game
 
       iex> update_game(game, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
   def update_game(%Game{} = game, attrs) do
-    game
+    {:ok, game} = game
     |> Game.changeset(attrs)
     |> Repo.update()
+
+    game
   end
 
   @doc """
@@ -161,15 +214,15 @@ defmodule FungusToast.Games do
 
   ## Examples
 
-      iex> delete_game(game)
-      {:ok, %Game{}}
+      iex> delete_game!(game)
+      game
 
-      iex> delete_game(game)
+      iex> delete_game!(game)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_game(%Game{} = game) do
-    Repo.delete(game)
+  def delete_game!(%Game{} = game) do
+    Repo.delete!(game)
   end
 
   @doc """
@@ -187,7 +240,7 @@ defmodule FungusToast.Games do
 
   #Preloads the necessary data for games
   defp preload_for_games(games) do
-    games |> Repo.preload([:rounds, players: [skills: :skill]])
+    games |> Repo.preload([players: [skills: :skill]])
   end
 
   @doc """
@@ -217,37 +270,104 @@ defmodule FungusToast.Games do
   @doc """
   Returns whether or not all players have spent their mutation points
   """
-  def next_round_available?(%Game{} = game_with_players) do
-    game_with_players.players
+  def next_round_available?(%Game{players: players}) do
+    players
     |> Enum.all?(fn player -> player.mutation_points == 0 end)
   end
 
   @doc """
   Executes a full round of growth cycles and creates a new round for this game
   """
-  def trigger_next_round(game) do
-    latest_round = get_latest_round_for_game(game.id)
-
-    current_game_state = latest_round.starting_game_state["cells"]
-    players = game.players
+  def trigger_next_round(%Game{players: players} = game) do
     player_id_to_player_map = players
       |> Map.new(fn x -> {x.id, x} end)
 
     total_cells = game.grid_size * game.grid_size
-    total_remaining_cells = total_cells - map_size(current_game_state)
+    total_remaining_cells = Game.number_of_empty_cells(game)
+    ai_players = Enum.filter(players, fn player -> !player.human end)
 
-    Enum.filter(players, fn player -> !player.human end)
-      |> (fn player -> Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells) end).()
+    {:ok, latest_round} = Repo.transaction(fn ->
+      Enum.each(ai_players, fn player ->
+        Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
+      end)
 
-    growth_summary = Grid.generate_growth_summary(current_game_state, game.grid_size, player_id_to_player_map)
+      #generate a new growth summary
+      latest_round = get_latest_round_for_game(game.id)
+      current_game_state = latest_round.starting_game_state
 
-    #set the growth cycles on the latest around
-    latest_round = Rounds.get_latest_round_for_game(game)
-      |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
+      starting_grid_map = Enum.into(current_game_state.cells, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      growth_summary = Grid.generate_growth_summary(starting_grid_map, game.grid_size, player_id_to_player_map)
 
-    #set up the new round with only the starting game state
-    next_round = %Round{number: latest_round.number + 1, starting_game_state: growth_summary.new_game_state}
-    Rounds.create_round(game.id, next_round)
+      #set the growth cycles on the latest around
+      latest_round = Rounds.get_latest_round_for_game(game)
+        |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
+
+      update_players_for_growth_cycles(players, growth_summary.growth_cycles)
+
+      {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
+
+      updated_game = check_for_game_end(updated_game)
+
+      if(updated_game.status == Status.status_finished) do
+        latest_round
+      else
+        #set up the new round with only the starting game state
+        next_round_number = latest_round.number + 1
+        next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
+        Rounds.create_round(game.id, next_round)
+      end
+    end)
+
+    latest_round
+  end
+
+  defp check_for_game_end(game) do
+    if(game.end_of_game_count_down != nil) do
+      new_count_down_value = game.end_of_game_count_down - 1
+      new_game_status = if(new_count_down_value > 0) do
+        Status.status_started
+      else
+        Status.status_finished
+      end
+      update_game(game, %{end_of_game_count_down: game.end_of_game_count_down - 1, status: new_game_status})
+    else
+      if(Game.number_of_empty_cells(game) <= 0) do
+        update_game(game, %{end_of_game_count_down: @starting_end_of_game_count_down})
+      else
+        game
+      end
+    end
+  end
+
+  defp update_players_for_growth_cycles(players, growth_cycles) do
+    player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
+    |> Enum.into(%{})
+
+    mutation_points_map = Enum.reduce(growth_cycles, player_to_mutation_points_map, fn growth_cycle, acc ->
+      mutation_points_earned_map = Enum.map(growth_cycle.mutation_points_earned, fn mutuation_points_earned ->
+        {mutuation_points_earned.player_id, mutuation_points_earned.mutation_points}
+      end)
+      |> Enum.into(%{})
+
+      Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
+    end)
+
+    player_ids = Enum.map(players, fn player -> player.id end)
+    player_stats_map = Grid.get_player_growth_cycles_stats(player_ids, growth_cycles)
+
+    Enum.each(players, fn player ->
+      mutation_points = mutation_points_map[player.id]
+      #TODO setting to -1 so there is always an update. What's a better way to do this?
+      player = %{player | mutation_points: -1}
+      existing_stats = %{mutation_points: mutation_points,
+        grown_cells: player.grown_cells,
+        regenerated_cells: player.regenerated_cells,
+        perished_cells: player.perished_cells}
+      new_stats = player_stats_map[player.id]
+      |> Map.merge(existing_stats, fn _, v1, v2 -> v1 + v2 end)
+
+      Players.update_player(player, new_stats)
+    end)
   end
 
   defdelegate get_latest_round_for_game(game), to: Rounds
@@ -257,12 +377,9 @@ defmodule FungusToast.Games do
     Repo.get!(Round, id) |> Repo.preload(:game)
   end
 
-  defdelegate create_round(game, attrs), to: Rounds
-
   defdelegate list_players_for_game(game), to: Players
   defdelegate get_player_for_game(game_id, id), to: Players
   defdelegate get_player!(id), to: Players
-  defdelegate update_player(player, attrs), to: Players
 
   defdelegate get_player_skills(player), to: PlayerSkills
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
