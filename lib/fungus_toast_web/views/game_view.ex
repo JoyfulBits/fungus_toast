@@ -40,7 +40,8 @@ defmodule FungusToastWeb.GameView do
     end)
   end
 
-  defp player_json(player) do
+  #TODO where should this go since it's referenced in player_skill_view as well?
+  def player_json(player) do
     status = if(!player.human or ((player.human and player.user_id != nil))) do
       "Joined"
     else
