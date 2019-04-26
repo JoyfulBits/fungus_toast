@@ -92,27 +92,27 @@ defmodule FungusToast.PlayerSkills do
 
   ## Examples
 
-      iex> update_player_skills(player, [%{"id": 1, "spent_points": 1}, ...])
+      iex> update_player_skills!(player, [%{"id": 1, "spent_points": 1}, ...])
       {:ok, [%PlayerSkill{}, ...]}
 
-      iex> update_player_skills(1, [%{"id": 1, "spent_points": 1}, ...])
+      iex> update_player_skills!(1, [%{"id": 1, "spent_points": 1}, ...])
       {:ok, [%PlayerSkill{}, ...]}
 
-      iex> update_player_skills(player, [%{"id": 1, "spent_points": -1}, ...])
+      iex> update_player_skills!(player, [%{"id": 1, "spent_points": -1}, ...])
       {:error, :bad_request}
 
   """
-  def update_player_skills(%Player{} = player, skill_upgrades) when is_list(skill_upgrades) do
+  def update_player_skills!(%Player{} = player, skill_upgrades) when is_list(skill_upgrades) do
     valid_request = is_valid_request?(player, skill_upgrades)
-    update_player_skills(%Player{} = player, skill_upgrades, [], valid_request)
+    update_player_skills!(%Player{} = player, skill_upgrades, [], valid_request)
   end
 
-  def update_player_skills(player_id, skill_upgrades) when is_list(skill_upgrades) do
+  def update_player_skills!(player_id, skill_upgrades) when is_list(skill_upgrades) do
     player = Games.get_player!(player_id) |> Repo.preload(:skills)
-    update_player_skills(player, skill_upgrades)
+    update_player_skills!(player, skill_upgrades)
   end
 
-  def update_player_skills(%Player{} = player, [head | tail], accum, true) do
+  def update_player_skills!(%Player{} = player, [head | tail], accum, true) do
     skill_id = head |> Map.get("id")
     points_spent = head |> Map.get("points_spent")
 
@@ -120,18 +120,18 @@ defmodule FungusToast.PlayerSkills do
 
     case create_or_update_player_skill(player, player_skill, skill_id, points_spent) do
       {:ok, updated_player_skill} ->
-        update_player_skills(player, tail, [updated_player_skill | accum], true)
+        update_player_skills!(player, tail, [updated_player_skill | accum], true)
 
       {:error, _} ->
         {:error, :bad_request}
     end
   end
 
-  def update_player_skills(_, [], accum, true) do
+  def update_player_skills!(_, [], accum, true) do
     {:ok, Enum.reverse(accum)}
   end
 
-  def update_player_skills(_, _, _, false) do
+  def update_player_skills!(_, _, _, false) do
     {:error, :bad_request}
   end
 

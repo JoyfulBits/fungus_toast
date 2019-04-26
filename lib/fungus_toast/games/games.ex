@@ -370,6 +370,24 @@ defmodule FungusToast.Games do
     end)
   end
 
+  def spend_human_player_mutation_points(player_id, game_id, upgrade_attrs) do
+    player = Players.get_player!(player_id)
+
+    PlayerSkills.update_player_skills!(player, upgrade_attrs)
+    spent_points = PlayerSkills.sum_skill_upgrades(upgrade_attrs)
+
+    updated_player = Players.update_player(player, %{mutation_points: player.mutation_points - spent_points})
+
+    game = get_game!(game_id)
+    new_round = next_round_available?(game)
+
+    if(new_round) do
+      trigger_next_round(game)
+    end
+
+    %{next_round_available: new_round, updated_player: updated_player}
+  end
+
   defdelegate get_latest_round_for_game(game), to: Rounds
 
   def get_round!(id) do
@@ -383,7 +401,6 @@ defmodule FungusToast.Games do
 
   defdelegate get_player_skills(player), to: PlayerSkills
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
-  defdelegate update_player_skills(player, attrs), to: PlayerSkills
   defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
 
   defdelegate create_skill(attrs), to: Skills
