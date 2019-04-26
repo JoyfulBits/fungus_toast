@@ -1,7 +1,7 @@
 defmodule FungusToast.GamesTest do
   use FungusToast.DataCase
 
-  alias FungusToast.{Accounts, Games, Players, Rounds}
+  alias FungusToast.{Accounts, Games, Players, Rounds, Skills, PlayerSkills, AiStrategies}
   alias FungusToast.Games.{Game, GameState, Player, GridCell}
   alias FungusToast.Game.Status
 
@@ -407,6 +407,29 @@ defmodule FungusToast.GamesTest do
       player2 = Enum.find(updated_players, fn player -> player.id == player_2_id end)
       assert player2.live_cells == 0
       assert player2.dead_cells == 2
+    end
+  end
+
+  describe "spend_human_player_mutation_points/3" do
+    test "that it spends the specified number of mutation points and returns that the next round is not available as well as the updated player" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
+      player = hd(game.players)
+      skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
+
+      #spend all but one point
+      one_less_than_available_points = player.mutation_points - 1
+      upgrade_attrs = [%{"id" => skill.id, "points_spent" => one_less_than_available_points}]
+
+      result = Games.spend_human_player_mutation_points(player.id, game.id, upgrade_attrs)
+
+      #since not all points were spent this should be false
+      refute result.next_round_available
+      assert result.updated_player
+      assert result.updated_player.mutation_points == 1
+
+      player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
+      assert player_skill.skill_level == one_less_than_available_points
     end
   end
 end
