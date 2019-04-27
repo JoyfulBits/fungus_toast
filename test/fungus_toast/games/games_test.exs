@@ -279,12 +279,13 @@ defmodule FungusToast.GamesTest do
           total_points_invested = Enum.reduce(player.skills, 0, fn player_skill, acc ->
             acc + player_skill.skill_level
           end)
-          assert total_points_invested == Player.default_starting_mutation_points
+          #ai players must have spent at least 2x the minimum you get each round since they have spent for 2 rounds
+          assert total_points_invested >= Player.default_starting_mutation_points * 2
         end
       end)
     end
 
-    test "that AI and Human players are awarded their new mutation points" do
+    test "that AI and Human players are awarded their new mutation points, but AI players already spent theirs" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
 
@@ -294,7 +295,14 @@ defmodule FungusToast.GamesTest do
 
       Players.list_players_for_game(game.id)
       |> Enum.each(fn player ->
-        assert player.mutation_points >= Player.default_starting_mutation_points
+        if(player.human) do
+          assert player.mutation_points >= Player.default_starting_mutation_points
+        else
+          #TODO add total_spent_points to Player
+          #since this is the 2nd round of expenditures, make sure the AI player as spent at least 2x the minimum
+          #assert player.total_spent_points >= Player.default_starting_mutation_points * 2
+        end
+
       end)
     end
 

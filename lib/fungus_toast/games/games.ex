@@ -284,13 +284,8 @@ defmodule FungusToast.Games do
 
     total_cells = game.grid_size * game.grid_size
     total_remaining_cells = Game.number_of_empty_cells(game)
-    ai_players = Enum.filter(players, fn player -> !player.human end)
 
     {:ok, latest_round} = Repo.transaction(fn ->
-      Enum.each(ai_players, fn player ->
-        Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
-      end)
-
       #generate a new growth summary
       latest_round = get_latest_round_for_game(game.id)
       current_game_state = latest_round.starting_game_state
@@ -302,7 +297,7 @@ defmodule FungusToast.Games do
       latest_round = Rounds.get_latest_round_for_game(game)
         |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-      update_players_for_growth_cycles(players, growth_summary.growth_cycles)
+      updated_players = update_players_for_growth_cycles(players, growth_summary.growth_cycles)
 
       {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
 
@@ -311,6 +306,12 @@ defmodule FungusToast.Games do
       if(updated_game.status == Status.status_finished) do
         latest_round
       else
+        #spend AI mutation points immediately
+        Enum.filter(updated_players, fn player -> !player.human end)
+        |> Enum.each(fn player ->
+            Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
+        end)
+
         #set up the new round with only the starting game state
         next_round_number = latest_round.number + 1
         next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
@@ -355,7 +356,7 @@ defmodule FungusToast.Games do
     player_ids = Enum.map(players, fn player -> player.id end)
     player_stats_map = Grid.get_player_growth_cycles_stats(player_ids, growth_cycles)
 
-    Enum.each(players, fn player ->
+    Enum.map(players, fn player ->
       mutation_points = mutation_points_map[player.id]
       #TODO setting to -1 so there is always an update. What's a better way to do this?
       player = %{player | mutation_points: -1}
