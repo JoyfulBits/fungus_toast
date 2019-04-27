@@ -92,27 +92,44 @@ defmodule FungusToast.PlayerSkills do
 
   ## Examples
 
-      iex> update_player_skills!(player, [%{"id": 1, "spent_points": 1}, ...])
+      iex> update_player_skills(player, [%{"id": 1, "spent_points": 1}, ...])
       {:ok, [%PlayerSkill{}, ...]}
 
-      iex> update_player_skills!(1, [%{"id": 1, "spent_points": 1}, ...])
+      iex> update_player_skills(1, [%{"id": 1, "spent_points": 1}, ...])
       {:ok, [%PlayerSkill{}, ...]}
 
-      iex> update_player_skills!(player, [%{"id": 1, "spent_points": -1}, ...])
+      iex> update_player_skills(player, [%{"id": 1, "spent_points": -1}, ...])
       {:error, :bad_request}
 
   """
-  def update_player_skills!(%Player{} = player, skill_upgrades) when is_list(skill_upgrades) do
+  def update_player_skills(%Player{} = player, skill_upgrades) when is_list(skill_upgrades) do
     valid_request = is_valid_request?(player, skill_upgrades)
-    update_player_skills!(%Player{} = player, skill_upgrades, [], valid_request)
+    update_player_skills(%Player{} = player, skill_upgrades, [], valid_request)
   end
 
-  def update_player_skills!(player_id, skill_upgrades) when is_list(skill_upgrades) do
+  def update_player_skills(player_id, skill_upgrades) when is_list(skill_upgrades) do
     player = Games.get_player!(player_id) |> Repo.preload(:skills)
-    update_player_skills!(player, skill_upgrades)
+    update_player_skills(player, skill_upgrades)
   end
 
-  def update_player_skills!(%Player{} = player, [head | tail], accum, true) do
+  def update_player_skills_and_get_player_changes(%Player{} = player, upgrade_attrs) do
+    Enum.reduce(upgrade_attrs, %{}, fn upgrade_map, acc ->
+      skill_id = Map.get(upgrade_map, "id")
+      points_spent = Map.get(upgrade_map,"points_spent")
+
+      skill = Skills.get_skill!(skill_id)
+
+      player_skill = get_player_skill(player.id, skill_id)
+      update_player_skill(player_skill, %{skill_level: player_skill.skill_level + points_spent})
+
+      skill_change = if(skill.up_is_good, do: skill.increase_per_point * points_spent, else: skill.increase_per_point * points_spent * -1.0)
+      attributes_to_update = FungusToast.AiStrategies.get_player_attributes_for_skill_name(skill.name)
+
+      Map.merge(acc, update_attribute(player, skill_change, attributes_to_update, acc))
+    end)
+  end
+
+  def update_player_skills(%Player{} = player, [head | tail], accum, true) do
     skill_id = head |> Map.get("id")
     points_spent = head |> Map.get("points_spent")
 
@@ -120,18 +137,18 @@ defmodule FungusToast.PlayerSkills do
 
     case create_or_update_player_skill(player, player_skill, skill_id, points_spent) do
       {:ok, updated_player_skill} ->
-        update_player_skills!(player, tail, [updated_player_skill | accum], true)
+        update_player_skills(player, tail, [updated_player_skill | accum], true)
 
       {:error, _} ->
         {:error, :bad_request}
     end
   end
 
-  def update_player_skills!(_, [], accum, true) do
+  def update_player_skills(_, [], accum, true) do
     {:ok, Enum.reverse(accum)}
   end
 
-  def update_player_skills!(_, _, _, false) do
+  def update_player_skills(_, _, _, false) do
     {:error, :bad_request}
   end
 
@@ -180,5 +197,23 @@ defmodule FungusToast.PlayerSkills do
     player_skill
     |> PlayerSkill.changeset(attrs)
     |> Repo.update()
+  end
+
+  #TODO perhaps rename to something like get_player_attribute_changes since this isn't actually updating the player?
+  def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
+    [attribute | remaining_attributes] = attributes
+    existing_value = Map.get(acc, attribute)
+    existing_value =
+      if(existing_value == nil) do
+        Map.get(player, attribute)
+      else
+        existing_value
+      end
+    acc = Map.put(acc, attribute, existing_value + skill_change)
+    update_attribute(player, skill_change, remaining_attributes, acc)
+  end
+
+  def update_attribute(_player, _skill_change, attributes, acc) when length(attributes) == 0 do
+    acc
   end
 end

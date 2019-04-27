@@ -162,29 +162,12 @@ defmodule FungusToast.Players do
     attributes_to_update = AiStrategies.get_player_attributes_for_skill_name(skill.name)
     skill_change = if(skill.up_is_good, do: skill.increase_per_point, else: skill.increase_per_point * -1.0)
 
-    acc = update_attribute(player, skill_change, attributes_to_update, acc)
+    acc = PlayerSkills.update_attribute(player, skill_change, attributes_to_update, acc)
     |> Map.put(:mutation_points, mutation_points - 1)
     spend_ai_mutation_points(player, mutation_points - 1, total_cells, number_of_remaining_cells, acc)
   end
 
   def spend_ai_mutation_points(player, mutation_points, _total_cells, _number_of_remaining_cells, acc) when mutation_points == 0 do
     update_player(player, acc)
-  end
-
-  def update_attribute(%Player{} = player, skill_change, attributes, acc) when length(attributes) > 0 do
-    [attribute | remaining_attributes] = attributes
-    existing_value = Map.get(acc, attribute)
-    existing_value =
-      if(existing_value == nil) do
-        Map.get(player, attribute)
-      else
-        existing_value
-      end
-    acc = Map.put(acc, attribute, existing_value + skill_change)
-    update_attribute(player, skill_change, remaining_attributes, acc)
-  end
-
-  def update_attribute(_player, _skill_change, attributes, acc) when length(attributes) == 0 do
-    acc
   end
 end
