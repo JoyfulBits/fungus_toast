@@ -1,7 +1,7 @@
 defmodule FungusToast.GamesTest do
   use FungusToast.DataCase
 
-  alias FungusToast.{Accounts, Games, Players, Rounds}
+  alias FungusToast.{Accounts, Games, Players, Rounds, Skills, PlayerSkills, AiStrategies}
   alias FungusToast.Games.{Game, GameState, Player, GridCell}
   alias FungusToast.Game.Status
 
@@ -279,12 +279,13 @@ defmodule FungusToast.GamesTest do
           total_points_invested = Enum.reduce(player.skills, 0, fn player_skill, acc ->
             acc + player_skill.skill_level
           end)
-          assert total_points_invested == Player.default_starting_mutation_points
+          #ai players must have spent at least 2x the minimum you get each round since they have spent for 2 rounds
+          assert total_points_invested >= Player.default_starting_mutation_points * 2
         end
       end)
     end
 
-    test "that AI and Human players are awarded their new mutation points" do
+    test "that AI and Human players are awarded their new mutation points, but AI players already spent theirs" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
 
@@ -294,7 +295,14 @@ defmodule FungusToast.GamesTest do
 
       Players.list_players_for_game(game.id)
       |> Enum.each(fn player ->
-        assert player.mutation_points >= Player.default_starting_mutation_points
+        if(player.human) do
+          assert player.mutation_points >= Player.default_starting_mutation_points
+        else
+          #TODO add total_spent_points to Player
+          #since this is the 2nd round of expenditures, make sure the AI player as spent at least 2x the minimum
+          #assert player.total_spent_points >= Player.default_starting_mutation_points * 2
+        end
+
       end)
     end
 
@@ -407,6 +415,87 @@ defmodule FungusToast.GamesTest do
       player2 = Enum.find(updated_players, fn player -> player.id == player_2_id end)
       assert player2.live_cells == 0
       assert player2.dead_cells == 2
+    end
+  end
+
+  describe "spend_human_player_mutation_points/3" do
+    test "that the next round is not available if the player didn't spend all of their points" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
+      player = hd(game.players)
+      skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
+
+      #spend all but one point
+      one_less_than_available_points = player.mutation_points - 1
+      upgrade_attrs = [%{"id" => skill.id, "points_spent" => one_less_than_available_points}]
+
+      result = Games.spend_human_player_mutation_points(player.id, game.id, upgrade_attrs)
+
+      #since not all points were spent this should be false
+      refute result.next_round_available
+      assert result.updated_player
+      assert result.updated_player.mutation_points == 1
+
+      player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
+      assert player_skill.skill_level == one_less_than_available_points
+    end
+
+    test "that the next round is not triggered if another player hasn't spent all their points" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2, number_of_ai_players: 0})
+      human_player = Enum.filter(game.players, fn player -> player.human end) |> hd
+      skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
+
+      #spend all of the first player's points
+      starting_mutation_points = human_player.mutation_points
+      upgrade_attrs = [%{"id" => skill.id, "points_spent" => starting_mutation_points}]
+
+      result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
+
+      #another player hasn't spent all their points so the next round shouldn't be available
+      refute result.next_round_available
+    end
+
+    test "that spending all mutation points triggers the next round" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
+      human_player = Enum.filter(game.players, fn player -> player.human end) |> hd
+      skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
+
+      #spend all of the player's points
+      starting_mutation_points = human_player.mutation_points
+      upgrade_attrs = [%{"id" => skill.id, "points_spent" => starting_mutation_points}]
+
+      result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
+
+      #since all points were spent this should be true
+      assert result.next_round_available
+      assert result.updated_player
+      assert result.updated_player.mutation_points == 0
+
+      player_skill = PlayerSkills.get_player_skill(human_player.id, skill.id)
+      assert player_skill.skill_level == starting_mutation_points
+    end
+
+    test "that when the next round is triggered AI players automatically spend their points" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
+      human_player = Enum.filter(game.players, fn player -> player.human end) |> hd
+      skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
+
+      #spend all of the player's points
+      starting_mutation_points = human_player.mutation_points
+      upgrade_attrs = [%{"id" => skill.id, "points_spent" => starting_mutation_points}]
+
+      result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
+
+      #since all points were spent this should be true
+      assert result.next_round_available
+
+      ai_player = Players.list_players_for_game(game.id)
+      |> Enum.filter(fn player -> !player.human end)
+      |> hd
+      assert ai_player.mutation_points == 0
     end
   end
 end

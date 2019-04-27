@@ -21,10 +21,15 @@ defmodule FungusToast.AiStrategies do
   def get_ai_types, do: @ai_types
 
   @skill_name_anti_apoptosis "Anti-Apoptosis"
+  def skill_name_anti_apoptosis, do: @skill_name_anti_apoptosis
   @skill_name_budding "Budding"
+  def skill_name_budding, do: @skill_name_budding
   @skill_name_hypermutation "Hypermutation"
+  def skill_name_hypermutation, do: @skill_name_hypermutation
   @skill_name_regeneration "Regeneration"
+  def skill_name_regeneration, do: @skill_name_regeneration
   @skill_name_mycotoxicity "Mycotoxicity"
+  def skill_name_mycotoxicity, do: @skill_name_mycotoxicity
 
   @skill_name_to_player_attribute_map %{
     @skill_name_anti_apoptosis => [:apoptosis_chance],
