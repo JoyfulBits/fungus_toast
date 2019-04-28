@@ -28,7 +28,8 @@ defmodule FungusToastWeb.GameView do
       growth_cycles: growth_cycles_json(latest_completed_round),
       total_live_cells: game_totals.total_live_cells,
       total_dead_cells: game_totals.total_dead_cells,
-      total_regenerated_cells: game_totals.total_regenerated_cells
+      total_regenerated_cells: game_totals.total_regenerated_cells,
+      end_of_game_count_down: game.end_of_game_count_down
     }
   end
 

@@ -47,6 +47,7 @@ defmodule FungusToastWeb.GameViewTest do
       }
 
       game = Map.put(game, :players, [player_1, player_2])
+      game = Map.put(game, :end_of_game_count_down, 5)
       game_with_round = %{game: game, latest_completed_round: nil}
 
       result = GameView.render("game.json", %{game: game_with_round})
@@ -56,6 +57,7 @@ defmodule FungusToastWeb.GameViewTest do
       assert result.number_of_ai_players == game.number_of_ai_players
       assert result.grid_size == game.grid_size
       assert result.status == Status.status_not_started
+      assert result.end_of_game_count_down == game.end_of_game_count_down
       assert length(result.players) == 2
       actual_player_1_info = Enum.filter(result.players, fn player -> player.id == player_1.id end) |> hd
 
