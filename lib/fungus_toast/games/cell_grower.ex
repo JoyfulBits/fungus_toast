@@ -5,6 +5,8 @@ defmodule FungusToast.Games.CellGrower do
   alias FungusToast.Games.GridCell
 
   @starvation_death_chance 10.0
+  @minimum_live_cells_for_apoptosis 8
+  def minimum_live_cells_for_apoptosis, do: @minimum_live_cells_for_apoptosis
 
   @doc ~S"""
     Iterates over surrounding cells calculating new growths, regenerations, and deaths. Returns GridCells that changed
@@ -49,7 +51,7 @@ defmodule FungusToast.Games.CellGrower do
   #it returns nil if the growth chance didn't hit
   iex> CellGrower.try_growing_cell(:right_cell, 0, %FungusToast.Games.Player{right_growth_chance: 0, id: 1})
   nil
-  
+
   """
   @spec try_growing_cell(atom(), integer(), %Player{}) :: [%GridCell{}]
   def try_growing_cell(position, cell_index, player) do
@@ -83,7 +85,7 @@ defmodule FungusToast.Games.CellGrower do
     #it returns nil if the mycotoxin_fungicide_chance chance doesn't hit
     iex> CellGrower.check_for_mycotoxin_murder(%FungusToast.Games.GridCell{live: true, player_id: 1}, %FungusToast.Games.Player{mycotoxin_fungicide_chance: 0, id: 2})
     nil
-  
+
   """
   def check_for_mycotoxin_murder(grid_cell, player) do
     if(grid_cell.player_id != player.id and Random.random_chance_hit(player.mycotoxin_fungicide_chance)) do
@@ -110,7 +112,7 @@ defmodule FungusToast.Games.CellGrower do
   #it returns nil if the regeneration chance didn't hit
   iex> CellGrower.check_for_regeneration(%GridCell{}, %FungusToast.Games.Player{regeneration_chance: 0, id: 2})
   nil
-  
+
   """
   def check_for_regeneration(grid_cell, player) do
     if(Random.random_chance_hit(player.regeneration_chance)) do
@@ -118,7 +120,7 @@ defmodule FungusToast.Games.CellGrower do
     end
   end
 
-  
+
   @doc ~S"""
   Returns %{} if the cell does not die, otherwise returns a killed %GridCell{}
 
@@ -143,7 +145,7 @@ defmodule FungusToast.Games.CellGrower do
   ## Examples
 
   #it dies if the cell is surrounded and the starvation chance hits
-  iex> surrounding_cells = 
+  iex> surrounding_cells =
   ...>%{
   ...>  bottom_cell: %FungusToast.Games.GridCell{
   ...>    live: true
@@ -174,7 +176,7 @@ defmodule FungusToast.Games.CellGrower do
   true
 
   #it does not die if the starvation chance misses
-  iex> surrounding_cells = 
+  iex> surrounding_cells =
   ...>%{
   ...>  bottom_cell: %FungusToast.Games.GridCell{
   ...>    live: true
@@ -205,7 +207,7 @@ defmodule FungusToast.Games.CellGrower do
   false
 
   #it does not die if not all of the surrounding cells are alive
-  iex> surrounding_cells = 
+  iex> surrounding_cells =
   ...>%{
   ...>  bottom_cell: %FungusToast.Games.GridCell{
   ...>    live: false
@@ -234,7 +236,7 @@ defmodule FungusToast.Games.CellGrower do
   ...>}
   ...>CellGrower.dies_from_starvation(surrounding_cells, 100)
   false
-  
+
   """
   def dies_from_starvation(surrounding_cells, starvation_chance \\ @starvation_death_chance) do
     Enum.all?(surrounding_cells, fn {_, v} -> v.live and Random.random_chance_hit(starvation_chance) end)
@@ -246,16 +248,24 @@ defmodule FungusToast.Games.CellGrower do
   ## Examples
 
   #it dies if the apoptosis chance hits
-  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 100.0})
+  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 100.0, live_cells: 100})
   true
 
   #it does not die if the apoptosis chance misses
   iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 0.0})
   false
-  
+
+  #it does not die if the player has less than the minimum number of live cells
+  iex> CellGrower.dies_from_apoptosis(%FungusToast.Games.Player{apoptosis_chance: 100.0, live_cells: FungusToast.Games.CellGrower.minimum_live_cells_for_apoptosis() - 1})
+  false
+
   """
   def dies_from_apoptosis(player) do
-    Random.random_chance_hit(player.apoptosis_chance)
+    if(player.live_cells < @minimum_live_cells_for_apoptosis) do
+      false
+    else
+      Random.random_chance_hit(player.apoptosis_chance)
+    end
   end
 
   @doc ~S"""
@@ -272,7 +282,7 @@ defmodule FungusToast.Games.CellGrower do
     player_id: nil,
     previous_player_id: nil
   }
-  
+
   """
   def make_out_of_grid_cell() do
     %GridCell{live: false, empty: false, out_of_grid: true}
@@ -292,7 +302,7 @@ defmodule FungusToast.Games.CellGrower do
     player_id: nil,
     previous_player_id: nil
   }
-  
+
   """
   def make_empty_grid_cell(cell_index) do
     %GridCell{index: cell_index, live: false, empty: true, out_of_grid: false}
