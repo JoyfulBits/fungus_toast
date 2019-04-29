@@ -6,7 +6,7 @@ defmodule FungusToast.Games do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.{Players, PlayerSkills, Rounds, Skills}
+  alias FungusToast.{Players, PlayerSkills, Rounds}
   alias FungusToast.Accounts.User
   alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
   alias FungusToast.Game.Status
@@ -403,6 +403,4 @@ defmodule FungusToast.Games do
   defdelegate get_player_skills(player), to: PlayerSkills
   defdelegate sum_skill_upgrades(skill_upgrades), to: PlayerSkills
   defdelegate update_player_skill(player_skill, attrs), to: PlayerSkills
-
-  defdelegate create_skill(attrs), to: Skills
 end
