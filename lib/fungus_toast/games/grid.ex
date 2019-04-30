@@ -6,7 +6,7 @@ defmodule FungusToast.Games.Grid do
   alias FungusToast.Random
   import :math
 
-  @spec create_starting_grid(integer(), [integer()]) :: map()
+  @spec create_starting_grid(integer(), [integer()]) :: any()
   def create_starting_grid(grid_size, player_ids) do
     number_of_players = length(player_ids)
 
@@ -33,20 +33,34 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
+  @hard_coded_start_positions %{
+    1 => [876],
+    2 => [1006, 1093],
+    3 => [433, 1732, 1006],
+    4 => [454, 485, 1614, 1635],
+    5 => [512, 382, 1192, 1777, 1358],
+    6 => [1765, 1055, 512, 365, 385, 1094]
+  }
+
   @spec get_start_cell_index(integer(), integer(), integer()) :: integer()
-  def get_start_cell_index(grid_height_and_width, number_of_players, player_number) do
-    grid_radius = grid_height_and_width / 2
-    ten_percent_of_grid = grid_height_and_width / 10
+  def get_start_cell_index(_, number_of_players, player_number) do
+    if(number_of_players > 6) do
+      raise "There is a max of 6 players, but you specified #{number_of_players}"
+    end
+    #TODO I just cannot figure out how to super-impose a circle on a 2-D grid to get start positions. Hard coding for now.
+    Enum.at(@hard_coded_start_positions[number_of_players], player_number - 1)
+    #grid_radius = grid_height_and_width / 2
+    #ten_percent_of_grid = grid_height_and_width / 10
 
-    x_coordinate =
-      (grid_radius - ten_percent_of_grid) * cos(2 * pi() * player_number / number_of_players) +
-        grid_radius
+    # x_coordinate =
+    #   (grid_radius - ten_percent_of_grid) * cos(2 * pi() * player_number / number_of_players) +
+    #     grid_radius
 
-    y_coordinate =
-      (grid_radius - ten_percent_of_grid) * sin(2 * pi() * player_number / number_of_players) +
-        grid_radius
+    # y_coordinate =
+    #   (grid_radius - ten_percent_of_grid) * sin(2 * pi() * player_number / number_of_players) +
+    #     grid_radius
 
-    trunc(x_coordinate + grid_height_and_width * y_coordinate)
+    #trunc(x_coordinate + grid_height_and_width * y_coordinate)
   end
 
   @doc ~S"""
