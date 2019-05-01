@@ -58,6 +58,7 @@ defmodule FungusToastWeb.GameViewTest do
       assert result.grid_size == game.grid_size
       assert result.status == Status.status_not_started
       assert result.end_of_game_count_down == game.end_of_game_count_down
+
       assert length(result.players) == 2
       actual_player_1_info = Enum.filter(result.players, fn player -> player.id == player_1.id end) |> hd
 
@@ -83,6 +84,7 @@ defmodule FungusToastWeb.GameViewTest do
       #make sure that the game totals are the sum of the player info
       assert result.total_dead_cells == player_1.dead_cells + player_2.dead_cells
       assert result.total_live_cells == player_1.live_cells + player_2.live_cells
+      assert result.total_empty_cells == Game.number_of_empty_cells(game)
       assert result.total_regenerated_cells  == player_1.regenerated_cells + player_2.regenerated_cells
     end
 
