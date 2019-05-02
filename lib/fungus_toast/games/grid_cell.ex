@@ -15,6 +15,7 @@ defmodule FungusToast.Games.GridCell do
     field :empty, :boolean, null: false, default: true
     field :out_of_grid, :boolean, null: false, default: false
     field :player_id, :integer, null: true
+    field :killed_by, :integer, null: true
     field :previous_player_id, :integer, null: true
   end
 

@@ -216,12 +216,14 @@ defmodule FungusToast.Games.GridTest do
       assert player_map[:grown_cells] == 0
       assert player_map[:regenerated_cells] == 0
       assert player_map[:perished_cells] == 0
+      assert player_map[:fungicidal_kills] == 0
 
       assert Map.has_key?(result, player_id_2)
       player_map = result[player_id_2]
       assert player_map[:grown_cells] == 0
       assert player_map[:regenerated_cells] == 0
       assert player_map[:perished_cells] == 0
+      assert player_map[:fungicidal_kills] == 0
     end
 
     test "that it totals the cells that died" do
@@ -238,6 +240,23 @@ defmodule FungusToast.Games.GridTest do
       assert Map.has_key?(result, player_id_1)
       player_map = result[player_id_1]
       assert player_map[:perished_cells] == 3
+    end
+
+    test "that it totals the fungicidal kills" do
+      killing_player_id_1 = 1
+      dead_player_id = 2
+      dead_cell = %GridCell{live: false, killed_by: killing_player_id_1, player_id: dead_player_id}
+      growth_cycle_1 = %GrowthCycle{toast_changes: [dead_cell, dead_cell]}
+      growth_cycle_2 = %GrowthCycle{toast_changes: [dead_cell]}
+      growth_cycles = [growth_cycle_1, growth_cycle_2]
+
+      result = Grid.get_player_growth_cycles_stats([killing_player_id_1, dead_player_id], growth_cycles)
+
+      assert map_size(result) == 2
+
+      assert Map.has_key?(result, killing_player_id_1)
+      player_map = result[killing_player_id_1]
+      assert player_map[:fungicidal_kills] == 3
     end
 
     test "that it totals the cells that were grown" do
