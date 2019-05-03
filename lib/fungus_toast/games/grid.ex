@@ -4,7 +4,6 @@ defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GrowthCycle
   alias FungusToast.Games.MutationPointsEarned
   alias FungusToast.Random
-  import :math
 
   @spec create_starting_grid(integer(), [integer()]) :: any()
   def create_starting_grid(grid_size, player_ids) do
