@@ -168,6 +168,8 @@ defmodule FungusToast.Players do
   end
 
   def spend_ai_mutation_points(player, mutation_points, _total_cells, _number_of_remaining_cells, acc) when mutation_points == 0 do
+    #since AI players always spend all of their mutation points, increment the spent points by what they started with
+    acc = Map.put(acc, :spent_mutation_points, player.spent_mutation_points + player.mutation_points)
     update_player(player, acc)
   end
 end

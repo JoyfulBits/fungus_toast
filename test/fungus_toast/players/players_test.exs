@@ -109,6 +109,8 @@ defmodule FungusToast.PlayersTest do
 
             player = Repo.get(Player, player.id) |> Repo.preload(:skills)
 
+            assert player.spent_mutation_points == mutation_points
+
             default_player = %Player{}
             Enum.each(player.skills, fn player_skill ->
                 skill = Skills.get_skill!(player_skill.skill_id)
