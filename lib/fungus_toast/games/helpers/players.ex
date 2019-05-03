@@ -72,7 +72,7 @@ defmodule FungusToast.Players do
   def create_ai_players(game, ai_type \\ nil) do
     if(game.number_of_ai_players > 0) do
       Enum.map(1..game.number_of_ai_players, fn x ->
-        {:ok, player} = create_basic_player(game.id, false, "Fungal Mutation #{x}", nil, ai_type)
+        {:ok, player} = create_basic_player(game.id, false, "AI Strain #{x}", nil, ai_type)
         |> Player.changeset(%{})
         |> Repo.insert()
 

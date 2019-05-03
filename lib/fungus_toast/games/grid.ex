@@ -4,7 +4,6 @@ defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.GrowthCycle
   alias FungusToast.Games.MutationPointsEarned
   alias FungusToast.Random
-  import :math
 
   @spec create_starting_grid(integer(), [integer()]) :: any()
   def create_starting_grid(grid_size, player_ids) do
@@ -177,12 +176,12 @@ defmodule FungusToast.Games.Grid do
   ## Examples
 
     iex(83)> Grid.get_player_growth_cycles_stats([1], [])
-    %{1 => %{grown_cells: 0, perished_cells: 0, regenerated_cells: 0}}
+    %{1 => %{grown_cells: 0, perished_cells: 0, regenerated_cells: 0, fungicidal_kills: 0}}
 
   """
   @spec get_player_growth_cycles_stats(list(), [%GrowthCycle{}]) :: any()
   def get_player_growth_cycles_stats(player_ids, growth_cycles) do
-    acc = Enum.map(player_ids,  fn player_id -> {player_id, %{regenerated_cells: 0, grown_cells: 0, perished_cells: 0}} end)
+    acc = Enum.map(player_ids,  fn player_id -> {player_id, %{regenerated_cells: 0, grown_cells: 0, perished_cells: 0, fungicidal_kills: 0}} end)
     |> Enum.into(%{})
 
     Enum.reduce(growth_cycles, acc, fn growth_cycle, acc ->
@@ -194,7 +193,13 @@ defmodule FungusToast.Games.Grid do
             update_in(acc, [grid_cell.player_id, :grown_cells], &(&1 + 1))
           end
         else
-          update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
+          map = update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
+
+          if(grid_cell.killed_by != nil) do
+            update_in(acc, [grid_cell.killed_by, :fungicidal_kills], &(&1 + 1))
+          else
+            map
+          end
         end
       end)
     end)

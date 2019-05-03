@@ -31,6 +31,7 @@ defmodule FungusToastWeb.GameViewTest do
         regenerated_cells: 13,
         perished_cells: 14,
         grown_cells: 15,
+        fungicidal_kills: 16,
         apoptosis_chance: 16,
         starved_cell_death_chance: 17,
         mutation_chance: 18,
@@ -75,6 +76,7 @@ defmodule FungusToastWeb.GameViewTest do
       assert actual_player_1_info.regenerated_cells == player_1.regenerated_cells
       assert actual_player_1_info.perished_cells == player_1.perished_cells
       assert actual_player_1_info.grown_cells == player_1.grown_cells
+      assert actual_player_1_info.fungicidal_kills == player_1.fungicidal_kills
       assert actual_player_1_info.apoptosis_chance == player_1.apoptosis_chance
       assert actual_player_1_info.starved_cell_death_chance == player_1.starved_cell_death_chance
       assert actual_player_1_info.mutation_chance == player_1.mutation_chance
