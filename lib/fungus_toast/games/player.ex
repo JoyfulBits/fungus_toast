@@ -40,6 +40,7 @@ defmodule FungusToast.Games.Player do
     :regenerated_cells,
     :perished_cells,
     :grown_cells,
+    :fungicidal_kills,
     :apoptosis_chance,
     :starved_cell_death_chance,
     :mutation_chance,
