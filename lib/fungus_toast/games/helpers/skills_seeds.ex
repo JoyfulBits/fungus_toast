@@ -22,7 +22,7 @@ defmodule FungusToast.Skills.SkillsSeed do
       name: "Hypermutation",
       description:
         "Increases the chance that you will generate a bonus mutation point during each growth cycle.",
-      increase_per_point: 3.0,
+      increase_per_point: 2.0,
       up_is_good: true
     })
 

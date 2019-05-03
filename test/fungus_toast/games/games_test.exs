@@ -435,6 +435,8 @@ defmodule FungusToast.GamesTest do
       refute result.next_round_available
       assert result.updated_player
       assert result.updated_player.mutation_points == 1
+      #make sure we updated the total number of points spent on the player
+      assert result.updated_player.spent_mutation_points == one_less_than_available_points
 
       player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
       assert player_skill.skill_level == one_less_than_available_points

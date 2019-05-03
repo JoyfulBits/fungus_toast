@@ -45,7 +45,8 @@ defmodule FungusToast.Games.Player do
     :starved_cell_death_chance,
     :mutation_chance,
     :regeneration_chance,
-    :mycotoxin_fungicide_chance
+    :mycotoxin_fungicide_chance,
+    :spent_mutation_points
   ]
 
   @derive {Jason.Encoder, only: [:id, :skills] ++ @attrs}
@@ -73,6 +74,8 @@ defmodule FungusToast.Games.Player do
     field :grown_cells, :integer, default: 0, null: false
     field :perished_cells, :integer, default: 0, null: false
     field :fungicidal_kills, :integer, default: 0, null: false
+
+    field :spent_mutation_points, :integer, default: 0, null: false
 
     field :apoptosis_chance, :float, default: @default_apoptosis_chance, null: false
     field :starved_cell_death_chance, :float, default: @default_starved_cell_death_chance, null: false
