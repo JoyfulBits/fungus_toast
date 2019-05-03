@@ -75,7 +75,8 @@ defmodule FungusToast.Games.CellGrower do
     live: false,
     out_of_grid: false,
     player_id: 1,
-    previous_player_id: nil
+    previous_player_id: nil,
+    killed_by: 2
   }
 
     #it returns nil if the cell is the current player's cell
@@ -89,7 +90,8 @@ defmodule FungusToast.Games.CellGrower do
   """
   def check_for_mycotoxin_murder(grid_cell, player) do
     if(grid_cell.player_id != player.id and Random.random_chance_hit(player.mycotoxin_fungicide_chance)) do
-      %{grid_cell | live: false}
+      grid_cell = %{grid_cell | live: false}
+      %{grid_cell | killed_by: player.id}
     end
   end
 
