@@ -37,7 +37,8 @@ defmodule FungusToastWeb.GameViewTest do
         mutation_chance: 18,
         regeneration_chance: 19,
         mycotoxin_fungicide_chance: 20,
-        user_id: 21
+        user_id: 21,
+        spent_mutation_points: 22
       }
 
       player_2 = %Player{
@@ -77,6 +78,7 @@ defmodule FungusToastWeb.GameViewTest do
       assert actual_player_1_info.perished_cells == player_1.perished_cells
       assert actual_player_1_info.grown_cells == player_1.grown_cells
       assert actual_player_1_info.fungicidal_kills == player_1.fungicidal_kills
+      assert actual_player_1_info.spent_mutation_points == player_1.spent_mutation_points
       assert actual_player_1_info.apoptosis_chance == player_1.apoptosis_chance
       assert actual_player_1_info.starved_cell_death_chance == player_1.starved_cell_death_chance
       assert actual_player_1_info.mutation_chance == player_1.mutation_chance

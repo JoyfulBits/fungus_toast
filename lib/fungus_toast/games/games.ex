@@ -374,8 +374,10 @@ defmodule FungusToast.Games do
   def spend_human_player_mutation_points(player_id, game_id, upgrade_attrs) do
     player = Players.get_player!(player_id)
     spent_points = PlayerSkills.sum_skill_upgrades(upgrade_attrs)
+    total_spent_points = player.spent_mutation_points + spent_points
     player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, upgrade_attrs)
     |> Map.put(:mutation_points, player.mutation_points - spent_points)
+    |> Map.put(:spent_mutation_points, total_spent_points)
 
     updated_player = Players.update_player(player, player_changes)
 
