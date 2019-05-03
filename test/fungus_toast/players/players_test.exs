@@ -85,7 +85,7 @@ defmodule FungusToast.PlayersTest do
                 assert player.game_id == game.id
                 assert !player.human
                 assert player.ai_type != nil
-                assert "Fungal Mutation " <> Integer.to_string(acc) == player.name
+                assert "AI Strain " <> Integer.to_string(acc) == player.name
                 assert player.user_id == nil
                 acc + 1
             end)
