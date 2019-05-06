@@ -18,11 +18,13 @@ defmodule FungusToast.Games.Grid do
         {:error,
         "There needs to be at least 100 cells left over after placing starting cells, but there was only #{number_of_empty_cells_after_placing_start_cells}."}
       else
+        #get a random number of radians that is less than 1/number_of_players of a circle
+        random_radians_offset = Enum.random(0..360)
         Enum.map(
           1..number_of_players,
           fn player_number ->
             %GridCell{
-              index: get_start_cell_index(grid_size, number_of_players, player_number),
+              index: get_start_cell_index(grid_size, number_of_players, player_number, random_radians_offset),
               player_id: Enum.at(player_ids, player_number - 1),
               live: true,
               empty: false
@@ -32,34 +34,21 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
-  @hard_coded_start_positions %{
-    1 => [876],
-    2 => [1007, 1093],
-    3 => [588, 1938, 1210],
-    4 => [464, 485, 1814, 1835],
-    5 => [512, 382, 1192, 1777, 1358],
-    6 => [1765, 1055, 512, 365, 385, 1094]
-  }
+  @spec get_start_cell_index(integer(), integer(), integer(), integer()) :: integer()
+  def get_start_cell_index(grid_size, number_of_players, player_number, random_0_to_360_offset) do
+    guaranteed_margin = 8
+    radius = (grid_size - 2 * guaranteed_margin)/2
+    tau = 2 * :math.pi()
+    radians_between_players = tau/number_of_players
+    random_radians_offset = tau * random_0_to_360_offset / 360
+    player_radians = radians_between_players * player_number + random_radians_offset
 
-  @spec get_start_cell_index(integer(), integer(), integer()) :: integer()
-  def get_start_cell_index(_, number_of_players, player_number) do
-    if(number_of_players > 6) do
-      raise "There is a max of 6 players, but you specified #{number_of_players}"
-    end
-    #TODO I just cannot figure out how to super-impose a circle on a 2-D grid to get start positions. Hard coding for now.
-    Enum.at(@hard_coded_start_positions[number_of_players], player_number - 1)
-    #grid_radius = grid_height_and_width / 2
-    #ten_percent_of_grid = grid_height_and_width / 10
-
-    # x_coordinate =
-    #   (grid_radius - ten_percent_of_grid) * cos(2 * pi() * player_number / number_of_players) +
-    #     grid_radius
-
-    # y_coordinate =
-    #   (grid_radius - ten_percent_of_grid) * sin(2 * pi() * player_number / number_of_players) +
-    #     grid_radius
-
-    #trunc(x_coordinate + grid_height_and_width * y_coordinate)
+    x = radius * :math.cos(player_radians)
+    half_of_grid = trunc(grid_size/2)
+    gx = trunc(x + half_of_grid)
+    y = radius * :math.sin(player_radians)
+    gy = trunc(y + half_of_grid)
+    trunc(gx + grid_size * gy)
   end
 
   @doc ~S"""
