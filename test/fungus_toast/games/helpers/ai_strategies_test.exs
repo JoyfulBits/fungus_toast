@@ -94,5 +94,16 @@ defmodule FungusToast.Games.AiStrategiesTest do
       assert length(candidate_skills) == 1
       assert hd(candidate_skills) == "Anti-Apoptosis"
     end
+
+    test "that it defaults to mycotoxicity when the player has already maxed out the candidate skills and anti-apoptosis" do
+      player = %Player{ai_type: "TEST", regeneration_chance: 100, apoptosis_chance: 0}
+      total_cells = 100
+      #force late game so Regeneration would be picked for the test player
+      remaining_cells = total_cells - 100 * AiStrategies.mid_game_threshold - 1
+      candidate_skills = AiStrategies.get_candidate_skills(player, total_cells, remaining_cells)
+
+      assert length(candidate_skills) == 1
+      assert hd(candidate_skills) == AiStrategies.skill_name_mycotoxicity
+    end
   end
 end

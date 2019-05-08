@@ -103,7 +103,11 @@ defmodule FungusToast.AiStrategies do
     if(length(candidate_skills) > 0) do
       candidate_skills
     else
-      [@skill_name_anti_apoptosis]
+      if(maxed_out_skill?(@skill_name_anti_apoptosis, ai_player)) do
+        [@skill_name_mycotoxicity]
+      else
+        [@skill_name_anti_apoptosis]
+      end
     end
   end
 
