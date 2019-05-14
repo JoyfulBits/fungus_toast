@@ -1,7 +1,7 @@
 defmodule FungusToastWeb.PlayerSkillController do
   use FungusToastWeb, :controller
 
-  alias FungusToast.{Games, Players}
+  alias FungusToast.{Games}
 
   action_fallback FungusToastWeb.FallbackController
 

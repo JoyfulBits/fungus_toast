@@ -8,9 +8,6 @@ defmodule FungusToastWeb.GameViewTest do
   import FungusToast.Factory
 
   describe "game.json" do
-    # TODO: run through this piece by piece until we swagger or something else:
-    # https://docs.google.com/document/d/1e7jwVzMLy4Ob9T36gQxmDFHR36xtcbk78mJdzlt9mqM/edit
-    #@tag :skip
     test "that the game and player information gets added to the model" do
       game = insert(:game)
       player_1 = %Player{
