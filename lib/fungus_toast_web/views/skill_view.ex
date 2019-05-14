@@ -10,5 +10,14 @@ defmodule FungusToastWeb.SkillView do
     render_one(skill, SkillView, "skill.json")
   end
 
-  def render("skill.json", %{skill: skill}), do: map_from(skill)
+  def render("skill.json", %{skill: skill}), do: skill_json(skill)
+
+  def skill_json(skill) do
+    %{
+      id: skill.id,
+      name: skill.name,
+      up_is_good: skill.up_is_good,
+      increase_per_point: skill.increase_per_point
+    }
+  end
 end
