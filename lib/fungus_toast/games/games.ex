@@ -399,16 +399,21 @@ defmodule FungusToast.Games do
     open_slots = game.number_of_human_players - number_of_already_joined_players
 
     if(open_slots > 0) do
-      next_open_player = Enum.find(game.players, fn player -> player.human and player.user_id == nil end)
-      user_id = Accounts.get_user_for_name(user_name)
-      Players.update_player(next_open_player, %{user_id: user_id})
+      user = Accounts.get_user_for_name(user_name)
+      existing_player = Enum.find(game.players, fn player -> player.user_id == user.id end)
+      if(existing_player == nil) do
+        next_open_player = Enum.find(game.players, fn player -> player.human and player.user_id == nil end)
+        Players.update_player(next_open_player, %{user_id: user.id})
 
-      if(open_slots == 1) do
-        game = get_game!(game.id)
-        start_game(game)
-        {:ok, true}
+        if(open_slots == 1) do
+          game = get_game!(game.id)
+          start_game(game)
+          {:ok, true}
+        else
+          {:ok, false}
+        end
       else
-        {:ok, false}
+        {:error, :user_already_joined}
       end
     else
       {:error, :no_open_slots}

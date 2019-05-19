@@ -17,4 +17,8 @@ defmodule FungusToastWeb.JoinedGameView do
   def render("game_full.json", %{}) do
     %{result_type: result_type_game_full()}
   end
+
+  def render("user_already_joined.json", %{}) do
+    %{result_type: result_type_user_already_in_game()}
+  end
 end

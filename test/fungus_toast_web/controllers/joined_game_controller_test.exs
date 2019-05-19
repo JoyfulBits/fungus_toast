@@ -35,6 +35,16 @@ defmodule FungusToastWeb.JoinedGameControllerTest do
       assert %{"resultType" => 3} = json_response(conn, 409)
     end
 
+    test "that it returns a 400 bad request if a user is trying to join a game they are already in", %{conn: conn} do
+      user = Fixtures.Accounts.User.create!()
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2})
+
+      m = %{"game_id" => game.id, "user_name" => user.user_name}
+      conn = post(conn, Routes.joined_game_path(conn, :create), m)
+
+      assert %{"resultType" => 4} = json_response(conn, 400)
+    end
+
     test "invalid params", %{conn: conn} do
       assert_raise Phoenix.ActionClauseError, fn ->
         conn = post(conn, Routes.joined_game_path(conn, :create), %{"bad" => "params"})
