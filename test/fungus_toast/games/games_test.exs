@@ -104,8 +104,8 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "start_game/1" do
-    test "that it returns false if there is more than one human player since that means the game can't start yet" do
-      result = Games.start_game(%Game{number_of_human_players: 2})
+    test "that it returns false if not all players have joined since that means the game can't start yet" do
+      result = Games.start_game(%Game{id: -1, number_of_human_players: 2})
 
       refute result
     end
@@ -498,6 +498,17 @@ defmodule FungusToast.GamesTest do
       |> Enum.filter(fn player -> !player.human end)
       |> hd
       assert ai_player.mutation_points == 0
+    end
+  end
+
+  describe "join_game/2" do
+    test "that it returns {:error, :no_open_slots} if all human slots are already occupied by a user" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
+
+      result = Games.join_game(game.id, user.user_name)
+
+      assert {:error, :no_open_slots} = result
     end
   end
 end

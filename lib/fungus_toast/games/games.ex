@@ -4,10 +4,10 @@ defmodule FungusToast.Games do
   """
 
   import Ecto.Query, warn: false
-  alias FungusToast.Repo
 
-  alias FungusToast.{Players, PlayerSkills, Rounds}
+  alias FungusToast.{Repo, Accounts, Players, PlayerSkills, Rounds}
   alias FungusToast.Accounts.User
+
   alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
   alias FungusToast.Game.Status
 
@@ -89,7 +89,7 @@ defmodule FungusToast.Games do
     game
   end
 
-  def start_game(game = %Game{id: _, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players, number_of_ai_players: number_of_ai_players}) do
+  def start_game(game = %Game{id: id, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players, number_of_ai_players: number_of_ai_players}) do
     if(number_of_ai_players > 0) do
       total_cells = grid_size * grid_size
       Enum.each(players, fn player ->
@@ -99,7 +99,8 @@ defmodule FungusToast.Games do
       end)
     end
 
-    if(number_of_human_players <= 1) do
+    number_of_joined_human_players = Players.get_number_of_users_who_joined_game(id)
+    if(number_of_joined_human_players == number_of_human_players) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
@@ -389,6 +390,29 @@ defmodule FungusToast.Games do
     end
 
     %{next_round_available: new_round, updated_player: updated_player}
+  end
+
+  def join_game(game_id, user_name) do
+    game = get_game!(game_id)
+
+    number_of_already_joined_players = Players.get_number_of_users_who_joined_game(game_id)
+    open_slots = game.number_of_human_players - number_of_already_joined_players
+
+    if(open_slots > 0) do
+      next_open_player = Enum.find(game.players, fn player -> player.human and player.user_id == nil end)
+      user_id = Accounts.get_user_for_name(user_name)
+      Players.update_player(next_open_player, %{user_id: user_id})
+
+      if(open_slots == 1) do
+        game = get_game!(game.id)
+        start_game(game)
+        {:ok, true}
+      else
+        {:ok, false}
+      end
+    else
+      {:error, :no_open_slots}
+    end
   end
 
   defdelegate get_latest_round_for_game(game), to: Rounds

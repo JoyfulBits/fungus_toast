@@ -6,6 +6,7 @@ defmodule FungusToastWeb.GameController do
 
   action_fallback FungusToastWeb.FallbackController
 
+  #TODO this isn't in router.ex -- perhaps we should delete it?
   def index(conn, %{"user_id" => user_id}) do
     with {:ok, games} <- Games.list_active_games_for_user(user_id) do
       render(conn, "index.json", games: games)

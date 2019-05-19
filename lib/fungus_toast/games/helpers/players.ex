@@ -37,6 +37,13 @@ defmodule FungusToast.Players do
   end
 
   @doc """
+  Returns the total number of human players who have joined the game
+  """
+  def get_number_of_users_who_joined_game(game_id) do
+    Repo.one(from p in Player, where: p.game_id == ^game_id and p.human and not is_nil(p.user_id), select: count(p.id))
+  end
+
+  @doc """
   Gets a single player.
 
   Raises `Ecto.NoResultsError` if the Player does not exist.
