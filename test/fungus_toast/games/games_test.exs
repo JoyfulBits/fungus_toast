@@ -118,6 +118,8 @@ defmodule FungusToast.GamesTest do
       result = Games.start_game(game)
 
       assert result
+      game = Games.get_game!(game.id)
+      assert game.status == Status.status_started
     end
 
     test "that ai players spend their initial mutation points as soon as the game starts" do
@@ -509,6 +511,15 @@ defmodule FungusToast.GamesTest do
       result = Games.join_game(game.id, user.user_name)
 
       assert {:error, :no_open_slots} = result
+    end
+
+    test "that it returns {:error, :user_already_joined} if the user already joined the game" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2})
+
+      result = Games.join_game(game.id, user.user_name)
+
+      assert {:error, :user_already_joined} = result
     end
   end
 end
