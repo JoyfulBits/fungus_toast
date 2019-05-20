@@ -104,8 +104,8 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "start_game/1" do
-    test "that it returns false if there is more than one human player since that means the game can't start yet" do
-      result = Games.start_game(%Game{number_of_human_players: 2})
+    test "that it returns false if not all players have joined since that means the game can't start yet" do
+      result = Games.start_game(%Game{id: -1, number_of_human_players: 2})
 
       refute result
     end
@@ -118,6 +118,8 @@ defmodule FungusToast.GamesTest do
       result = Games.start_game(game)
 
       assert result
+      game = Games.get_game!(game.id)
+      assert game.status == Status.status_started
     end
 
     test "that ai players spend their initial mutation points as soon as the game starts" do
@@ -498,6 +500,63 @@ defmodule FungusToast.GamesTest do
       |> Enum.filter(fn player -> !player.human end)
       |> hd
       assert ai_player.mutation_points == 0
+    end
+  end
+
+  describe "join_game/2" do
+    test "that it returns {:error, :no_open_slots} if all human slots are already occupied by a user" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
+
+      result = Games.join_game(game.id, user.user_name)
+
+      assert {:error, :no_open_slots} = result
+    end
+
+    test "that it returns {:error, :user_already_joined} if the user already joined the game" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2})
+
+      result = Games.join_game(game.id, user.user_name)
+
+      assert {:error, :user_already_joined} = result
+    end
+
+    test "that it sets the user_id and user_name on one of the available player slots" do
+      user = user_fixture()
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2, number_of_ai_players: 0})
+
+      user2 = user_fixture(%{user_name: "user name"})
+      result = Games.join_game(game.id, user2.user_name)
+
+      assert {:ok, _} = result
+      game = Games.get_game!(game.id)
+      updated_player = Enum.find(game.players, fn player -> player.user_id == user2.id end)
+      assert updated_player != nil
+    end
+
+    test "that it returns {:ok, false} if the user joined the game and the game didn't start yet" do
+      user = user_fixture()
+      game = Games.create_game(user.user_name, %{number_of_human_players: 3, number_of_ai_players: 1})
+
+      user2 = user_fixture(%{user_name: "user name"})
+      result = Games.join_game(game.id, user2.user_name)
+
+      assert {:ok, false} = result
+      game = Games.get_game!(game.id)
+      assert game.status == Status.status_not_started
+    end
+
+    test "that it returns {:ok, true} if the user joined the game and the game started" do
+      user = user_fixture()
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2, number_of_ai_players: 1})
+
+      user2 = user_fixture(%{user_name: "user name"})
+      result = Games.join_game(game.id, user2.user_name)
+
+      assert {:ok, true} = result
+      game = Games.get_game!(game.id) |> IO.inspect
+      assert game.status == Status.status_started
     end
   end
 end

@@ -14,6 +14,12 @@ alias FungusToast.Skills.SkillsSeed
 
 Accounts.create_user(%{user_name: "Fungusmotron"})
 Accounts.create_user(%{user_name: "Fungus Amungus"})
+Accounts.create_user(%{user_name: "Human 1"})
+Accounts.create_user(%{user_name: "Human 2"})
+Accounts.create_user(%{user_name: "Human 3"})
+Accounts.create_user(%{user_name: "Human 4"})
+Accounts.create_user(%{user_name: "Human 5"})
+Accounts.create_user(%{user_name: "Human 6"})
 
 Games.create_game("Fungus Amungus", %{number_of_human_players: 1})
 
