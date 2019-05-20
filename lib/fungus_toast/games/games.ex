@@ -93,7 +93,7 @@ defmodule FungusToast.Games do
     if(number_of_ai_players > 0) do
       total_cells = grid_size * grid_size
       Enum.each(players, fn player ->
-        if(!player.human) do
+        if(!player.human and player.mutation_points > 0) do
           Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_cells)
         end
       end)
@@ -115,6 +115,8 @@ defmodule FungusToast.Games do
           Rounds.create_round(game.id, second_round)
 
           update_aggregate_stats(game, starting_cells)
+
+          update_game(game, %{status: Status.status_started})
         end)
 
         true
@@ -403,7 +405,7 @@ defmodule FungusToast.Games do
       existing_player = Enum.find(game.players, fn player -> player.user_id == user.id end)
       if(existing_player == nil) do
         next_open_player = Enum.find(game.players, fn player -> player.human and player.user_id == nil end)
-        Players.update_player(next_open_player, %{user_id: user.id})
+        Players.update_player(next_open_player, %{user_id: user.id, name: user.user_name})
 
         if(open_slots == 1) do
           game = get_game!(game.id)

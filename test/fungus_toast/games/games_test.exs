@@ -521,5 +521,42 @@ defmodule FungusToast.GamesTest do
 
       assert {:error, :user_already_joined} = result
     end
+
+    test "that it sets the user_id and user_name on one of the available player slots" do
+      user = user_fixture()
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2, number_of_ai_players: 0})
+
+      user2 = user_fixture(%{user_name: "user name"})
+      result = Games.join_game(game.id, user2.user_name)
+
+      assert {:ok, _} = result
+      game = Games.get_game!(game.id)
+      updated_player = Enum.find(game.players, fn player -> player.user_id == user2.id end)
+      assert updated_player != nil
+    end
+
+    test "that it returns {:ok, false} if the user joined the game and the game didn't start yet" do
+      user = user_fixture()
+      game = Games.create_game(user.user_name, %{number_of_human_players: 3, number_of_ai_players: 1})
+
+      user2 = user_fixture(%{user_name: "user name"})
+      result = Games.join_game(game.id, user2.user_name)
+
+      assert {:ok, false} = result
+      game = Games.get_game!(game.id)
+      assert game.status == Status.status_not_started
+    end
+
+    test "that it returns {:ok, true} if the user joined the game and the game started" do
+      user = user_fixture()
+      game = Games.create_game(user.user_name, %{number_of_human_players: 2, number_of_ai_players: 1})
+
+      user2 = user_fixture(%{user_name: "user name"})
+      result = Games.join_game(game.id, user2.user_name)
+
+      assert {:ok, true} = result
+      game = Games.get_game!(game.id) |> IO.inspect
+      assert game.status == Status.status_started
+    end
   end
 end

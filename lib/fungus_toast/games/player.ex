@@ -46,6 +46,33 @@ defmodule FungusToast.Games.Player do
     :mutation_chance,
     :regeneration_chance,
     :mycotoxin_fungicide_chance,
+    :spent_mutation_points,
+    :user_id
+  ]
+
+  @required_attrs [
+    :name,
+    :human,
+    :mutation_points,
+    :top_left_growth_chance,
+    :top_growth_chance,
+    :top_right_growth_chance,
+    :right_growth_chance,
+    :bottom_right_growth_chance,
+    :bottom_growth_chance,
+    :bottom_left_growth_chance,
+    :left_growth_chance,
+    :dead_cells,
+    :live_cells,
+    :regenerated_cells,
+    :perished_cells,
+    :grown_cells,
+    :fungicidal_kills,
+    :apoptosis_chance,
+    :starved_cell_death_chance,
+    :mutation_chance,
+    :regeneration_chance,
+    :mycotoxin_fungicide_chance,
     :spent_mutation_points
   ]
 
@@ -95,6 +122,6 @@ defmodule FungusToast.Games.Player do
   def changeset(player, attrs) do
     player
     |> cast(attrs, @attrs)
-    |> validate_required(@attrs)
+    |> validate_required(@required_attrs)
   end
 end
