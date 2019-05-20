@@ -61,5 +61,14 @@ defmodule FungusToast.Skills.SkillsSeed do
       increase_per_point: 0.25,
       up_is_good: true
     })
+
+    upsert_skill(%{
+      id: 6,
+      name: "Moisture Affinity",
+      description:
+        "Increases the chance that your live cell growth into an adjacent moist cell.",
+      increase_per_point: 2.0,
+      up_is_good: true
+    })
   end
 end
