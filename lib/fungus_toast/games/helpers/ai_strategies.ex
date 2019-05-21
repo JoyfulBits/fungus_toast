@@ -30,13 +30,16 @@ defmodule FungusToast.AiStrategies do
   def skill_name_regeneration, do: @skill_name_regeneration
   @skill_name_mycotoxicity "Mycotoxicity"
   def skill_name_mycotoxicity, do: @skill_name_mycotoxicity
+  @skill_name_hydrophilia "Hydrophilia"
+  def skill_name_hydrophilia, do: @skill_name_hydrophilia
 
   @skill_name_to_player_attribute_map %{
     @skill_name_anti_apoptosis => [:apoptosis_chance],
     @skill_name_budding => [:top_left_growth_chance, :top_right_growth_chance, :bottom_right_growth_chance, :bottom_left_growth_chance],
     @skill_name_hypermutation => [:mutation_chance],
     @skill_name_regeneration => [:regeneration_chance],
-    @skill_name_mycotoxicity => [:mycotoxin_fungicide_chance]
+    @skill_name_mycotoxicity => [:mycotoxin_fungicide_chance],
+    @skill_name_hydrophilia => [:moisture_growth_boost]
   }
 
   def skill_name_to_player_attribute_map, do: @skill_name_to_player_attribute_map
