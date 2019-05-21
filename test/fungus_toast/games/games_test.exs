@@ -555,7 +555,7 @@ defmodule FungusToast.GamesTest do
       result = Games.join_game(game.id, user2.user_name)
 
       assert {:ok, true} = result
-      game = Games.get_game!(game.id) |> IO.inspect
+      game = Games.get_game!(game.id)
       assert game.status == Status.status_started
     end
   end
