@@ -21,7 +21,8 @@ defmodule FungusToastWeb.PlayerSkillController do
 
 
     result = Games.spend_human_player_mutation_points(player_id, game_id, upgrade_attrs)
+    {:ok, next_round_available: next_round_available, updated_player: updated_player} = result
 
-    render(conn, "player_skill_update.json", model: result)
+    render(conn, "player_skill_update.json", model: %{next_round_available: next_round_available, updated_player: updated_player})
   end
 end
