@@ -433,12 +433,13 @@ defmodule FungusToast.GamesTest do
 
       result = Games.spend_human_player_mutation_points(player.id, game.id, upgrade_attrs)
 
+      assert {:ok, next_round_available: next_round_available, updated_player: updated_player} = result
       #since not all points were spent this should be false
-      refute result.next_round_available
-      assert result.updated_player
-      assert result.updated_player.mutation_points == 1
+      refute next_round_available
+      assert updated_player
+      assert updated_player.mutation_points == 1
       #make sure we updated the total number of points spent on the player
-      assert result.updated_player.spent_mutation_points == one_less_than_available_points
+      assert updated_player.spent_mutation_points == one_less_than_available_points
 
       player_skill = PlayerSkills.get_player_skill(player.id, skill.id)
       assert player_skill.skill_level == one_less_than_available_points
@@ -456,8 +457,9 @@ defmodule FungusToast.GamesTest do
 
       result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
 
+      assert {:ok, next_round_available: next_round_available, updated_player: _} = result
       #another player hasn't spent all their points so the next round shouldn't be available
-      refute result.next_round_available
+      refute next_round_available
     end
 
     test "that spending all mutation points triggers the next round" do
@@ -473,13 +475,15 @@ defmodule FungusToast.GamesTest do
       result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
 
       #since all points were spent this should be true
-      assert result.next_round_available
-      assert result.updated_player
-      assert result.updated_player.mutation_points == 0
+      assert {:ok, next_round_available: next_round_available, updated_player: updated_player} = result
+      assert next_round_available
+      assert updated_player
+      assert updated_player.mutation_points == 0
 
       player_skill = PlayerSkills.get_player_skill(human_player.id, skill.id)
       assert player_skill.skill_level == starting_mutation_points
     end
+
 
     test "that when the next round is triggered AI players automatically spend their points" do
       user = user_fixture(%{user_name: "user name"})
@@ -493,8 +497,9 @@ defmodule FungusToast.GamesTest do
 
       result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
 
+      assert {:ok, next_round_available: next_round_available, updated_player: _} = result
       #since all points were spent this should be true
-      assert result.next_round_available
+      assert next_round_available
 
       ai_player = Players.list_players_for_game(game.id)
       |> Enum.filter(fn player -> !player.human end)

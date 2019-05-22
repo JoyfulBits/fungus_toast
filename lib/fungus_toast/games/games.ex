@@ -391,7 +391,7 @@ defmodule FungusToast.Games do
       trigger_next_round(game)
     end
 
-    %{next_round_available: new_round, updated_player: updated_player}
+    {:ok, next_round_available: new_round, updated_player: updated_player}
   end
 
   def join_game(game_id, user_name) do
