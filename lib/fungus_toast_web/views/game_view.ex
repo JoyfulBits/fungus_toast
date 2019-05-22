@@ -75,6 +75,7 @@ defmodule FungusToastWeb.GameView do
       mutation_chance: player.mutation_chance,
       regeneration_chance: player.regeneration_chance,
       mycotoxin_fungicide_chance: player.mycotoxin_fungicide_chance,
+      moisture_growth_boost: player.moisture_growth_boost,
       status: status
     }
   end
