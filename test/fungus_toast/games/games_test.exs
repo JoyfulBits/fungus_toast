@@ -421,6 +421,21 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "spend_human_player_mutation_points/3" do
+    test "that an error is returned if too many points were attempted to be spent" do
+      user = user_fixture(%{user_name: "user name"})
+      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
+      player = hd(game.players)
+      skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
+
+      #spend one too many points
+      one_more_than_available_points = player.mutation_points + 1
+      upgrade_attrs = [%{"id" => skill.id, "points_spent" => one_more_than_available_points}]
+
+      result = Games.spend_human_player_mutation_points(player.id, game.id, upgrade_attrs)
+
+      assert {error_illegal_number_of_points_spent} = result
+    end
+
     test "that the next round is not available if the player didn't spend all of their points" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
