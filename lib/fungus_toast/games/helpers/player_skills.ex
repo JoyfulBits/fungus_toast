@@ -113,9 +113,8 @@ defmodule FungusToast.PlayerSkills do
   end
 
   def update_player_skills_and_get_player_changes(%Player{} = player, upgrade_attrs) do
-    Enum.reduce(upgrade_attrs, %{}, fn upgrade_map, acc ->
-      skill_id = Map.get(upgrade_map, "id")
-      points_spent = Map.get(upgrade_map,"points_spent")
+    Enum.reduce(upgrade_attrs, %{}, fn {skill_id, map}, acc ->
+      points_spent = Map.get(map, "points_spent")
 
       skill = Skills.get_skill!(skill_id)
 
@@ -177,8 +176,7 @@ defmodule FungusToast.PlayerSkills do
   """
   def sum_skill_upgrades(skill_upgrades) do
     skill_upgrades
-    |> Enum.map(fn su -> su |> Map.get("points_spent") end)
-    |> Enum.sum()
+    |> Enum.reduce(0, fn {_, map}, acc -> acc + Map.get(map, "points_spent") end)
   end
 
   @doc """

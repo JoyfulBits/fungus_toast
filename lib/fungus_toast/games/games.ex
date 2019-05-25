@@ -380,21 +380,27 @@ defmodule FungusToast.Games do
     if(spent_points > player.mutation_points) do
       {:error_illegal_number_of_points_spent}
     else
-      total_spent_points = player.spent_mutation_points + spent_points
-      player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, upgrade_attrs)
-      |> Map.put(:mutation_points, player.mutation_points - spent_points)
-      |> Map.put(:spent_mutation_points, total_spent_points)
+      if(FungusToast.ActiveCellChanges.active_cell_changes_are_valid(upgrade_attrs)) do
+        total_spent_points = player.spent_mutation_points + spent_points
 
-      updated_player = Players.update_player(player, player_changes)
+        player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, upgrade_attrs)
+        |> Map.put(:mutation_points, player.mutation_points - spent_points)
+        |> Map.put(:spent_mutation_points, total_spent_points)
 
-      game = get_game!(game_id)
-      new_round = next_round_available?(game)
+        updated_player = Players.update_player(player, player_changes)
 
-      if(new_round) do
-        trigger_next_round(game)
+        game = get_game!(game_id)
+        new_round = next_round_available?(game)
+
+        if(new_round) do
+          trigger_next_round(game)
+        end
+
+        {:ok, next_round_available: new_round, updated_player: updated_player}
+      else
+        {:error_illegal_active_cell_changes}
       end
 
-      {:ok, next_round_available: new_round, updated_player: updated_player}
     end
   end
 

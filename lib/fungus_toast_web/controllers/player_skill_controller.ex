@@ -13,14 +13,20 @@ defmodule FungusToastWeb.PlayerSkillController do
     render(conn, "index.json", player_skills: player_skills)
   end
 
-  def update(conn, %{
-        "game_id" => game_id,
-        "player_id" => player_id,
-        "skill_upgrades" => upgrade_attrs
-      }) do
+  #incoming params example:
+  # %{
+  #   "game_id" => "48",
+  #   "player_id" => "50",
+  #   "upgrades" => %{
+  #     "6" => %{"active_cell_changes" => [1, 2, 3, 4], "points_spent" => 0}
+  #   }
+  # }
+  def update(conn, params) do
 
-
-    result = Games.spend_human_player_mutation_points(player_id, game_id, upgrade_attrs)
+    game_id = Map.get(params, "game_id")
+    player_id = Map.get(params, "player_id")
+    upgrades = Map.get(params, "upgrades")
+    result = Games.spend_human_player_mutation_points(player_id, game_id, upgrades)
 
     case result do
       {:ok, next_round_available: next_round_available, updated_player: updated_player} ->
