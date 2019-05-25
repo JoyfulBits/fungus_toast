@@ -1,12 +1,32 @@
 defmodule FungusToast.Skills do
-  @moduledoc """
-  The Games.context.
-  """
-
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
   alias FungusToast.Games.Skill
+
+  def skill_id_hypermutation, do: 1
+  def skill_id_budding, do: 2
+  def skill_id_anti_apoptosis, do: 3
+  def skill_id_regeneration, do: 4
+  def skill_id_mycotoxicity, do: 5
+  def skill_id_hydrophilia, do: 6
+
+  defp skill_to_number_of_active_changes_map, do: %{
+    skill_id_hypermutation() => 0,
+    skill_id_budding() => 0,
+    skill_id_anti_apoptosis() => 0,
+    skill_id_regeneration() => 0,
+    skill_id_mycotoxicity() => 0,
+    skill_id_hydrophilia() => 3
+  }
+
+  def get_allowed_number_of_active_changes(skill_id) when is_integer(skill_id) do
+    Map.get(skill_to_number_of_active_changes_map(), skill_id)
+  end
+
+  def get_allowed_number_of_active_changes(skill_id) when is_binary(skill_id) do
+    Map.get(skill_to_number_of_active_changes_map(), String.to_integer(skill_id))
+  end
 
   @doc """
   Returns the list of skills.
@@ -40,7 +60,7 @@ defmodule FungusToast.Skills do
   end
 
   @doc """
-  Gets a single skill.
+  Gets a single skill (using an integer skill id)
 
   Raises `Ecto.NoResultsError` if the Skill does not exist.
 
@@ -55,6 +75,15 @@ defmodule FungusToast.Skills do
   """
   def get_skill!(id) when is_integer(id) do
     Repo.get!(Skill, id)
+  end
+
+  @doc """
+  Gets a single skill (using a string skill id)
+
+  Raises `Ecto.NoResultsError` if the Skill does not exist.
+  """
+  def get_skill!(id) when is_binary(id) do
+    Repo.get!(Skill, String.to_integer(id))
   end
 
   @doc """

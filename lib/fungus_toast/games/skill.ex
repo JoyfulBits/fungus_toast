@@ -12,9 +12,10 @@ defmodule FungusToast.Games.Skill do
 
   schema "skills" do
     field :description, :string, size: 512
-    field :increase_per_point, :float #make this non-nullable
+    field :increase_per_point, :float
+    field :number_of_active_cell_changes, :integer, default: 0
     field :name, :string, size: 64
-    field :up_is_good, :boolean #should this be nullable?
+    field :up_is_good, :boolean
 
     timestamps()
   end
@@ -22,7 +23,7 @@ defmodule FungusToast.Games.Skill do
   @doc false
   def changeset(skill, attrs) do
     skill
-    |> cast(attrs, [:name, :description, :increase_per_point, :up_is_good])
+    |> cast(attrs, [:name, :description, :increase_per_point, :number_of_active_cell_changes, :up_is_good])
     |> validate_required([:name, :description, :increase_per_point])
     |> validate_length(:name, max: 64)
     |> validate_length(:description, max: 512)
