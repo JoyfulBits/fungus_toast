@@ -60,10 +60,8 @@ defmodule FungusToast.Games.Grid do
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
         generation_number: 1,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -72,10 +70,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 2,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -84,10 +80,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 3,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -96,10 +90,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 4,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -108,10 +100,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 5,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }

@@ -8,6 +8,7 @@ defmodule FungusToast.Games.MutationPointsEarned do
   ]
 
   @derive Jason.Encoder
+  @primary_key false
   embedded_schema do
     field :player_id, :integer, null: false
     field :mutation_points, :integer, null: false

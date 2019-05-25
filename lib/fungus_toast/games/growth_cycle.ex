@@ -9,6 +9,7 @@ defmodule FungusToast.Games.GrowthCycle do
   ]
 
   @derive Jason.Encoder
+  @primary_key false
   embedded_schema do
     field :generation_number, :integer, default: 0
     embeds_many :toast_changes, FungusToast.Games.GridCell, on_replace: :delete

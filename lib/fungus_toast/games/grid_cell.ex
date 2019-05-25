@@ -9,7 +9,8 @@ defmodule FungusToast.Games.GridCell do
     :out_of_grid
   ]
 
-@derive Jason.Encoder
+  @derive Jason.Encoder
+  @primary_key false
   embedded_schema do
     field :index, :integer, null: true
     field :live, :boolean, null: false, default: false
@@ -21,8 +22,8 @@ defmodule FungusToast.Games.GridCell do
     field :previous_player_id, :integer, null: true
   end
 
-  def changeset(grid_Cell, attrs) do
-    grid_Cell
+  def changeset(grid_cell, attrs) do
+    grid_cell
     |> change(attrs)
     |> validate_required(@required_attrs)
   end
