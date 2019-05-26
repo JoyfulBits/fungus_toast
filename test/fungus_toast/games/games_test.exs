@@ -478,7 +478,9 @@ defmodule FungusToast.GamesTest do
 
     test "that the next round is not triggered if another player hasn't spent all their points" do
       user = user_fixture(%{user_name: "user name"})
+      user2 = user_fixture(%{user_name: "user name 2"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 2, number_of_ai_players: 0})
+      Games.join_game(game.id, user2.user_name)
       human_player = Enum.filter(game.players, fn player -> player.human end) |> hd
       skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
 

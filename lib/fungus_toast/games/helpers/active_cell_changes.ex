@@ -1,5 +1,6 @@
 defmodule FungusToast.ActiveCellChanges do
   alias FungusToast.{Skills, Rounds}
+  alias FungusToast.Games.ActiveCellChange
 
   @moduledoc """
   Provides functions for dealing with active cell changes. Active cell changes are player-generated manipulations of the toast
@@ -16,12 +17,20 @@ defmodule FungusToast.ActiveCellChanges do
   end
 
 
-  def update_active_cell_changes(game_id, upgrade_attrs) do
+  def update_active_cell_changes(player_id, game_id, upgrade_attrs) do
     if(active_cell_changes_are_valid(upgrade_attrs)) do
-      latest_round = Rounds.get_latest_round_for_game(game_id)
+      active_cell_changes = Enum.map(upgrade_attrs, fn {skill_id, map} ->
+        %ActiveCellChange{skill_id: skill_id, player_id: player_id, cell_indexes: Map.get(map, :active_cell_changes)}
+      end)
 
-      #latest_round =
+      if(length(active_cell_changes) > 0) do
+        latest_round = Rounds.get_latest_round_for_game(game_id)
+
+        new_active_cell_changes = latest_round.active_cell_changes ++ active_cell_changes
+        Rounds.update_round(latest_round, %{active_cell_changes: new_active_cell_changes})
+      end
       true
+
     else
       false
     end
