@@ -1,5 +1,6 @@
 defmodule FungusToast.Skills.SkillsSeed do
   alias FungusToast.Skills
+  alias FungusToast.Repo
 
   defp upsert_skill(changes = %{
     id: _,
@@ -77,5 +78,12 @@ defmodule FungusToast.Skills.SkillsSeed do
       up_is_good: true,
       number_of_active_cell_changes: 3 #can drop 3 drops of water
     })
+  end
+
+  def reset_skills_in_database() do
+    Repo.delete_all(FungusToast.Games.Skill)
+    #reset the identity so the skill ids can match the desired values again
+    Repo.query("ALTER SEQUENCE skills_id_seq RESTART")
+    seed_skills()
   end
 end
