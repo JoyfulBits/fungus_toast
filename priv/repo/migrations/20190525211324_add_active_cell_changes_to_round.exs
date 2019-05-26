@@ -3,7 +3,7 @@ defmodule FungusToast.Repo.Migrations.AddActiveCellChangesToRound do
 
   def change do
     alter table(:rounds) do
-      add :active_cell_changes, :jsonb, null: false
+      add :active_cell_changes, :jsonb, null: true
     end
   end
 end
