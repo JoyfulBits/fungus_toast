@@ -5,7 +5,7 @@ defmodule FungusToast.Games do
 
   import Ecto.Query, warn: false
 
-  alias FungusToast.{Repo, Accounts, Players, PlayerSkills, Rounds}
+  alias FungusToast.{Repo, Accounts, Players, PlayerSkills, Rounds, ActiveCellChanges}
   alias FungusToast.Accounts.User
 
   alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
@@ -380,7 +380,7 @@ defmodule FungusToast.Games do
     if(spent_points > player.mutation_points) do
       {:error_illegal_number_of_points_spent}
     else
-      if(FungusToast.ActiveCellChanges.active_cell_changes_are_valid(upgrade_attrs)) do
+      if(ActiveCellChanges.update_active_cell_changes(game_id, upgrade_attrs)) do
         total_spent_points = player.spent_mutation_points + spent_points
 
         player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, upgrade_attrs)
