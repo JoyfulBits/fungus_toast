@@ -1,6 +1,11 @@
 defmodule FungusToast.ActiveCellChanges do
   alias FungusToast.Skills
 
+  @moduledoc """
+  Provides functions for dealing with active cell changes. Active cell changes are player-generated manipulations of the toast
+  resulting from certain skills. These changes are applied to the toast at the start of the round, before growth cycles.
+  """
+
   @doc """
   Returns a map of skill id to the number of active changes made by for that skill.
 
@@ -37,5 +42,14 @@ defmodule FungusToast.ActiveCellChanges do
       max_allowed_active_changes = Skills.get_allowed_number_of_active_changes(skill_id) * points_spent
       acc and total_active_changes_for_skill <= max_allowed_active_changes
     end)
+  end
+
+  def update_active_cell_changes(game_id, upgrade_attrs) do
+    if(active_cell_changes_are_valid(upgrade_attrs)) do
+
+      true
+    else
+      false
+    end
   end
 end
