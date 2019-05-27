@@ -1,6 +1,6 @@
 defmodule FungusToast.Games.GridTest do
   use ExUnit.Case, async: true
-  alias FungusToast.Games.{Grid, GridCell, Player, GrowthCycle}
+  alias FungusToast.Games.{Grid, GridCell, Player, GrowthCycle, ActiveCellChange}
 
   doctest FungusToast.Games.Grid
 
@@ -52,19 +52,20 @@ defmodule FungusToast.Games.GridTest do
     end
   end
 
-  describe "generate_growth_summary/5" do
-    test "that a single player game with no growth or mutation chance will generate 5 sequential growth cycles with no toast changes, and 1 mutation point per growth cycle" do
+  describe "generate_growth_summary/4" do
+    test "that a single player game with no growth or mutation chance will generate 6 sequential growth cycles with no toast changes, and 1 mutation point per growth cycle" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
 
-      result = Grid.generate_growth_summary(starting_grid_map, grid_size, player_id_to_player_map, 1, [])
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
-      assert Enum.count(growth_cycles) == 5
+      assert Enum.count(growth_cycles) == 6
+
       assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 1, player1.id)
       assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 2, player1.id)
       assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 3, player1.id)
@@ -86,7 +87,7 @@ defmodule FungusToast.Games.GridTest do
       end
     end
 
-    test "that a multiplayer game where each player has max growth chance will generate an rapidly increasing number of growth cycles" do
+    test "that a multiplayer game where each player has max growth chance will generate a rapidly increasing number of growth cycles" do
       player_1 = make_maximum_growth_player(1)
       player_2 = make_maximum_growth_player(2)
       player_3 = make_maximum_growth_player(3)
@@ -95,13 +96,13 @@ defmodule FungusToast.Games.GridTest do
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id, player_2.id, player_3.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-      result = Grid.generate_growth_summary(starting_grid_map, grid_size, player_id_to_player_map, 1, [])
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
-      assert Enum.count(growth_cycles) == 5
+      assert Enum.count(growth_cycles) == 6
 
-      growth_cycle_1 = Enum.at(growth_cycles, 0)
+      growth_cycle_1 = Enum.at(growth_cycles, 1)
       number_of_toast_changes = length(growth_cycle_1.toast_changes)
       # the least number of growths for a given cell would be 3 (if it's in the corner), therefore it should be impossible to have
       # less than 3 players x 3 cells = 9 toast changesin the first round
@@ -143,8 +144,8 @@ defmodule FungusToast.Games.GridTest do
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id])#, player_2.id, player_3.id, player_4.id, player_5.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-      #set the growth_cycle number to -44 so that we get a full 50 growth cycles (44 + 6 to get up to +5) -- more than enough to fill the entire grid
-      result = Grid.generate_growth_summary(starting_grid_map, grid_size, player_id_to_player_map, -44, [])
+      #set the growth_cycle number to -43 so that we get a full 50 growth cycles (43 + 6 + empty active cell canges to get up to +5) -- more than enough to fill the entire grid
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, -43)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -166,14 +167,14 @@ defmodule FungusToast.Games.GridTest do
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id, player_2.id, player_3.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-      #set the generation to 5 so it only does one cycle
-      result = Grid.generate_growth_summary(starting_grid_map, grid_size, player_id_to_player_map, 5, [])
+      #set the generation to 5 so it only does one cycle (plus empty active cell changes)
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, 5)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
-      assert Enum.count(growth_cycles) == 1
+      assert Enum.count(growth_cycles) == 2
 
-      growth_cycle = Enum.at(growth_cycles, 0)
+      growth_cycle = Enum.at(growth_cycles, 1)
 
       points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
         fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
@@ -199,6 +200,23 @@ defmodule FungusToast.Games.GridTest do
       %Player{id: id, mutation_chance: 100}
     end
 
+    # test "that it applies active cell changes to the starting game state before applying additional growth" do
+    #   player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
+    #   player_id_to_player_map = %{player1.id => player1}
+    #   grid_size = 50
+    #   starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
+    #   starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    #   expected_cell_indexes = [0, 1, 2]
+    #   active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_hydrophilia(), cell_indexes: expected_cell_indexes}]
+
+    #   result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, 1, [])
+
+    #   assert result.growth_cycles
+    #   growth_cycles = result.growth_cycles
+    #   assert Enum.count(growth_cycles) == 6
+    #   actve_cell_changes_growth_cycle = hd(result.growth_cycles)
+    #   assert actve_cell_changes_growth_cycle.generation_number == 0
+    # end
   end
 
   describe "get_player_growth_cycles_stats/2" do
