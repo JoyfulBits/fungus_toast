@@ -26,7 +26,7 @@ defmodule FungusToastWeb.PlayerSkillController do
     game_id = Map.get(params, "game_id")
     player_id = Map.get(params, "player_id")
     upgrades = Map.get(params, "upgrades")
-    result = Games.spend_human_player_mutation_points(player_id, game_id, upgrades)
+    result = Games.spend_human_player_mutation_points(player_id, game_id, upgrades) |> IO.inspect
 
     case result do
       {:ok, next_round_available: next_round_available, updated_player: updated_player} ->
@@ -35,6 +35,10 @@ defmodule FungusToastWeb.PlayerSkillController do
         conn
         |> put_status(:bad_request)
         |> render("illegal_points_spent.json", %{})
+      {:error_illegal_active_cell_changes} ->
+      conn
+      |> put_status(:bad_request)
+      |> render("illegal_active_cell_changes.json", %{})
     end
   end
 end
