@@ -116,7 +116,11 @@ defmodule FungusToast.Games.Grid do
 
   """
   def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, generation_number \\ 1) do
-
+    active_cell_changes = if(active_cell_changes == nil) do
+      []
+    else
+      active_cell_changes
+    end
     active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
       grid_cells = if(active_cell_change.skill_id == Skills.skill_id_hydrophilia()) do
         Enum.map(active_cell_change.cell_indexes, fn index ->
@@ -201,12 +205,16 @@ defmodule FungusToast.Games.Grid do
             update_in(acc, [grid_cell.player_id, :grown_cells], &(&1 + 1))
           end
         else
-          map = update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
-
-          if(grid_cell.killed_by != nil) do
-            update_in(acc, [grid_cell.killed_by, :fungicidal_kills], &(&1 + 1))
+          if(grid_cell.empty) do
+            acc
           else
-            map
+            map = update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
+
+            if(grid_cell.killed_by != nil) do
+              update_in(acc, [grid_cell.killed_by, :fungicidal_kills], &(&1 + 1))
+            else
+              map
+            end
           end
         end
       end)

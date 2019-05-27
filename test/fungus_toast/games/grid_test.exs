@@ -263,7 +263,7 @@ defmodule FungusToast.Games.GridTest do
 
     test "that it totals the cells that died" do
       player_id_1 = 1
-      dead_cell = %GridCell{live: false, player_id: player_id_1}
+      dead_cell = %GridCell{live: false, empty: false, player_id: player_id_1}
       growth_cycle_1 = %GrowthCycle{toast_changes: [dead_cell, dead_cell]}
       growth_cycle_2 = %GrowthCycle{toast_changes: [dead_cell]}
       growth_cycles = [growth_cycle_1, growth_cycle_2]
@@ -280,7 +280,7 @@ defmodule FungusToast.Games.GridTest do
     test "that it totals the fungicidal kills" do
       killing_player_id_1 = 1
       dead_player_id = 2
-      dead_cell = %GridCell{live: false, killed_by: killing_player_id_1, player_id: dead_player_id}
+      dead_cell = %GridCell{live: false, empty: false, killed_by: killing_player_id_1, player_id: dead_player_id}
       growth_cycle_1 = %GrowthCycle{toast_changes: [dead_cell, dead_cell]}
       growth_cycle_2 = %GrowthCycle{toast_changes: [dead_cell]}
       growth_cycles = [growth_cycle_1, growth_cycle_2]
@@ -324,6 +324,18 @@ defmodule FungusToast.Games.GridTest do
       assert Map.has_key?(result, player_id_1)
       player_map = result[player_id_1]
       assert player_map[:regenerated_cells] == 3
+    end
+
+    test "that it ignores cells that were empty" do
+      player_id_1 = 1
+      empty_cell = %GridCell{live: false, empty: true, moist: true}
+      growth_cycle_1 = %GrowthCycle{toast_changes: [empty_cell]}
+      growth_cycles = [growth_cycle_1]
+
+      result = Grid.get_player_growth_cycles_stats([player_id_1], growth_cycles)
+
+      assert map_size(result) == 1
+      assert Map.has_key?(result, player_id_1)
     end
   end
 
