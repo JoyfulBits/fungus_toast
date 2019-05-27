@@ -20,7 +20,7 @@ defmodule FungusToast.ActiveCellChanges do
   def update_active_cell_changes(player_id, game_id, upgrade_attrs) do
     if(active_cell_changes_are_valid(upgrade_attrs)) do
       active_cell_changes = Enum.map(upgrade_attrs, fn {skill_id, map} ->
-        %ActiveCellChange{skill_id: skill_id, player_id: player_id, cell_indexes: Map.get(map, :active_cell_changes)}
+        %ActiveCellChange{skill_id: skill_id, player_id: player_id, cell_indexes: Map.get(map, "active_cell_changes")}
       end)
 
       if(length(active_cell_changes) > 0) do
