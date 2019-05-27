@@ -137,6 +137,7 @@ defmodule FungusToast.Games.Grid do
       acc ++ grid_cells
     end)
 
+
     pre_generation_number = generation_number - 1
 
     active_cell_changes_growth_cycle = %GrowthCycle{
@@ -144,7 +145,12 @@ defmodule FungusToast.Games.Grid do
       toast_changes: active_toast_changes,
       mutation_points_earned: []
     }
-    generate_growth_summary_after_active_cell_changes(starting_grid_map, grid_size, player_id_to_player_map, generation_number, [active_cell_changes_growth_cycle])
+
+    active_toast_changes_map = Enum.into(active_toast_changes, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    #merge the maps together. Active cell changes do not take precedence (to avoid chicanery from the API)
+    updated_grid = Map.merge(starting_grid_map, active_toast_changes_map, fn _index, grid_cell_1, _grid_cell_2 -> grid_cell_1 end)
+
+    generate_growth_summary_after_active_cell_changes(updated_grid, grid_size, player_id_to_player_map, generation_number, [active_cell_changes_growth_cycle])
   end
 
   @spec generate_growth_summary_after_active_cell_changes(map(), integer(), map(), integer(), list()) :: any()

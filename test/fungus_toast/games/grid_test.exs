@@ -217,8 +217,16 @@ defmodule FungusToast.Games.GridTest do
       assert Enum.count(growth_cycles) == 6
       active_cell_changes_growth_cycle = hd(result.growth_cycles)
       assert active_cell_changes_growth_cycle.generation_number == 0
+      #make sure the 3 active cell changes are accounted for in toast changes
       Enum.each(expected_cell_indexes, fn cell_index ->
         matching_cell = hd(Enum.filter(active_cell_changes_growth_cycle.toast_changes, fn grid_cell -> grid_cell.index == cell_index end))
+        assert matching_cell
+        assert matching_cell.moist
+      end)
+
+      #make sure the 3 active cell changes are accounted for in the updated game state
+      Enum.each(expected_cell_indexes, fn cell_index ->
+        matching_cell = hd(Enum.filter(result.new_game_state, fn grid_cell -> grid_cell.index == cell_index end))
         assert matching_cell
         assert matching_cell.moist
       end)
