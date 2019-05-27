@@ -147,7 +147,12 @@ defmodule FungusToast.Games do
       if(grid_cell.live) do
         update_in(acc, [grid_cell.player_id, :live_cells], &(&1 + 1))
       else
-        update_in(acc, [grid_cell.player_id, :dead_cells], &(&1 + 1))
+        #moist cells can be empty
+        if(grid_cell.empty) do
+          acc
+        else
+          update_in(acc, [grid_cell.player_id, :dead_cells], &(&1 + 1))
+        end
       end
     end)
   end
