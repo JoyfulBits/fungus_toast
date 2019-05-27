@@ -1,9 +1,6 @@
 defmodule FungusToast.Games.Grid do
-  alias FungusToast.Games.GridCell
-  alias FungusToast.Games.CellGrower
-  alias FungusToast.Games.GrowthCycle
-  alias FungusToast.Games.MutationPointsEarned
-  alias FungusToast.Random
+  alias FungusToast.Games.{CellGrower, GridCell, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.{Skills, Random}
 
   @spec create_starting_grid(integer(), [integer()]) :: any()
   def create_starting_grid(grid_size, player_ids) do
@@ -120,8 +117,24 @@ defmodule FungusToast.Games.Grid do
   """
   def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, generation_number \\ 1) do
 
-    active_toast_changes = []
+    active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
+      grid_cells = if(active_cell_change.skill_id == Skills.skill_id_hydrophilia()) do
+        Enum.map(active_cell_change.cell_indexes, fn index ->
+          %GridCell{index: index, moist: true}
+        end)
+      else
+        if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
+          raise "Hydrophilia is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
+        else
+          []
+        end
+      end
+
+      acc ++ grid_cells
+    end)
+
     pre_generation_number = generation_number - 1
+
     active_cell_changes_growth_cycle = %GrowthCycle{
       generation_number: pre_generation_number,
       toast_changes: active_toast_changes,

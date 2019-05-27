@@ -1,6 +1,7 @@
 defmodule FungusToast.Games.GridTest do
   use ExUnit.Case, async: true
   alias FungusToast.Games.{Grid, GridCell, Player, GrowthCycle, ActiveCellChange}
+  alias FungusToast.Skills
 
   doctest FungusToast.Games.Grid
 
@@ -200,23 +201,27 @@ defmodule FungusToast.Games.GridTest do
       %Player{id: id, mutation_chance: 100}
     end
 
-    # test "that it applies active cell changes to the starting game state before applying additional growth" do
-    #   player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
-    #   player_id_to_player_map = %{player1.id => player1}
-    #   grid_size = 50
-    #   starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
-    #   starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-    #   expected_cell_indexes = [0, 1, 2]
-    #   active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_hydrophilia(), cell_indexes: expected_cell_indexes}]
+    test "that it applies active cell changes to the starting game state before applying additional growth" do
+      player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
+      player_id_to_player_map = %{player1.id => player1}
+      grid_size = 50
+      starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
+      starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      expected_cell_indexes = [0, 1, 2]
+      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_hydrophilia(), cell_indexes: expected_cell_indexes}]
 
-    #   result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, 1, [])
+      result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map)
 
-    #   assert result.growth_cycles
-    #   growth_cycles = result.growth_cycles
-    #   assert Enum.count(growth_cycles) == 6
-    #   actve_cell_changes_growth_cycle = hd(result.growth_cycles)
-    #   assert actve_cell_changes_growth_cycle.generation_number == 0
-    # end
+      assert result.growth_cycles
+      growth_cycles = result.growth_cycles
+      assert Enum.count(growth_cycles) == 6
+      active_cell_changes_growth_cycle = hd(result.growth_cycles)
+      assert active_cell_changes_growth_cycle.generation_number == 0
+      Enum.each(expected_cell_indexes, fn cell_index ->
+        matching_cell = Enum.filter(active_cell_changes_growth_cycle.toast_changes, fn grid_cell -> grid_cell.index == cell_index end)
+        assert matching_cell
+      end)
+    end
   end
 
   describe "get_player_growth_cycles_stats/2" do
