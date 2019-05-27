@@ -201,7 +201,7 @@ defmodule FungusToast.Games.GridTest do
       %Player{id: id, mutation_chance: 100}
     end
 
-    test "that it applies active cell changes to the starting game state before applying additional growth" do
+    test "that it applies hydrophilia active cell changes to the starting game state before applying additional growth" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
@@ -218,9 +218,21 @@ defmodule FungusToast.Games.GridTest do
       active_cell_changes_growth_cycle = hd(result.growth_cycles)
       assert active_cell_changes_growth_cycle.generation_number == 0
       Enum.each(expected_cell_indexes, fn cell_index ->
-        matching_cell = Enum.filter(active_cell_changes_growth_cycle.toast_changes, fn grid_cell -> grid_cell.index == cell_index end)
+        matching_cell = hd(Enum.filter(active_cell_changes_growth_cycle.toast_changes, fn grid_cell -> grid_cell.index == cell_index end))
         assert matching_cell
+        assert matching_cell.moist
       end)
+    end
+
+    test "that it raises if an active cell change is for a skill that doesn't support active changes" do
+      player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
+      player_id_to_player_map = %{player1.id => player1}
+      grid_size = 50
+      starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
+      starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_budding(), cell_indexes: [0]}]
+
+      assert_raise RuntimeError, fn -> Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map) end
     end
   end
 
