@@ -11,7 +11,7 @@ defmodule FungusToast.Games.CellGrower do
   @doc ~S"""
     Iterates over surrounding cells calculating new growths, regenerations, and deaths. Returns GridCells that changed
   """
-  @spec calculate_cell_growth(map(), %Player{}) :: [%GridCell{}]
+  @spec calculate_cell_growth(map(), %Player{}) :: map()
   def calculate_cell_growth(surrounding_cells, player) do
     Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player) end)
       |> Enum.filter(fn x -> x != nil end)
@@ -53,7 +53,7 @@ defmodule FungusToast.Games.CellGrower do
   nil
 
   """
-  @spec try_growing_cell(atom(), integer(), %Player{}) :: [%GridCell{}]
+  @spec try_growing_cell(atom(), integer(), %Player{}) :: map()
   def try_growing_cell(position, cell_index, player) do
     {:ok, growth_attribute} = Map.fetch(Player.position_to_attribute_map, position)
     {:ok, growth_chance} = Map.fetch(player, growth_attribute)
