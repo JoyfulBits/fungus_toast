@@ -92,7 +92,7 @@ defmodule FungusToastWeb.GameView do
   end
 
   defp make_api_fungal_cell(grid_cell) do
-    %{index: grid_cell.index, player_id: grid_cell.player_id, live: grid_cell.live, previous_player_id: grid_cell.previous_player_id}
+    %{index: grid_cell.index, player_id: grid_cell.player_id, live: grid_cell.live, moist: grid_cell.moist, previous_player_id: grid_cell.previous_player_id}
   end
 
   defp growth_cycles_json(round) do
