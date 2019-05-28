@@ -398,11 +398,11 @@ defmodule FungusToast.GamesTest do
       player_2_id = Enum.at(game.players, 1).id
 
       grid_cells = [
-        %GridCell{player_id: player_1_id, live: true},
-        %GridCell{player_id: player_1_id, live: true},
-        %GridCell{player_id: player_1_id, live: true},
-        %GridCell{player_id: player_2_id, live: false},
-        %GridCell{player_id: player_2_id, live: false}
+        %GridCell{player_id: player_1_id, live: true, empty: false},
+        %GridCell{player_id: player_1_id, live: true, empty: false},
+        %GridCell{player_id: player_1_id, live: true, empty: false},
+        %GridCell{player_id: player_2_id, live: false, empty: false},
+        %GridCell{player_id: player_2_id, live: false, empty: false}
       ]
 
       {updated_game, updated_players} = Games.update_aggregate_stats(game, grid_cells)
