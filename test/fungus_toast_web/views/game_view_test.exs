@@ -118,7 +118,8 @@ defmodule FungusToastWeb.GameViewTest do
       live_cell = cells_map.live_cell
       dead_cell = cells_map.dead_cell
       regenerated_cell = cells_map.regenerated_cell
-      cells = [live_cell, dead_cell, regenerated_cell]
+      moist_cell = cells_map.moist_cell
+      cells = [live_cell, dead_cell, regenerated_cell, moist_cell]
 
       starting_game_state = %GameState{round_number: 1, cells: cells}
       latest_completed_round = %Round{starting_game_state: starting_game_state}
@@ -139,6 +140,9 @@ defmodule FungusToastWeb.GameViewTest do
 
       actual_regenerated_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == regenerated_cell.index end) |> hd
       assert_cells_match(actual_regenerated_cell, regenerated_cell)
+
+      actual_moist_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == moist_cell.index end) |> hd
+      assert_cells_match(actual_moist_cell, moist_cell)
     end
 
     test "that growth cycles are returned" do
@@ -252,7 +256,14 @@ defmodule FungusToastWeb.GameViewTest do
         previous_player_id: 11
       }
 
-      %{live_cell: live_cell, dead_cell: dead_cell, regenerated_cell: regenerated_cell}
+      moist_cell =  %GridCell{
+        index: 4,
+        live: false,
+        empty: true,
+        moist: true
+      }
+
+      %{live_cell: live_cell, dead_cell: dead_cell, regenerated_cell: regenerated_cell, moist_cell: moist_cell}
     end
 
     defp assert_cells_match(actual_cell, expected_cell) do

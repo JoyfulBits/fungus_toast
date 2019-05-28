@@ -11,7 +11,7 @@ defmodule FungusToast.Games.CellGrower do
   @doc ~S"""
     Iterates over surrounding cells calculating new growths, regenerations, and deaths. Returns GridCells that changed
   """
-  @spec calculate_cell_growth(map(), %Player{}) :: [%GridCell{}]
+  @spec calculate_cell_growth(map(), %Player{}) :: map()
   def calculate_cell_growth(surrounding_cells, player) do
     Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player) end)
       |> Enum.filter(fn x -> x != nil end)
@@ -20,7 +20,7 @@ defmodule FungusToast.Games.CellGrower do
 
   def process_cell(position, grid_cell, player) do
     if(grid_cell.empty) do
-      try_growing_cell(position, grid_cell.index, player)
+      try_growing_cell(position, grid_cell.index, grid_cell.moist, player)
     else
       if(grid_cell.live) do
         check_for_mycotoxin_murder(grid_cell, player)
@@ -38,7 +38,7 @@ defmodule FungusToast.Games.CellGrower do
   ## Examples
 
   #it generates a new live cell with that player's id if the growth percentage hits
-  iex> CellGrower.try_growing_cell(:right_cell, 0, %FungusToast.Games.Player{right_growth_chance: 100, id: 1})
+  iex> CellGrower.try_growing_cell(:right_cell, 0, false, %FungusToast.Games.Player{right_growth_chance: 100, id: 1})
   %FungusToast.Games.GridCell{
     empty: false,
     index: 0,
@@ -48,17 +48,34 @@ defmodule FungusToast.Games.CellGrower do
     previous_player_id: nil
   }
 
+  #it generates a new live cell with that player's id if the cell is moist and the player's moisture_growth_boost hits
+  iex> CellGrower.try_growing_cell(:right_cell, 0, true, %FungusToast.Games.Player{right_growth_chance: 0, moisture_growth_boost: 100, id: 1})
+  %FungusToast.Games.GridCell{
+    empty: false,
+    index: 0,
+    live: true,
+    moist: false,
+    out_of_grid: false,
+    player_id: 1,
+    previous_player_id: nil
+  }
+
   #it returns nil if the growth chance didn't hit
-  iex> CellGrower.try_growing_cell(:right_cell, 0, %FungusToast.Games.Player{right_growth_chance: 0, id: 1})
+  iex> CellGrower.try_growing_cell(:right_cell, 0, false, %FungusToast.Games.Player{right_growth_chance: 0, id: 1})
   nil
 
   """
-  @spec try_growing_cell(atom(), integer(), %Player{}) :: [%GridCell{}]
-  def try_growing_cell(position, cell_index, player) do
+  @spec try_growing_cell(atom(), integer(), boolean(), %Player{}) :: map()
+  def try_growing_cell(position, cell_index, moist, player) do
     {:ok, growth_attribute} = Map.fetch(Player.position_to_attribute_map, position)
     {:ok, growth_chance} = Map.fetch(player, growth_attribute)
-    if(Random.random_chance_hit(growth_chance)) do
-      %GridCell{index: cell_index, live: true, empty: false, out_of_grid: false, player_id: player.id}
+    bonus_growth_chance = if(moist) do
+      player.moisture_growth_boost
+    else
+      0.0
+    end
+    if(Random.random_chance_hit(growth_chance + bonus_growth_chance)) do
+      %GridCell{index: cell_index, live: true, empty: false, moist: false, out_of_grid: false, player_id: player.id}
     end
   end
 

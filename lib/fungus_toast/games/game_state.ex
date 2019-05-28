@@ -3,6 +3,7 @@ defmodule FungusToast.Games.GameState do
   use Ecto.Schema
 
   @derive Jason.Encoder
+  @primary_key false
   embedded_schema do
     #TODO remove round_number here. It is redundant with Round.round_number
     field :round_number, :integer

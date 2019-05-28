@@ -1,9 +1,6 @@
 defmodule FungusToast.Games.Grid do
-  alias FungusToast.Games.GridCell
-  alias FungusToast.Games.CellGrower
-  alias FungusToast.Games.GrowthCycle
-  alias FungusToast.Games.MutationPointsEarned
-  alias FungusToast.Random
+  alias FungusToast.Games.{CellGrower, GridCell, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.{Skills, Random}
 
   @spec create_starting_grid(integer(), [integer()]) :: any()
   def create_starting_grid(grid_size, player_ids) do
@@ -55,15 +52,18 @@ defmodule FungusToast.Games.Grid do
   Returns the specified number of growth cycles, as well as the ending game state.
 
   ##Examples
-  iex> Grid.generate_growth_summary(%{}, 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
+  iex> Grid.generate_growth_summary(%{}, [], 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
   %{
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
+        generation_number: 0,
+        mutation_points_earned: [],
+        toast_changes: []
+      },
+      %FungusToast.Games.GrowthCycle{
         generation_number: 1,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -72,10 +72,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 2,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -84,10 +82,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 3,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -96,10 +92,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 4,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -108,10 +102,8 @@ defmodule FungusToast.Games.Grid do
       },
       %FungusToast.Games.GrowthCycle{
         generation_number: 5,
-        id: nil,
         mutation_points_earned: [
           %FungusToast.Games.MutationPointsEarned{
-            id: nil,
             mutation_points: 1,
             player_id: 1
           }
@@ -123,9 +115,46 @@ defmodule FungusToast.Games.Grid do
   }
 
   """
-  def generate_growth_summary(starting_grid, grid_size, player_id_to_player_map, generation_number \\ 1, acc \\ [])
-  @spec generate_growth_summary(map(), integer(), map(), integer(), list()) :: any()
-  def generate_growth_summary(starting_grid_map, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
+  def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, generation_number \\ 1) do
+    active_cell_changes = if(active_cell_changes == nil) do
+      []
+    else
+      active_cell_changes
+    end
+    active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
+      grid_cells = if(active_cell_change.skill_id == Skills.skill_id_hydrophilia()) do
+        Enum.map(active_cell_change.cell_indexes, fn index ->
+          %GridCell{index: index, moist: true}
+        end)
+      else
+        if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
+          raise "Hydrophilia is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
+        else
+          []
+        end
+      end
+
+      acc ++ grid_cells
+    end)
+
+
+    pre_generation_number = generation_number - 1
+
+    active_cell_changes_growth_cycle = %GrowthCycle{
+      generation_number: pre_generation_number,
+      toast_changes: active_toast_changes,
+      mutation_points_earned: []
+    }
+
+    active_toast_changes_map = Enum.into(active_toast_changes, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    #merge the maps together. Active cell changes do not take precedence (to avoid chicanery from the API)
+    updated_grid = Map.merge(starting_grid_map, active_toast_changes_map, fn _index, grid_cell_1, _grid_cell_2 -> grid_cell_1 end)
+
+    generate_growth_summary_after_active_cell_changes(updated_grid, grid_size, player_id_to_player_map, generation_number, [active_cell_changes_growth_cycle])
+  end
+
+  @spec generate_growth_summary_after_active_cell_changes(map(), integer(), map(), integer(), list()) :: any()
+  defp generate_growth_summary_after_active_cell_changes(starting_grid_map, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
     live_cells = Enum.filter(starting_grid_map, fn {_, grid_cell} -> grid_cell.live end)
     |> Enum.into(%{})
 
@@ -142,10 +171,10 @@ defmodule FungusToast.Games.Grid do
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
     Map.merge(starting_grid_map, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)
-    |> generate_growth_summary(grid_size, player_id_to_player_map, generation_number + 1, acc ++ [growth_cycle])
+    |> generate_growth_summary_after_active_cell_changes(grid_size, player_id_to_player_map, generation_number + 1, acc ++ [growth_cycle])
   end
 
-  def generate_growth_summary(ending_grid, _, _, _, acc) do
+  defp generate_growth_summary_after_active_cell_changes(ending_grid, _, _, _, acc) do
     cells_list = Enum.map(ending_grid, fn {_k, grid_cell} -> grid_cell end)
     %{growth_cycles: acc, new_game_state: cells_list}
   end
@@ -182,12 +211,16 @@ defmodule FungusToast.Games.Grid do
             update_in(acc, [grid_cell.player_id, :grown_cells], &(&1 + 1))
           end
         else
-          map = update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
-
-          if(grid_cell.killed_by != nil) do
-            update_in(acc, [grid_cell.killed_by, :fungicidal_kills], &(&1 + 1))
+          if(grid_cell.empty) do
+            acc
           else
-            map
+            map = update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
+
+            if(grid_cell.killed_by != nil) do
+              update_in(acc, [grid_cell.killed_by, :fungicidal_kills], &(&1 + 1))
+            else
+              map
+            end
           end
         end
       end)

@@ -11,6 +11,7 @@
 # and so on) as they will fail if something goes wrong.
 alias FungusToast.{Accounts, Games}
 alias FungusToast.Skills.SkillsSeed
+alias FungusToast.Accounts.UsersSeed
 
 Accounts.create_user(%{user_name: "Fungusmotron"})
 Accounts.create_user(%{user_name: "Fungus Amungus"})
@@ -21,7 +22,7 @@ Accounts.create_user(%{user_name: "Human 4"})
 Accounts.create_user(%{user_name: "Human 5"})
 Accounts.create_user(%{user_name: "Human 6"})
 
-Games.create_game("Fungus Amungus", %{number_of_human_players: 1})
-
 #create all of the Skills records
 SkillsSeed.seed_skills()
+#temporary until we get registration and authentication working
+UsersSeed.seed_users()
