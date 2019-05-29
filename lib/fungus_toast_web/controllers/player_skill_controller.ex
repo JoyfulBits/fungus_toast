@@ -26,7 +26,7 @@ defmodule FungusToastWeb.PlayerSkillController do
     game_id = Map.get(params, "game_id")
     player_id = Map.get(params, "player_id")
     upgrades = Map.get(params, "upgrades")
-    result = Games.spend_human_player_mutation_points(player_id, game_id, upgrades) |> IO.inspect
+    result = Games.spend_human_player_mutation_points(player_id, game_id, upgrades)
 
     case result do
       {:ok, next_round_available: next_round_available, updated_player: updated_player} ->

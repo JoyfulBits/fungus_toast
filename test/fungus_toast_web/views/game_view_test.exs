@@ -2,7 +2,7 @@ defmodule FungusToastWeb.GameViewTest do
   use FungusToastWeb.ConnCase, async: true
   use Plug.Test
   alias FungusToastWeb.GameView
-  alias FungusToast.Games.{Game, Player, GridCell, GameState, Round, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.Games.{Game, Player, GridCell, GameState, Round, GrowthCycle, MutationPointsEarned, PlayerStatsChange}
   alias FungusToast.Game.Status
 
   import FungusToast.Factory
@@ -159,11 +159,24 @@ defmodule FungusToastWeb.GameViewTest do
         regenerated_cell
       ]
 
-      player_1_mutation_points_earned = %MutationPointsEarned{player_id: 1, mutation_points: 20}
-      player_2_mutation_points_earned = %MutationPointsEarned{player_id: 2, mutation_points: 30}
+      player_1_id = live_cell.player_id
+      player_2_id = -2
+
+      player_1_player_stats_change = %PlayerStatsChange{ player_id: player_1_id, grown_cells: 1, perished_cells: 1, regenerated_cells: 1 }
+      player_2_player_stats_change = %PlayerStatsChange{ player_id: player_2_id, grown_cells: 0, perished_cells: 0, regenerated_cells: 0 }
+      player_stats_changes = [player_1_player_stats_change, player_2_player_stats_change]
+
+      player_1_mutation_points_earned = %MutationPointsEarned{player_id: player_1_id, mutation_points: 20}
+      player_2_mutation_points_earned = %MutationPointsEarned{player_id: player_2_id, mutation_points: 30}
       mutation_points_earned = [player_1_mutation_points_earned, player_2_mutation_points_earned]
 
-      growth_cycle_1 = %GrowthCycle{generation_number: 1, toast_changes: growth_cycle_1_toast_changes, mutation_points_earned: mutation_points_earned}
+      growth_cycle_1 = %GrowthCycle
+      {
+        generation_number: 1,
+        toast_changes: growth_cycle_1_toast_changes,
+        mutation_points_earned: mutation_points_earned,
+        player_stats_changes: player_stats_changes
+      }
 
       #just have one additional growth cycle to make sure it works with multiple growth cycles
       growth_cycle_2_toast_changes = [
@@ -193,6 +206,10 @@ defmodule FungusToastWeb.GameViewTest do
 
       actual_newly_regenerated_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == regenerated_cell.index end) |> hd
       assert_cells_match(actual_newly_regenerated_cell, regenerated_cell)
+
+      actual_player_stats_changes = actual_growth_cycle_1.player_stats_changes
+      assert actual_player_stats_changes[player_1_player_stats_change.player_id] == player_1_player_stats_change
+      assert actual_player_stats_changes[player_2_player_stats_change.player_id] == player_2_player_stats_change
 
       actual_mutation_points_earned = actual_growth_cycle_1.mutation_points_earned
       assert actual_mutation_points_earned[player_1_mutation_points_earned.player_id] == player_1_mutation_points_earned.mutation_points

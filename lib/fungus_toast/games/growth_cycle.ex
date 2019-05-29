@@ -13,6 +13,7 @@ defmodule FungusToast.Games.GrowthCycle do
   embedded_schema do
     field :generation_number, :integer, default: 0
     embeds_many :toast_changes, FungusToast.Games.GridCell, on_replace: :delete
+    embeds_many :player_stats_changes, FungusToast.Games.PlayerStatsChange, on_replace: :delete
     embeds_many :mutation_points_earned, FungusToast.Games.MutationPointsEarned, on_replace: :delete
   end
 
