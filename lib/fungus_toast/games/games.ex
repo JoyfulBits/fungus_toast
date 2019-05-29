@@ -106,17 +106,29 @@ defmodule FungusToast.Games do
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
         growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, toast_changes: starting_cells }
-        first_round_values = %{number: 0, growth_cycles: [growth_cycle], starting_game_state: %GameState{cells: [], round_number: 0}}
-        #create the second round with a starting_game_state but no state change yet
-        second_round = %{number: 1, growth_cycles: [], starting_game_state: %GameState{cells: starting_cells, round_number: 1}}
+        first_round_values = %{
+          number: 0,
+          growth_cycles: [growth_cycle],
+          starting_game_state: %GameState{cells: [], round_number: 0}
+        }
 
         {:ok, _} = Repo.transaction(fn ->
+          {updated_game, updated_players} = update_aggregate_stats(game, starting_cells)
+
+          starting_player_stats = Players.make_starting_player_stats(updated_players)
+
+          #create the second round with a starting_game_state but no state change yet
+          second_round = %{
+            number: 1,
+            growth_cycles: [],
+            starting_game_state: %GameState{cells: starting_cells, round_number: 1},
+            starting_player_stats: starting_player_stats
+          }
+
           Rounds.create_round(game.id, first_round_values)
           Rounds.create_round(game.id, second_round)
 
-          update_aggregate_stats(game, starting_cells)
-
-          update_game(game, %{status: Status.status_started})
+          update_game(updated_game, %{status: Status.status_started})
         end)
 
         true
@@ -320,9 +332,15 @@ defmodule FungusToast.Games do
             Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
         end)
 
-        #set up the new round with only the starting game state
+        #set up the new round with only the starting game state and starting player stats
+        starting_player_stats = Players.make_starting_player_stats(updated_players)
         next_round_number = latest_round.number + 1
-        next_round = %{number: next_round_number, growth_cycles: [], starting_game_state: %GameState{round_number: next_round_number, cells: growth_summary.new_game_state}}
+        next_round = %{
+          number: next_round_number, growth_cycles: [],
+          starting_game_state: %GameState{round_number: next_round_number,
+          cells: growth_summary.new_game_state},
+          starting_player_stats: starting_player_stats
+        }
         Rounds.create_round(game.id, next_round)
       end
     end)
@@ -380,6 +398,7 @@ defmodule FungusToast.Games do
   end
 
   def spend_human_player_mutation_points(player_id, game_id, upgrade_attrs) do
+    #TODO check if the game is started and throw a 400 bad request if not
     player = Players.get_player!(player_id)
     spent_points = PlayerSkills.sum_skill_upgrades(upgrade_attrs)
     if(spent_points > player.mutation_points) do

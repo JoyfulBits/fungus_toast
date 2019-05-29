@@ -1,6 +1,6 @@
 defmodule FungusToast.PlayersTest do
     use FungusToast.DataCase
-    alias FungusToast.Games.Player
+    alias FungusToast.Games.{Player}
     alias FungusToast.{Players, Skills, AiStrategies}
 
     doctest FungusToast.Players

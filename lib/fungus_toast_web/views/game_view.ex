@@ -26,6 +26,7 @@ defmodule FungusToastWeb.GameView do
       round_number: if(latest_completed_round == nil) do 0 else latest_completed_round.number + 1 end,
       players: Enum.map(game.players, &player_json(&1)),
       starting_game_state: starting_game_state_json(latest_completed_round),
+      starting_player_stats: starting_player_stats_json(latest_completed_round),
       growth_cycles: growth_cycles_json(latest_completed_round),
       total_live_cells: game_totals.total_live_cells,
       total_dead_cells: game_totals.total_dead_cells,
@@ -88,6 +89,14 @@ defmodule FungusToastWeb.GameView do
         round_number: round.number,
         fungal_cells: Enum.map(round.starting_game_state.cells, fn grid_cell -> make_api_fungal_cell(grid_cell) end)
       }
+    end
+  end
+
+  defp starting_player_stats_json(round) do
+    if(round == nil) do
+      nil
+    else
+        round.starting_player_stats
     end
   end
 

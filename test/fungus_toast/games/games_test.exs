@@ -155,6 +155,11 @@ defmodule FungusToast.GamesTest do
       assert length(latest_completed_round.growth_cycles) == 1
       actual_growth_cycle = hd(latest_completed_round.growth_cycles)
       assert length(actual_growth_cycle.toast_changes) == 2
+
+      assert latest_completed_round.starting_player_stats == []
+
+      latest_round = Rounds.get_latest_round_for_game(game.id)
+      assert length(latest_round.starting_player_stats) == length(game.players)
     end
   end
 
@@ -377,7 +382,7 @@ defmodule FungusToast.GamesTest do
       assert game.status == Status.status_started
     end
 
-    test "that a new round is created with a starting_game_state but no growth_cycles" do
+    test "that a new round is created with a starting_game_state and starting player stats but no growth_cycles" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name,
         %{number_of_human_players: 1, number_of_ai_players: 1, total_live_cells: 1})
@@ -385,6 +390,7 @@ defmodule FungusToast.GamesTest do
       latest_round = Games.trigger_next_round(game)
 
       assert length(latest_round.starting_game_state.cells) > 0
+      assert length(latest_round.starting_player_stats) == 2
       assert latest_round.growth_cycles == []
     end
   end

@@ -12,6 +12,7 @@ defmodule FungusToast.Games.Round do
   schema "rounds" do
     embeds_one :starting_game_state, FungusToast.Games.GameState, on_replace: :delete
     embeds_many :growth_cycles, FungusToast.Games.GrowthCycle, on_replace: :delete
+    embeds_many :starting_player_stats, FungusToast.Games.PlayerStats, on_replace: :delete
     embeds_many :active_cell_changes, FungusToast.Games.ActiveCellChange, on_replace: :delete
     field :number, :integer, default: 1, null: false
 

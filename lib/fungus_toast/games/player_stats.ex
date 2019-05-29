@@ -1,9 +1,11 @@
-defmodule FungusToast.Games.PlayerStatsChange do
+defmodule FungusToast.Games.PlayerStats do
   import Ecto.Changeset
   use Ecto.Schema
 
   @attrs [
     :player_id,
+    :live_cells,
+    :dead_cells,
     :grown_cells,
     :perished_cells,
     :regenerated_cells,
@@ -14,14 +16,16 @@ defmodule FungusToast.Games.PlayerStatsChange do
   @primary_key false
   embedded_schema do
     field :player_id, :integer, null: false
+    field :dead_cells, :integer, default: 0, null: false
+    field :live_cells, :integer, default: 0, null: false
     field :grown_cells, :integer, null: false, default: 0
     field :perished_cells, :integer, null: false, default: 0
     field :regenerated_cells, :integer, null: false, default: 0
     field :fungicidal_kills, :integer, null: false, default: 0
   end
 
-  def changeset(player_stats_change, attrs) do
-    player_stats_change
+  def changeset(player_stats, attrs) do
+    player_stats
     |> change(attrs)
     |> validate_required( @attrs)
   end

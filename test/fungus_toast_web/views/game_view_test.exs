@@ -2,7 +2,7 @@ defmodule FungusToastWeb.GameViewTest do
   use FungusToastWeb.ConnCase, async: true
   use Plug.Test
   alias FungusToastWeb.GameView
-  alias FungusToast.Games.{Game, Player, GridCell, GameState, Round, GrowthCycle, MutationPointsEarned, PlayerStatsChange}
+  alias FungusToast.Games.{Game, Player, GridCell, GameState, Round, GrowthCycle, MutationPointsEarned, PlayerStatsChange, PlayerStats}
   alias FungusToast.Game.Status
 
   import FungusToast.Factory
@@ -122,7 +122,10 @@ defmodule FungusToastWeb.GameViewTest do
       cells = [live_cell, dead_cell, regenerated_cell, moist_cell]
 
       starting_game_state = %GameState{round_number: 1, cells: cells}
-      latest_completed_round = %Round{starting_game_state: starting_game_state}
+
+      starting_player_stats = [%PlayerStats{}]
+      latest_completed_round = %Round{starting_game_state: starting_game_state, starting_player_stats: starting_player_stats}
+
       game_with_round = %{game: game, latest_completed_round: latest_completed_round}
 
       result = GameView.render("game.json", %{game: game_with_round})
@@ -131,6 +134,9 @@ defmodule FungusToastWeb.GameViewTest do
       actual_starting_game_state = result.starting_game_state
       assert actual_starting_game_state.round_number == starting_game_state.round_number
       assert length(actual_starting_game_state.fungal_cells) == length(cells)
+
+      assert result.starting_player_stats != nil
+      assert result.starting_player_stats == starting_player_stats
 
       actual_live_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == live_cell.index end) |> hd
       assert_cells_match(actual_live_cell, live_cell)
@@ -243,7 +249,7 @@ defmodule FungusToastWeb.GameViewTest do
       assert result.round_number == last_completed_round_number + 1
     end
 
-    test "that starting game state is nil if there hasn't been a completed round yet" do
+    test "that starting game state and starting player stats are nil if there hasn't been a completed round yet" do
       game = %Game{players: []}
 
       game_with_round = %{game: game, latest_completed_round: nil}
@@ -251,6 +257,7 @@ defmodule FungusToastWeb.GameViewTest do
       result = GameView.render("game.json", %{game: game_with_round})
 
       assert result.starting_game_state == nil
+      assert result.starting_player_stats == nil
     end
 
     defp get_all_cell_types() do
