@@ -97,6 +97,9 @@ defmodule FungusToastWeb.GameView do
       nil
     else
         round.starting_player_stats
+        |> Enum.map(fn player_stats ->
+          { player_stats.player_id, player_stats} end)
+        |> Enum.into(%{})
     end
   end
 

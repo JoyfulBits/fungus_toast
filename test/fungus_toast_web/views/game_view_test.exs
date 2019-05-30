@@ -123,7 +123,8 @@ defmodule FungusToastWeb.GameViewTest do
 
       starting_game_state = %GameState{round_number: 1, cells: cells}
 
-      starting_player_stats = [%PlayerStats{}]
+      player_id = 1
+      starting_player_stats = [%PlayerStats{player_id: player_id}]
       latest_completed_round = %Round{starting_game_state: starting_game_state, starting_player_stats: starting_player_stats}
 
       game_with_round = %{game: game, latest_completed_round: latest_completed_round}
@@ -136,7 +137,8 @@ defmodule FungusToastWeb.GameViewTest do
       assert length(actual_starting_game_state.fungal_cells) == length(cells)
 
       assert result.starting_player_stats != nil
-      assert result.starting_player_stats == starting_player_stats
+      actual_player_stats = Map.get(result.starting_player_stats, player_id)
+      assert actual_player_stats.player_id == player_id
 
       actual_live_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == live_cell.index end) |> hd
       assert_cells_match(actual_live_cell, live_cell)
