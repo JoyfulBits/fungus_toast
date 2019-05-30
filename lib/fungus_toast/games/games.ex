@@ -137,7 +137,7 @@ defmodule FungusToast.Games do
       end
   end
 
-  def update_aggregate_stats(game = %Game{players: players}, cells) do
+  def update_aggregate_stats(game = %Game{players: players}, cells, update_grown_cells \\ false) do
     stats_map = get_aggregate_stats_map(players, cells)
 
     total_live_and_dead_cells = get_live_and_dead_cell_aggregates(stats_map)
@@ -145,12 +145,12 @@ defmodule FungusToast.Games do
       total_live_cells: total_live_and_dead_cells.total_live_cells,
       total_dead_cells: total_live_and_dead_cells.total_dead_cells})
 
-    updated_players = update_players_aggregate_stats(players, stats_map)
+    updated_players = update_players_aggregate_stats(players, stats_map, update_grown_cells)
 
     {updated_game, updated_players}
   end
 
-  def get_aggregate_stats_map(players, cells) do
+  defp get_aggregate_stats_map(players, cells) do
     stats_map = Enum.reduce(players, %{}, fn player, acc ->
       Map.put(acc, player.id, %{live_cells: 0, dead_cells: 0})
     end)
@@ -181,13 +181,21 @@ defmodule FungusToast.Games do
     %{total_live_cells: total_live_cells, total_dead_cells: total_dead_cells}
   end
 
-  defp update_players_aggregate_stats(players, stats_map) do
+  defp update_players_aggregate_stats(players, stats_map, update_grown_cells) do
     Enum.map(players, fn player ->
       player_stats = Enum.filter(stats_map, fn {player_id, _} -> player_id == player.id end)
+
       player_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats)
-      Players.update_player(player, %{
+      player_updates = %{
         live_cells: player_live_and_dead_cells.total_live_cells,
-        dead_cells: player_live_and_dead_cells.total_dead_cells})
+        dead_cells: player_live_and_dead_cells.total_dead_cells}
+
+      player_updates = if(update_grown_cells) do
+        Map.put(player_updates, :grown_cells, player_live_and_dead_cells.total_live_cells)
+      else
+        player_updates
+      end
+      Players.update_player(player, player_updates)
     end)
   end
 
