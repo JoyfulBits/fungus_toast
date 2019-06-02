@@ -258,7 +258,7 @@ defmodule FungusToast.Games.Grid do
           map = update_in(acc, [grid_cell.player_id, :perished_cells], &(&1 + 1))
 
           if(grid_cell.killed_by != nil) do
-            update_in(acc, [grid_cell.killed_by, :fungicidal_kills], &(&1 + 1))
+            update_in(map, [grid_cell.killed_by, :fungicidal_kills], &(&1 + 1))
           else
             map
           end

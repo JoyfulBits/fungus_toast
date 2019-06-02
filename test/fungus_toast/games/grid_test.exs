@@ -347,4 +347,48 @@ defmodule FungusToast.Games.GridTest do
     end
   end
 
+  #%{player_id: player_id, regenerated_cells: 0, grown_cells: 0, perished_cells: 0, fungicidal_kills: 0}}
+  describe "get_toast_changes_stats/2" do
+    test "that it totals regenerated_cells" do
+      player_id = 1
+      regenerated_cell = %GridCell{player_id: player_id, previous_player_id: 2, live: true, empty: false}
+
+      player_stats_change = hd(Grid.get_toast_changes_stats([player_id], [regenerated_cell]))
+
+      assert player_stats_change.regenerated_cells == 1
+    end
+
+    test "that it totals grown cells" do
+      player_id = 1
+      grown_cell = %GridCell{player_id: player_id, live: true, empty: false}
+
+      player_stats_change = hd(Grid.get_toast_changes_stats([player_id], [grown_cell]))
+
+      assert player_stats_change.grown_cells == 1
+    end
+
+    test "that it totals perished cells" do
+      player_id = 1
+      perished_cell = %GridCell{player_id: player_id, live: false, empty: false}
+
+      player_stats_change = hd(Grid.get_toast_changes_stats([player_id], [perished_cell]))
+
+      assert player_stats_change.perished_cells == 1
+    end
+
+    test "that it totals perished cells and fungicidal kills when a cell is murdered" do
+      player_id = 1
+      murderous_player_id = 2
+      perished_cell = %GridCell{player_id: player_id, live: false, empty: false, killed_by: murderous_player_id}
+
+      player_stats_changes = Grid.get_toast_changes_stats([player_id, murderous_player_id], [perished_cell])
+
+      player_1_stats_change = Enum.find(player_stats_changes, fn player_stats_change -> player_stats_change.player_id == player_id end)
+      assert player_1_stats_change.perished_cells == 1
+
+      murderous_player_stats_change = Enum.find(player_stats_changes, fn player_stats_change -> player_stats_change.player_id == murderous_player_id end)
+      assert murderous_player_stats_change.fungicidal_kills == 1
+    end
+  end
+
 end
