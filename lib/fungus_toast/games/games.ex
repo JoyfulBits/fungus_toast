@@ -113,7 +113,7 @@ defmodule FungusToast.Games do
         }
 
         {:ok, _} = Repo.transaction(fn ->
-          {updated_game, updated_players} = update_aggregate_stats(game, starting_cells)
+          {updated_game, updated_players} = update_aggregate_stats(game, starting_cells, true)
 
           starting_player_stats = Players.make_starting_player_stats(updated_players)
 
@@ -150,7 +150,7 @@ defmodule FungusToast.Games do
     {updated_game, updated_players}
   end
 
-  defp get_aggregate_stats_map(players, cells) do
+  def get_aggregate_stats_map(players, cells) do
     stats_map = Enum.reduce(players, %{}, fn player, acc ->
       Map.put(acc, player.id, %{live_cells: 0, dead_cells: 0})
     end)

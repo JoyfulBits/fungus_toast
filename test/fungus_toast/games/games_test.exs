@@ -440,7 +440,7 @@ defmodule FungusToast.GamesTest do
         %GridCell{player_id: player_2_id, live: false, empty: false}
       ]
 
-      {updated_game, updated_players} = Games.update_aggregate_stats(game, grid_cells, true)
+      {_updated_game, updated_players} = Games.update_aggregate_stats(game, grid_cells, true)
 
       player1 = Enum.find(updated_players, fn player -> player.id == player_1_id end)
       assert player1.grown_cells == 2
