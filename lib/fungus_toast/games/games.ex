@@ -115,6 +115,7 @@ defmodule FungusToast.Games do
         {:ok, _} = Repo.transaction(fn ->
           {updated_game, updated_players} = update_aggregate_stats(game, starting_cells, true)
 
+          #TODO found examples where the number of dead cells on starting player stats is not consistent with what is in the starting game state
           starting_player_stats = Players.make_starting_player_stats(updated_players)
 
           #create the second round with a starting_game_state but no state change yet
@@ -394,10 +395,13 @@ defmodule FungusToast.Games do
       mutation_points = mutation_points_map[player.id]
       #TODO setting to -1 so there is always an update. What's a better way to do this?
       player = %{player | mutation_points: -1}
-      existing_stats = %{mutation_points: mutation_points,
+      existing_stats = %{
+        mutation_points: mutation_points,
         grown_cells: player.grown_cells,
         regenerated_cells: player.regenerated_cells,
-        perished_cells: player.perished_cells}
+        perished_cells: player.perished_cells,
+        fungicidal_kills: player.fungicidal_kills
+      }
       new_stats = player_stats_map[player.id]
       |> Map.merge(existing_stats, fn _, v1, v2 -> v1 + v2 end)
 
