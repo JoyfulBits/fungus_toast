@@ -400,7 +400,8 @@ defmodule FungusToast.Games do
         grown_cells: player.grown_cells,
         regenerated_cells: player.regenerated_cells,
         perished_cells: player.perished_cells,
-        fungicidal_kills: player.fungicidal_kills
+        fungicidal_kills: player.fungicidal_kills,
+        lost_dead_cells: player.lost_dead_cells
       }
       new_stats = player_stats_map[player.id]
       |> Map.merge(existing_stats, fn _, v1, v2 -> v1 + v2 end)
