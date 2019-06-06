@@ -76,6 +76,10 @@ defmodule FungusToast.Games.GridTest do
       assert length(result.new_game_state) == 1
     end
 
+    test "conflicting toast changes will go to the first player that grew into the cell" do
+      #XXXXXX
+    end
+
     defp has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, generation_number, player_id) do
       growth_cycle = Enum.find(growth_cycles, fn growth_cycle -> growth_cycle.generation_number == generation_number end)
 

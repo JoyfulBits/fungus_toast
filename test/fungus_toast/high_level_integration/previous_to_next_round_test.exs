@@ -9,7 +9,7 @@ defmodule FungusToast.Games.PreviousToNextRoundTest do
     test "that the previous round's starting player state plus state changes equals the next round's starting player state" do
       user = User.create!()
       game = Games.create_game(user.user_name,
-        %{number_of_human_players: 1, number_of_ai_players: 5})
+        %{number_of_human_players: 1, number_of_ai_players: 0})
       game = spend_all_skill_points_to_trigger_next_round(game)
       |> spend_all_skill_points_to_trigger_next_round()
       |> spend_all_skill_points_to_trigger_next_round()
@@ -32,15 +32,11 @@ defmodule FungusToast.Games.PreviousToNextRoundTest do
       ending_player_stats = latest_round.starting_player_stats
 
       player_stats_map = Enum.map(game.players, fn player ->
-
         existing_player_stats = Enum.find(starting_player_stats, fn player_stats -> player_stats.player_id == player.id end)
 
-        {
-          player.id,
+        {player.id,
           %{
             player_id: player.id,
-            live_cells: Map.get(existing_player_stats, :live_cells),
-            dead_cells: Map.get(existing_player_stats, :dead_cells),
             grown_cells: 0,
             perished_cells: 0,
             regenerated_cells: 0,
@@ -114,12 +110,17 @@ defmodule FungusToast.Games.PreviousToNextRoundTest do
         assert (starting_player_stat.regenerated_cells + summarized_stats_for_player.regenerated_cells) == ending_stats_for_player.regenerated_cells
         assert (starting_player_stat.fungicidal_kills + summarized_stats_for_player.fungicidal_kills) == ending_stats_for_player.fungicidal_kills
         assert (starting_player_stat.lost_dead_cells + summarized_stats_for_player.lost_dead_cells) == ending_stats_for_player.lost_dead_cells
+        expected_total_live_cells = starting_player_stat.live_cells + summarized_stats_for_player.grown_cells + summarized_stats_for_player.regenerated_cells - summarized_stats_for_player.perished_cells
+        IO.inspect "#{starting_player_stat.live_cells} + #{summarized_stats_for_player.grown_cells} + #{summarized_stats_for_player.regenerated_cells} - #{summarized_stats_for_player.perished_cells} = #{expected_total_live_cells}"
+        IO.inspect "player id: #{starting_player_stat.player_id}"
+        assert expected_total_live_cells == ending_stats_for_player.live_cells
         #assert (starting_player_stat.live_cells + summarized_stats_for_player.grown_cells + summarized_stats_for_player.grown_cells) == ending_stats_for_player.fungicidal_kills
         #also, starting player stats plus toast changes should be the starting player stats for the next round
         assert (starting_player_stat.grown_cells + toast_changes_for_player.grown_cells) == ending_stats_for_player.grown_cells
         assert (starting_player_stat.perished_cells + toast_changes_for_player.perished_cells) == ending_stats_for_player.perished_cells
         assert (starting_player_stat.regenerated_cells + toast_changes_for_player.regenerated_cells) == ending_stats_for_player.regenerated_cells
         assert (starting_player_stat.fungicidal_kills + toast_changes_for_player.fungicidal_kills) == ending_stats_for_player.fungicidal_kills
+        assert (starting_player_stat.lost_dead_cells + toast_changes_for_player.lost_dead_cells) == ending_stats_for_player.lost_dead_cells
       end)
     end
 

@@ -113,7 +113,7 @@ defmodule FungusToast.Games do
         }
 
         {:ok, _} = Repo.transaction(fn ->
-          {updated_game, updated_players} = update_aggregate_stats(game, starting_cells, true)
+          {updated_game, updated_players} = set_starting_game_stats(game, starting_cells)
 
           #TODO found examples where the number of dead cells on starting player stats is not consistent with what is in the starting game state
           starting_player_stats = Players.make_starting_player_stats(updated_players)
@@ -138,20 +138,94 @@ defmodule FungusToast.Games do
       end
   end
 
-  def update_aggregate_stats(game = %Game{players: players}, cells, update_grown_cells \\ false) do
-    stats_map = get_aggregate_stats_map(players, cells)
+  def update_players_for_next_round(game = %Game{players: players}, growth_summary) do
+    players_live_and_dead_cells_count_map = get_live_and_dead_cells_for_player(players, growth_summary.new_game_state)
 
-    total_live_and_dead_cells = get_live_and_dead_cell_aggregates(stats_map)
+    player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
+    |> Enum.into(%{})
+
+    mutation_points_map = Enum.reduce(growth_summary.growth_cycles, player_to_mutation_points_map, fn growth_cycle, acc ->
+      mutation_points_earned_map = Enum.map(growth_cycle.mutation_points_earned, fn mutuation_points_earned ->
+        {mutuation_points_earned.player_id, mutuation_points_earned.mutation_points}
+      end)
+      |> Enum.into(%{})
+
+      Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
+    end)
+
+    player_ids = Enum.map(players, fn player -> player.id end)
+    #get all of the delta attributes like grown and perished cells (etc.)
+    player_growth_cycle_stats_map = Grid.get_player_growth_cycles_stats(player_ids, growth_summary.growth_cycles)
+
+    #merge the stats that are a function of the current toast (e.g. live cells) vs. the stats that are more transient (e.g. perished cells)
+    new_players_stats_map = Enum.map(player_growth_cycle_stats_map, fn {player_id, map} ->
+      player_live_and_dead_cells_map = Map.get(players_live_and_dead_cells_count_map, player_id)
+      {player_id, Map.merge(map, player_live_and_dead_cells_map)}
+    end)
+    |> Enum.into(%{})
+
+    updated_players = Enum.map(players, fn player ->
+      mutation_points = mutation_points_map[player.id]
+      #TODO setting to -1 so there is always an update (since we may have already updated the player struct). May want to clean this up..
+      player = %{player | mutation_points: -1}
+      existing_stats = %{
+        mutation_points: mutation_points,
+        grown_cells: player.grown_cells,
+        regenerated_cells: player.regenerated_cells,
+        perished_cells: player.perished_cells,
+        fungicidal_kills: player.fungicidal_kills,
+        lost_dead_cells: player.lost_dead_cells
+      }
+      new_stats = new_players_stats_map[player.id]
+      |> Map.merge(existing_stats, fn _, v1, v2 -> v1 + v2 end)
+
+      Players.update_player(player, new_stats)
+    end)
+
+    #since we've already aggregated player stats, just aggregate those without the player id to get totals for the game
+    total_live_and_dead_cells = get_live_and_dead_cell_aggregates(players_live_and_dead_cells_count_map)
     updated_game = update_game(game, %{
       total_live_cells: total_live_and_dead_cells.total_live_cells,
       total_dead_cells: total_live_and_dead_cells.total_dead_cells})
 
-    updated_players = update_players_aggregate_stats(players, stats_map, update_grown_cells)
+    {updated_game, updated_players}
+  end
+
+
+
+
+
+
+  def set_starting_game_stats(game = %Game{players: players}, cells) do
+    player_stats_map = get_live_and_dead_cells_for_player(players, cells)
+    updated_players = update_players_aggregate_stats(players, player_stats_map)
+
+    #since we've already aggregated player stats, just aggregate those without the player id to get totals for the game
+    total_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats_map)
+    updated_game = update_game(game, %{
+      total_live_cells: total_live_and_dead_cells.total_live_cells,
+      total_dead_cells: total_live_and_dead_cells.total_dead_cells})
 
     {updated_game, updated_players}
   end
 
-  def get_aggregate_stats_map(players, cells) do
+  defp update_players_aggregate_stats(players, stats_map) do
+    Enum.map(players, fn player ->
+      player_stats = Enum.filter(stats_map, fn {player_id, _} -> player_id == player.id end)
+
+      player_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats)
+      player_updates = %{
+        live_cells: player_live_and_dead_cells.total_live_cells,
+        dead_cells: player_live_and_dead_cells.total_dead_cells
+      }
+
+      player_updates = Map.put(player_updates, :grown_cells, player_live_and_dead_cells.total_live_cells)
+
+      Players.update_player(player, player_updates)
+    end)
+  end
+
+  def get_live_and_dead_cells_for_player(players, cells) do
     stats_map = Enum.reduce(players, %{}, fn player, acc ->
       Map.put(acc, player.id, %{live_cells: 0, dead_cells: 0})
     end)
@@ -180,24 +254,6 @@ defmodule FungusToast.Games do
     end)
 
     %{total_live_cells: total_live_cells, total_dead_cells: total_dead_cells}
-  end
-
-  defp update_players_aggregate_stats(players, stats_map, update_grown_cells) do
-    Enum.map(players, fn player ->
-      player_stats = Enum.filter(stats_map, fn {player_id, _} -> player_id == player.id end)
-
-      player_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats)
-      player_updates = %{
-        live_cells: player_live_and_dead_cells.total_live_cells,
-        dead_cells: player_live_and_dead_cells.total_dead_cells}
-
-      player_updates = if(update_grown_cells) do
-        Map.put(player_updates, :grown_cells, player_live_and_dead_cells.total_live_cells)
-      else
-        player_updates
-      end
-      Players.update_player(player, player_updates)
-    end)
   end
 
   def get_starting_mutation_points(players) do
@@ -326,9 +382,7 @@ defmodule FungusToast.Games do
       latest_round = Rounds.get_latest_round_for_game(game)
         |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-      updated_players = update_players_for_growth_cycles(players, growth_summary.growth_cycles)
-
-      {updated_game, _} = update_aggregate_stats(game, growth_summary.new_game_state)
+      {updated_game, updated_players} = update_players_for_next_round(game, growth_summary)
 
       updated_game = check_for_game_end(updated_game)
 
@@ -373,41 +427,6 @@ defmodule FungusToast.Games do
         game
       end
     end
-  end
-
-  defp update_players_for_growth_cycles(players, growth_cycles) do
-    player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
-    |> Enum.into(%{})
-
-    mutation_points_map = Enum.reduce(growth_cycles, player_to_mutation_points_map, fn growth_cycle, acc ->
-      mutation_points_earned_map = Enum.map(growth_cycle.mutation_points_earned, fn mutuation_points_earned ->
-        {mutuation_points_earned.player_id, mutuation_points_earned.mutation_points}
-      end)
-      |> Enum.into(%{})
-
-      Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
-    end)
-
-    player_ids = Enum.map(players, fn player -> player.id end)
-    player_stats_map = Grid.get_player_growth_cycles_stats(player_ids, growth_cycles)
-
-    Enum.map(players, fn player ->
-      mutation_points = mutation_points_map[player.id]
-      #TODO setting to -1 so there is always an update. What's a better way to do this?
-      player = %{player | mutation_points: -1}
-      existing_stats = %{
-        mutation_points: mutation_points,
-        grown_cells: player.grown_cells,
-        regenerated_cells: player.regenerated_cells,
-        perished_cells: player.perished_cells,
-        fungicidal_kills: player.fungicidal_kills,
-        lost_dead_cells: player.lost_dead_cells
-      }
-      new_stats = player_stats_map[player.id]
-      |> Map.merge(existing_stats, fn _, v1, v2 -> v1 + v2 end)
-
-      Players.update_player(player, new_stats)
-    end)
   end
 
   def spend_human_player_mutation_points(player_id, game_id, upgrade_attrs) do

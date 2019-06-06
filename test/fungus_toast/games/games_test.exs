@@ -395,7 +395,7 @@ defmodule FungusToast.GamesTest do
     end
   end
 
-  describe "update_aggregate_stats/3" do
+  describe "set_starting_game_stats/2" do
     test "that it updates the total live and dead cells for the game and players" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
@@ -411,7 +411,7 @@ defmodule FungusToast.GamesTest do
         %GridCell{player_id: player_2_id, live: false, empty: false}
       ]
 
-      {updated_game, updated_players} = Games.update_aggregate_stats(game, grid_cells)
+      {updated_game, updated_players} = Games.set_starting_game_stats(game, grid_cells)
 
       assert updated_game.total_live_cells == 3
       assert updated_game.total_dead_cells == 2
@@ -419,34 +419,12 @@ defmodule FungusToast.GamesTest do
       player1 = Enum.find(updated_players, fn player -> player.id == player_1_id end)
       assert player1.live_cells == 3
       assert player1.dead_cells == 0
+      assert player1.grown_cells == 3
 
       player2 = Enum.find(updated_players, fn player -> player.id == player_2_id end)
       assert player2.live_cells == 0
       assert player2.dead_cells == 2
-    end
-
-    test "that it updates the grown_cells if specified" do
-      user = user_fixture(%{user_name: "user name"})
-      game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
-
-      player_1_id = Enum.at(game.players, 0).id
-      player_2_id = Enum.at(game.players, 1).id
-
-      grid_cells = [
-        %GridCell{player_id: player_1_id, live: true, empty: false},
-        %GridCell{player_id: player_1_id, live: true, empty: false},
-        %GridCell{player_id: player_1_id, live: false, empty: false},
-        %GridCell{player_id: player_2_id, live: true, empty: false},
-        %GridCell{player_id: player_2_id, live: false, empty: false}
-      ]
-
-      {_updated_game, updated_players} = Games.update_aggregate_stats(game, grid_cells, true)
-
-      player1 = Enum.find(updated_players, fn player -> player.id == player_1_id end)
-      assert player1.grown_cells == 2
-
-      player2 = Enum.find(updated_players, fn player -> player.id == player_2_id end)
-      assert player2.grown_cells == 1
+      assert player2.grown_cells == 0
     end
   end
 
