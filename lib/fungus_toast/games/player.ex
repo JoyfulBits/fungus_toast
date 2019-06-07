@@ -43,6 +43,7 @@ defmodule FungusToast.Games.Player do
     :grown_cells,
     :fungicidal_kills,
     :lost_dead_cells,
+    :stolen_dead_cells,
     :apoptosis_chance,
     :starved_cell_death_chance,
     :mutation_chance,
@@ -72,6 +73,7 @@ defmodule FungusToast.Games.Player do
     :grown_cells,
     :fungicidal_kills,
     :lost_dead_cells,
+    :stolen_dead_cells,
     :apoptosis_chance,
     :starved_cell_death_chance,
     :mutation_chance,
@@ -107,6 +109,7 @@ defmodule FungusToast.Games.Player do
     field :perished_cells, :integer, default: 0, null: false
     field :fungicidal_kills, :integer, default: 0, null: false
     field :lost_dead_cells, :integer, default: 0, null: false
+    field :stolen_dead_cells, :integer, default: 0, null: false
 
     field :spent_mutation_points, :integer, default: 0, null: false
 

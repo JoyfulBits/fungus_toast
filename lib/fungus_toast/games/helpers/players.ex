@@ -185,13 +185,14 @@ defmodule FungusToast.Players do
 
   ## Examples
 
-  iex> Players.make_starting_player_stats([%Player{id: 10, live_cells: 1, dead_cells: 2, grown_cells: 3, perished_cells: 4, regenerated_cells: 5, fungicidal_kills: 6, lost_dead_cells: 7}])
+  iex> Players.make_starting_player_stats([%Player{id: 10, live_cells: 1, dead_cells: 2, grown_cells: 3, perished_cells: 4, regenerated_cells: 5, fungicidal_kills: 6, lost_dead_cells: 7, stolen_dead_cells: 8}])
   [%FungusToast.Games.PlayerStats{
     dead_cells: 2,
     fungicidal_kills: 6,
     grown_cells: 3,
     live_cells: 1,
     lost_dead_cells: 7,
+    stolen_dead_cells: 8,
     perished_cells: 4,
     player_id: 10,
     regenerated_cells: 5
@@ -207,7 +208,8 @@ defmodule FungusToast.Players do
         perished_cells: player.perished_cells,
         regenerated_cells: player.regenerated_cells,
         fungicidal_kills: player.fungicidal_kills,
-        lost_dead_cells: player.lost_dead_cells
+        lost_dead_cells: player.lost_dead_cells,
+        stolen_dead_cells: player.stolen_dead_cells
       }
     end)
   end

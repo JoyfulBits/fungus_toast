@@ -265,6 +265,7 @@ defmodule FungusToast.Games.GridTest do
       assert player_map[:perished_cells] == 0
       assert player_map[:fungicidal_kills] == 0
       assert player_map[:lost_dead_cells] == 0
+      assert player_map[:stolen_dead_cells] == 0
 
       assert Map.has_key?(result, player_id_2)
       player_map = result[player_id_2]
@@ -273,6 +274,7 @@ defmodule FungusToast.Games.GridTest do
       assert player_map[:perished_cells] == 0
       assert player_map[:fungicidal_kills] == 0
       assert player_map[:lost_dead_cells] == 0
+      assert player_map[:stolen_dead_cells] == 0
     end
 
     test "that it totals the cells that died" do
@@ -340,13 +342,15 @@ defmodule FungusToast.Games.GridTest do
       assert player_map[:regenerated_cells] == 3
       #since the player regenerated their own dead cells, they didn't lose them to someone else
       assert player_map[:lost_dead_cells] == 0
+      assert player_map[:stolen_dead_cells] == 0
     end
 
-    test "that it totals the cells that were lost dead cells" do
+    test "that it totals the cells that were lost and stolen when a regeneration happens" do
       player_id_1 = 1
       player_that_lost_dead_cell = 2
+      regenerated_cell = %GridCell{live: true, previous_player_id: player_id_1, player_id: player_id_1}
       regenerated_cell_with_lost_dead_cell = %GridCell{live: true, previous_player_id: player_that_lost_dead_cell, player_id: player_id_1}
-      growth_cycle_1 = %GrowthCycle{toast_changes: [regenerated_cell_with_lost_dead_cell]}
+      growth_cycle_1 = %GrowthCycle{toast_changes: [regenerated_cell]}
       growth_cycle_2 = %GrowthCycle{toast_changes: [regenerated_cell_with_lost_dead_cell]}
       growth_cycles = [growth_cycle_1, growth_cycle_2]
 
@@ -356,13 +360,15 @@ defmodule FungusToast.Games.GridTest do
 
       assert Map.has_key?(result, player_id_1)
       player_map = result[player_id_1]
-      assert player_map[:regenerated_cells] == 2
+      assert player_map[:regenerated_cells] == 1
       assert player_map[:lost_dead_cells] == 0
+      assert player_map[:stolen_dead_cells] == 1
 
       assert Map.has_key?(result, player_that_lost_dead_cell)
       player_map = result[player_that_lost_dead_cell]
       assert player_map[:regenerated_cells] == 0
-      assert player_map[:lost_dead_cells] == 2
+      assert player_map[:lost_dead_cells] == 1
+      assert player_map[:stolen_dead_cells] == 0
     end
 
     test "that it ignores cells that were empty" do
@@ -379,29 +385,34 @@ defmodule FungusToast.Games.GridTest do
   end
 
   describe "get_toast_changes_stats/2" do
-    test "that it totals regenerated cells and lost dead cells" do
-      player_id = 1
-      previous_player_id = 2
-      regenerated_cell = %GridCell{player_id: player_id, previous_player_id: previous_player_id, live: true, empty: false}
-
-      player_stats_changes = Grid.get_toast_changes_stats([player_id, previous_player_id], [regenerated_cell])
-
-      player_1_stats_change = Enum.find(player_stats_changes, fn player_stats_change -> player_stats_change.player_id == player_id end)
-      assert player_1_stats_change.regenerated_cells == 1
-
-      player_2_stats_change = Enum.find(player_stats_changes, fn player_stats_change -> player_stats_change.player_id == previous_player_id end)
-      assert player_2_stats_change.lost_dead_cells == 1
-    end
-
-    test "that it totals regenerated cells and but doesn't award a lost dead cell if the player's own cell was regenerated" do
+    test "that regenerated cells are when the player brings back their own cell" do
       player_id = 1
       regenerated_cell = %GridCell{player_id: player_id, previous_player_id: player_id, live: true, empty: false}
 
       player_stats_changes = Grid.get_toast_changes_stats([player_id], [regenerated_cell])
 
-      player_1_stats_change = hd(player_stats_changes)
+      player_1_stats_change = Enum.find(player_stats_changes, fn player_stats_change -> player_stats_change.player_id == player_id end)
       assert player_1_stats_change.regenerated_cells == 1
+      assert player_1_stats_change.stolen_dead_cells == 0
       assert player_1_stats_change.lost_dead_cells == 0
+    end
+
+    test "that lost and stolen dead cells are when the player regenerates someone else's cell" do
+      player_id = 1
+      previous_player_id = 2
+      stolen_cell = %GridCell{player_id: player_id, previous_player_id: previous_player_id, live: true, empty: false}
+
+      player_stats_changes = Grid.get_toast_changes_stats([player_id, previous_player_id], [stolen_cell])
+
+      player_1_stats_change = Enum.find(player_stats_changes, fn player_stats_change -> player_stats_change.player_id == player_id end)
+      assert player_1_stats_change.regenerated_cells == 0
+      assert player_1_stats_change.stolen_dead_cells == 1
+      assert player_1_stats_change.lost_dead_cells == 0
+
+      player_2_stats_change = Enum.find(player_stats_changes, fn player_stats_change -> player_stats_change.player_id == previous_player_id end)
+      assert player_2_stats_change.regenerated_cells == 0
+      assert player_2_stats_change.stolen_dead_cells == 0
+      assert player_2_stats_change.lost_dead_cells == 1
     end
 
     test "that it totals grown cells" do

@@ -32,13 +32,14 @@ defmodule FungusToastWeb.GameViewTest do
         grown_cells: 15,
         fungicidal_kills: 16,
         lost_dead_cells: 17,
-        apoptosis_chance: 18,
-        starved_cell_death_chance: 19,
-        mutation_chance: 20,
-        regeneration_chance: 21,
-        mycotoxin_fungicide_chance: 22,
-        user_id: 23,
-        spent_mutation_points: 24
+        stolen_dead_cells: 18,
+        apoptosis_chance: 19,
+        starved_cell_death_chance: 20,
+        mutation_chance: 21,
+        regeneration_chance: 22,
+        mycotoxin_fungicide_chance: 23,
+        user_id: 24,
+        spent_mutation_points: 25
       }
 
       player_2 = %Player{
@@ -79,6 +80,7 @@ defmodule FungusToastWeb.GameViewTest do
       assert actual_player_1_info.grown_cells == player_1.grown_cells
       assert actual_player_1_info.fungicidal_kills == player_1.fungicidal_kills
       assert actual_player_1_info.lost_dead_cells == player_1.lost_dead_cells
+      assert actual_player_1_info.stolen_dead_cells == player_1.stolen_dead_cells
       assert actual_player_1_info.spent_mutation_points == player_1.spent_mutation_points
       assert actual_player_1_info.apoptosis_chance == player_1.apoptosis_chance
       assert actual_player_1_info.starved_cell_death_chance == player_1.starved_cell_death_chance
@@ -170,7 +172,10 @@ defmodule FungusToastWeb.GameViewTest do
     test "that growth cycles are returned" do
       game = %Game{players: []}
 
-      cells_map = get_all_cell_types()
+      player_1_id = @default_player_id
+      player_2_id = 2
+
+      cells_map = get_all_cell_types(player_1_id, 2, player_1_id)
       live_cell = cells_map.live_cell
       dead_cell = cells_map.dead_cell
       regenerated_cell = cells_map.regenerated_cell
@@ -185,11 +190,8 @@ defmodule FungusToastWeb.GameViewTest do
         lost_dead_cell
       ]
 
-      player_1_id = live_cell.player_id
-      player_2_id = -2
-
       player_1_player_stats_change = %PlayerStatsChange{ player_id: player_1_id, grown_cells: 1, perished_cells: 1, regenerated_cells: 1, lost_dead_cells: 1 }
-      player_2_player_stats_change = %PlayerStatsChange{ player_id: player_2_id, grown_cells: 0, perished_cells: 0, regenerated_cells: 0, lost_dead_cells: 0 }
+      player_2_player_stats_change = %PlayerStatsChange{ player_id: player_2_id }
       player_stats_changes = [player_1_player_stats_change, player_2_player_stats_change]
 
       player_1_mutation_points_earned = %MutationPointsEarned{player_id: player_1_id, mutation_points: 20}

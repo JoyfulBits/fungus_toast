@@ -10,7 +10,8 @@ defmodule FungusToast.Games.PlayerStats do
     :perished_cells,
     :regenerated_cells,
     :fungicidal_kills,
-    :lost_dead_cells
+    :lost_dead_cells,
+    :stolen_dead_cells
   ]
 
   @derive Jason.Encoder
@@ -24,6 +25,7 @@ defmodule FungusToast.Games.PlayerStats do
     field :regenerated_cells, :integer, null: false, default: 0
     field :fungicidal_kills, :integer, null: false, default: 0
     field :lost_dead_cells, :integer, null: false, default: 0
+    field :stolen_dead_cells, :integer, null: false, default: 0
   end
 
   def changeset(player_stats, attrs) do
