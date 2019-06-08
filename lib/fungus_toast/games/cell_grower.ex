@@ -118,14 +118,15 @@ defmodule FungusToast.Games.CellGrower do
   ## Examples
 
   #it revives the dead cell and sets the new player_id while shifting the old one to the previous_player_id
-  iex> CellGrower.check_for_regeneration(%GridCell{live: false, empty: false, player_id: 1, index: 0}, %FungusToast.Games.Player{regeneration_chance: 100, id: 2})
+  iex> CellGrower.check_for_regeneration(%GridCell{live: false, empty: false, player_id: 1, index: 0, killed_by: 2}, %FungusToast.Games.Player{regeneration_chance: 100, id: 2})
   %FungusToast.Games.GridCell{
     empty: false,
     index: 0,
     live: true,
     out_of_grid: false,
     player_id: 2,
-    previous_player_id: 1
+    previous_player_id: 1,
+    killed_by: nil
   }
 
   #it returns nil if the regeneration chance didn't hit
@@ -135,7 +136,7 @@ defmodule FungusToast.Games.CellGrower do
   """
   def check_for_regeneration(grid_cell, player) do
     if(Random.random_chance_hit(player.regeneration_chance)) do
-      %{grid_cell | live: true, previous_player_id: grid_cell.player_id, player_id: player.id}
+      %{grid_cell | live: true, previous_player_id: grid_cell.player_id, player_id: player.id, killed_by: nil}
     end
   end
 

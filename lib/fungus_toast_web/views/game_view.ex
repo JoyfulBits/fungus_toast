@@ -71,6 +71,8 @@ defmodule FungusToastWeb.GameView do
       grown_cells: player.grown_cells,
       spent_mutation_points: player.spent_mutation_points,
       fungicidal_kills: player.fungicidal_kills,
+      lost_dead_cells: player.lost_dead_cells,
+      stolen_dead_cells: player.stolen_dead_cells,
       apoptosis_chance: player.apoptosis_chance,
       starved_cell_death_chance: player.starved_cell_death_chance,
       mutation_chance: player.mutation_chance,

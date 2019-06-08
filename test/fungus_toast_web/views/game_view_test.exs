@@ -7,6 +7,8 @@ defmodule FungusToastWeb.GameViewTest do
 
   import FungusToast.Factory
 
+  @default_player_id 1
+
   describe "game.json" do
     test "that the game and player information gets added to the model" do
       game = insert(:game)
@@ -29,13 +31,15 @@ defmodule FungusToastWeb.GameViewTest do
         perished_cells: 14,
         grown_cells: 15,
         fungicidal_kills: 16,
-        apoptosis_chance: 16,
-        starved_cell_death_chance: 17,
-        mutation_chance: 18,
-        regeneration_chance: 19,
-        mycotoxin_fungicide_chance: 20,
-        user_id: 21,
-        spent_mutation_points: 22
+        lost_dead_cells: 17,
+        stolen_dead_cells: 18,
+        apoptosis_chance: 19,
+        starved_cell_death_chance: 20,
+        mutation_chance: 21,
+        regeneration_chance: 22,
+        mycotoxin_fungicide_chance: 23,
+        user_id: 24,
+        spent_mutation_points: 25
       }
 
       player_2 = %Player{
@@ -75,6 +79,8 @@ defmodule FungusToastWeb.GameViewTest do
       assert actual_player_1_info.perished_cells == player_1.perished_cells
       assert actual_player_1_info.grown_cells == player_1.grown_cells
       assert actual_player_1_info.fungicidal_kills == player_1.fungicidal_kills
+      assert actual_player_1_info.lost_dead_cells == player_1.lost_dead_cells
+      assert actual_player_1_info.stolen_dead_cells == player_1.stolen_dead_cells
       assert actual_player_1_info.spent_mutation_points == player_1.spent_mutation_points
       assert actual_player_1_info.apoptosis_chance == player_1.apoptosis_chance
       assert actual_player_1_info.starved_cell_death_chance == player_1.starved_cell_death_chance
@@ -114,16 +120,18 @@ defmodule FungusToastWeb.GameViewTest do
     test "that the starting game state gets added" do
       game = %Game{players: []}
 
+      player_id = @default_player_id
       cells_map = get_all_cell_types()
       live_cell = cells_map.live_cell
       dead_cell = cells_map.dead_cell
       regenerated_cell = cells_map.regenerated_cell
       moist_cell = cells_map.moist_cell
-      cells = [live_cell, dead_cell, regenerated_cell, moist_cell]
+      murdered_cell = cells_map.murdered_cell
+      lost_dead_cell = cells_map.lost_dead_cell
+      cells = [live_cell, dead_cell, regenerated_cell, moist_cell, murdered_cell, lost_dead_cell]
 
       starting_game_state = %GameState{round_number: 1, cells: cells}
 
-      player_id = 1
       starting_player_stats = [%PlayerStats{player_id: player_id}]
       latest_completed_round = %Round{starting_game_state: starting_game_state, starting_player_stats: starting_player_stats}
 
@@ -146,32 +154,44 @@ defmodule FungusToastWeb.GameViewTest do
       actual_dead_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == dead_cell.index end) |> hd
       assert_cells_match(actual_dead_cell, dead_cell)
 
+      #TODO Looking at this code I'm not sure why I bothered putting in each cell type and looking for them specifically. Seems irrelevant to the test? Need to check with
+      #someone who's brain isn't fried.
       actual_regenerated_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == regenerated_cell.index end) |> hd
       assert_cells_match(actual_regenerated_cell, regenerated_cell)
 
       actual_moist_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == moist_cell.index end) |> hd
       assert_cells_match(actual_moist_cell, moist_cell)
+
+      actual_murdered_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == murdered_cell.index end) |> hd
+      assert_cells_match(actual_murdered_cell, murdered_cell)
+
+      actual_lost_dead_cell = Enum.filter(actual_starting_game_state.fungal_cells, fn cell -> cell.index == lost_dead_cell.index end) |> hd
+      assert_cells_match(actual_lost_dead_cell, lost_dead_cell)
     end
 
     test "that growth cycles are returned" do
       game = %Game{players: []}
 
-      cells_map = get_all_cell_types()
+      player_1_id = @default_player_id
+      player_2_id = 2
+
+      cells_map = get_all_cell_types(player_1_id, 2, player_1_id)
       live_cell = cells_map.live_cell
       dead_cell = cells_map.dead_cell
       regenerated_cell = cells_map.regenerated_cell
+      murdered_cell = cells_map.murdered_cell
+      lost_dead_cell = cells_map.lost_dead_cell
 
       growth_cycle_1_toast_changes = [
         live_cell,
         dead_cell,
-        regenerated_cell
+        regenerated_cell,
+        murdered_cell,
+        lost_dead_cell
       ]
 
-      player_1_id = live_cell.player_id
-      player_2_id = -2
-
-      player_1_player_stats_change = %PlayerStatsChange{ player_id: player_1_id, grown_cells: 1, perished_cells: 1, regenerated_cells: 1 }
-      player_2_player_stats_change = %PlayerStatsChange{ player_id: player_2_id, grown_cells: 0, perished_cells: 0, regenerated_cells: 0 }
+      player_1_player_stats_change = %PlayerStatsChange{ player_id: player_1_id, grown_cells: 1, perished_cells: 1, regenerated_cells: 1, lost_dead_cells: 1 }
+      player_2_player_stats_change = %PlayerStatsChange{ player_id: player_2_id }
       player_stats_changes = [player_1_player_stats_change, player_2_player_stats_change]
 
       player_1_mutation_points_earned = %MutationPointsEarned{player_id: player_1_id, mutation_points: 20}
@@ -209,11 +229,19 @@ defmodule FungusToastWeb.GameViewTest do
       actual_newly_grown_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == live_cell.index end) |> hd
       assert_cells_match(actual_newly_grown_cell, live_cell)
 
+      #TODO Looking at this code I'm not sure why I bothered putting in each cell type and looking for them specifically. Seems irrelevant to the test? Need to check with
+      #someone who's brain isn't fried.
       actual_newly_dead_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == dead_cell.index end) |> hd
       assert_cells_match(actual_newly_dead_cell, dead_cell)
 
       actual_newly_regenerated_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == regenerated_cell.index end) |> hd
       assert_cells_match(actual_newly_regenerated_cell, regenerated_cell)
+
+      actual_murdered_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == murdered_cell.index end) |> hd
+      assert_cells_match(actual_murdered_cell, murdered_cell)
+
+      actual_lost_dead_cell = Enum.filter(actual_growth_cycle_1_toast_changes, fn cell -> cell.index == lost_dead_cell.index end) |> hd
+      assert_cells_match(actual_lost_dead_cell, lost_dead_cell)
 
       actual_player_stats_changes = actual_growth_cycle_1.player_stats_changes
       assert actual_player_stats_changes[player_1_player_stats_change.player_id] == player_1_player_stats_change
@@ -262,24 +290,24 @@ defmodule FungusToastWeb.GameViewTest do
       assert result.starting_player_stats == nil
     end
 
-    defp get_all_cell_types() do
+    defp get_all_cell_types(player_id \\ @default_player_id, previous_player_id \\ @default_player_id, killed_by_player_id \\ @default_player_id) do
       live_cell =  %GridCell{
         index: 1,
-        player_id: 10,
+        player_id: player_id,
         live: true
       }
 
       dead_cell =  %GridCell{
         index: 2,
-        player_id: 10,
+        player_id: player_id,
         live: false
       }
 
       regenerated_cell =  %GridCell{
         index: 3,
-        player_id: 10,
+        player_id: player_id,
         live: true,
-        previous_player_id: 11
+        previous_player_id: previous_player_id
       }
 
       moist_cell =  %GridCell{
@@ -289,7 +317,21 @@ defmodule FungusToastWeb.GameViewTest do
         moist: true
       }
 
-      %{live_cell: live_cell, dead_cell: dead_cell, regenerated_cell: regenerated_cell, moist_cell: moist_cell}
+      murdered_cell =  %GridCell{
+        index: 5,
+        player_id: player_id,
+        live: false,
+        killed_by: killed_by_player_id
+      }
+
+      lost_dead_cell =  %GridCell{
+        index: 6,
+        player_id: player_id,
+        live: true,
+        previous_player_id: previous_player_id
+      }
+
+      %{live_cell: live_cell, dead_cell: dead_cell, regenerated_cell: regenerated_cell, moist_cell: moist_cell, murdered_cell: murdered_cell, lost_dead_cell: lost_dead_cell}
     end
 
     defp assert_cells_match(actual_cell, expected_cell) do
