@@ -12,13 +12,13 @@ defmodule FungusToast.Games.CellGrower do
     Iterates over surrounding cells calculating new growths, regenerations, and deaths. Returns GridCells that changed
   """
   @spec calculate_cell_growth(map(), integer(), map(), %Player{}) :: map()
-  def calculate_cell_growth(toast_grid_map, grid_size, surrounding_cells, player) do
+  def calculate_cell_growth(toast_grid_map, number_of_grid_cells, surrounding_cells, player) do
     grown_cells = Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player) end)
       |> Enum.filter(fn x -> x != nil end)
       |> Enum.into(%{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
 
       if(grown_cells == %{}) do
-        new_spores_cell = try_spore_growth(toast_grid_map, grid_size, player)
+        new_spores_cell = try_spore_growth(toast_grid_map, number_of_grid_cells, player)
         if(new_spores_cell == nil) do
           %{}
         else
@@ -56,9 +56,9 @@ defmodule FungusToast.Games.CellGrower do
   iex> CellGrower.try_spore_growth(%{0 => %FungusToast.Games.GridCell{ index: 0 }}, 1, %FungusToast.Games.Player{spores_chance: 100})
   nil
   """
-  def try_spore_growth(toast_grid_map, grid_size, player) do
+  def try_spore_growth(toast_grid_map, number_of_grid_cells, player) do
     if(Random.random_chance_hit(player.spores_chance)) do
-      spore_index = Enum.random(0..grid_size - 1)
+      spore_index = Enum.random(0..number_of_grid_cells - 1)
       existing_cell = Map.get(toast_grid_map, spore_index)
       if(existing_cell == nil) do
         %GridCell{index: spore_index, live: true, empty: false, moist: false, out_of_grid: false, player_id: player.id}
