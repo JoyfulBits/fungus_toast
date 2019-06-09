@@ -11,11 +11,22 @@ defmodule FungusToast.Games.CellGrower do
   @doc ~S"""
     Iterates over surrounding cells calculating new growths, regenerations, and deaths. Returns GridCells that changed
   """
-  @spec calculate_cell_growth(map(), %Player{}) :: map()
-  def calculate_cell_growth(surrounding_cells, player) do
-    Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player) end)
+  @spec calculate_cell_growth(map(), integer(), map(), %Player{}) :: map()
+  def calculate_cell_growth(toast_grid_map, number_of_grid_cells, surrounding_cells, player) do
+    grown_cells = Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player) end)
       |> Enum.filter(fn x -> x != nil end)
       |> Enum.into(%{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+
+      if(grown_cells == %{}) do
+        new_spores_cell = try_spore_growth(toast_grid_map, number_of_grid_cells, player)
+        if(new_spores_cell == nil) do
+          %{}
+        else
+          %{new_spores_cell.index => new_spores_cell}
+        end
+      else
+        grown_cells
+      end
   end
 
   def process_cell(position, grid_cell, player) do
@@ -28,6 +39,29 @@ defmodule FungusToast.Games.CellGrower do
         if(!grid_cell.out_of_grid) do
           check_for_regeneration(grid_cell, player)
         end
+      end
+    end
+  end
+
+  @doc ~S"""
+  Returns a new %GridCell{} on a random spot on the toast if the spores_chance hits and if the random cell location is open. Returns nil otherwise.
+
+  ## Examples
+
+  #it returns nil if the spore chance doesn't hit
+  iex> CellGrower.try_spore_growth(%{}, 100, %FungusToast.Games.Player{spores_chance: 0})
+  nil
+
+  #it returns nil if the spore chance hits but the random location is occupied
+  iex> CellGrower.try_spore_growth(%{0 => %FungusToast.Games.GridCell{ index: 0 }}, 1, %FungusToast.Games.Player{spores_chance: 100})
+  nil
+  """
+  def try_spore_growth(toast_grid_map, number_of_grid_cells, player) do
+    if(Random.random_chance_hit(player.spores_chance)) do
+      spore_index = Enum.random(0..number_of_grid_cells - 1)
+      existing_cell = Map.get(toast_grid_map, spore_index)
+      if(existing_cell == nil) do
+        %GridCell{index: spore_index, live: true, empty: false, moist: false, out_of_grid: false, player_id: player.id}
       end
     end
   end

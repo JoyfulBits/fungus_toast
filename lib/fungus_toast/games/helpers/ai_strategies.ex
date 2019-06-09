@@ -2,21 +2,24 @@ defmodule FungusToast.AiStrategies do
   alias FungusToast.Games.Player
 
   @ai_type_random "Random"
-  def ai_type_random, do:  @ai_type_random
+  def ai_type_random, do: @ai_type_random
 
   @ai_type_growth "Growth"
-  def ai_type_growth, do:  @ai_type_growth
+  def ai_type_growth, do: @ai_type_growth
+
+  @ai_type_spores "Spores"
+  def ai_type_spores, do: @ai_type_spores
 
   @ai_type_toxic "Toxic"
-  def ai_type_toxic, do:  @ai_type_toxic
+  def ai_type_toxic, do: @ai_type_toxic
 
   @ai_type_experimental_1 "Experimental 1"
-  def ai_type_experimental_1, do:  @ai_type_experimental_1
+  def ai_type_experimental_1, do: @ai_type_experimental_1
 
   @ai_type_long_term "Long Term"
-  def ai_type_long_term, do:  @ai_type_long_term
+  def ai_type_long_term, do: @ai_type_long_term
 
-  @ai_types [@ai_type_random, @ai_type_growth, @ai_type_toxic, @ai_type_long_term]
+  @ai_types [@ai_type_random, @ai_type_growth, @ai_type_toxic, @ai_type_long_term, @ai_type_spores]
 
   def get_ai_types, do: @ai_types
 
@@ -32,6 +35,8 @@ defmodule FungusToast.AiStrategies do
   def skill_name_mycotoxicity, do: @skill_name_mycotoxicity
   @skill_name_hydrophilia "Hydrophilia"
   def skill_name_hydrophilia, do: @skill_name_hydrophilia
+  @skill_name_spores "Spores"
+  def skill_name_spores, do: @skill_name_spores
 
   @skill_name_to_player_attribute_map %{
     @skill_name_anti_apoptosis => [:apoptosis_chance],
@@ -39,12 +44,13 @@ defmodule FungusToast.AiStrategies do
     @skill_name_hypermutation => [:mutation_chance],
     @skill_name_regeneration => [:regeneration_chance],
     @skill_name_mycotoxicity => [:mycotoxin_fungicide_chance],
-    @skill_name_hydrophilia => [:moisture_growth_boost]
+    @skill_name_hydrophilia => [:moisture_growth_boost],
+    @skill_name_spores => [:spores_chance]
   }
 
   def skill_name_to_player_attribute_map, do: @skill_name_to_player_attribute_map
 
-  @skills_that_max_out_at_100_percent [@skill_name_budding, @skill_name_hypermutation, @skill_name_regeneration, @skill_name_mycotoxicity]
+  @skills_that_max_out_at_100_percent [@skill_name_budding, @skill_name_hypermutation, @skill_name_regeneration, @skill_name_mycotoxicity, @skill_name_spores]
   def skills_that_max_out_at_100_percent, do: @skills_that_max_out_at_100_percent
 
   @skills_that_bottom_out_at_0_percent [@skill_name_anti_apoptosis]
@@ -61,6 +67,9 @@ defmodule FungusToast.AiStrategies do
     "Growth|EarlyGame" => [@skill_name_budding],
     "Growth|MidGame" => [@skill_name_anti_apoptosis, @skill_name_budding],
     "Growth|LateGame" => [@skill_name_anti_apoptosis, @skill_name_budding, @skill_name_regeneration],
+    "Spores|EarlyGame" => [@skill_name_spores, @skill_name_hypermutation],
+    "Spores|MidGame" => [@skill_name_anti_apoptosis, @skill_name_spores],
+    "Spores|LateGame" => [@skill_name_anti_apoptosis, @skill_name_regeneration, @skill_name_mycotoxicity],
     "Toxic|EarlyGame" => [@skill_name_budding, @skill_name_hypermutation],
     "Toxic|MidGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],
     "Toxic|LateGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],

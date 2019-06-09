@@ -235,7 +235,7 @@ defmodule FungusToast.Games.Grid do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
     player = player_id_to_player_map[grid_cell.player_id]
-    cell_changes = CellGrower.calculate_cell_growth(surrounding_cells, player)
+    cell_changes = CellGrower.calculate_cell_growth(starting_grid, grid_size * grid_size, surrounding_cells, player)
     #check if the cell dies from apoptosis or starvation
     Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
   end
