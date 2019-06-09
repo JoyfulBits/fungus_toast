@@ -71,6 +71,7 @@ defmodule FungusToast.Games.FullAiGameTest do
           top_right_growth_chance: player.top_right_growth_chance,
           mutation_chance: player.mutation_chance,
           mycotoxin_fungicide_chance: player.mycotoxin_fungicide_chance,
+          spores_chance: player.spores_chance,
           total_points_spent: get_points_spent(player)
         }
             end)

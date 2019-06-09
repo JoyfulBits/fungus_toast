@@ -29,7 +29,6 @@ defmodule FungusToast.Skills.SkillsSeed do
       number_of_active_cell_changes: 0
     })
 
-
     upsert_skill(%{
       id: Skills.skill_id_budding,
       name: "Budding",
@@ -77,6 +76,16 @@ defmodule FungusToast.Skills.SkillsSeed do
       increase_per_point: 2.0,
       up_is_good: true,
       number_of_active_cell_changes: 3 #can drop 3 drops of water
+    })
+
+    upsert_skill(%{
+      id: Skills.skill_id_spores,
+      name: "Spores",
+      description:
+        "Increases the chance that a cell which fails to grow into an adjacent cell will will release spores and grow into a random cell on the grid.",
+      increase_per_point: 0.10,
+      up_is_good: true,
+      number_of_active_cell_changes: 0
     })
   end
 

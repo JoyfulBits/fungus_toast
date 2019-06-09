@@ -50,6 +50,7 @@ defmodule FungusToast.Games.Player do
     :regeneration_chance,
     :mycotoxin_fungicide_chance,
     :moisture_growth_boost,
+    :spores_chance,
     :spent_mutation_points,
     :user_id
   ]
@@ -80,6 +81,7 @@ defmodule FungusToast.Games.Player do
     :regeneration_chance,
     :mycotoxin_fungicide_chance,
     :moisture_growth_boost,
+    :spores_chance,
     :spent_mutation_points
   ]
 
@@ -119,6 +121,7 @@ defmodule FungusToast.Games.Player do
     field :regeneration_chance, :float, default: 0.0, null: false
     field :mycotoxin_fungicide_chance, :float, default: 0.0, null: false
     field :moisture_growth_boost, :float, default: @default_moisture_boost, null: false
+    field :spores_chance, :float, default: 0.0, null: false
 
     has_many :skills, FungusToast.Games.PlayerSkill
 
