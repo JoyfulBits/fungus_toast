@@ -37,6 +37,8 @@ defmodule FungusToast.AiStrategies do
   def skill_name_hydrophilia, do: @skill_name_hydrophilia
   @skill_name_spores "Spores"
   def skill_name_spores, do: @skill_name_spores
+  @skill_name_eye_dropper "Eye Dropper"
+  def skill_name_eye_dropper, do: @skill_name_eye_dropper
 
   @skill_name_to_player_attribute_map %{
     @skill_name_anti_apoptosis => [:apoptosis_chance],
@@ -57,7 +59,12 @@ defmodule FungusToast.AiStrategies do
   def skills_that_bottom_out_at_0_percent, do: @skills_that_bottom_out_at_0_percent
 
   def get_player_attributes_for_skill_name(skill_name) do
-    Map.get(@skill_name_to_player_attribute_map, skill_name)
+    attributes = Map.get(@skill_name_to_player_attribute_map, skill_name)
+    if(attributes == nil) do
+      []
+    else
+      attributes
+    end
   end
 
   @candidate_skills_map %{
@@ -125,7 +132,11 @@ defmodule FungusToast.AiStrategies do
 
   @spec maxed_out_skill?(String.t(), %Player{}) :: boolean()
   def maxed_out_skill?(skill_name, player) do
-    attribute_to_check = hd(get_player_attributes_for_skill_name(skill_name))
+    attributes = get_player_attributes_for_skill_name(skill_name)
+    if(attributes == []) do
+      false
+    else
+      attribute_to_check = hd(attributes)
     percentage_chance = Map.get(player, attribute_to_check)
     return_value = if(Enum.member?(@skills_that_bottom_out_at_0_percent, skill_name)) do
       if(percentage_chance <= 0) do
@@ -142,5 +153,6 @@ defmodule FungusToast.AiStrategies do
     end
 
     return_value
+    end
   end
 end

@@ -1,6 +1,6 @@
 defmodule FungusToast.Games.CellGrowerTest do
     use ExUnit.Case, async: true
-    alias FungusToast.Games.{CellGrower, GridCell, Player}
+    alias FungusToast.Games.{CellGrower, GridCell}
 
     doctest FungusToast.Games.CellGrower
 

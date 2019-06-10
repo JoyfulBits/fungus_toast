@@ -205,14 +205,14 @@ defmodule FungusToast.Games.GridTest do
       %Player{id: id, mutation_chance: 100}
     end
 
-    test "that it applies hydrophilia active cell changes to the starting game state before applying additional growth" do
+    test "that it applies eye dropper active cell changes to the starting game state before applying additional growth" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
       expected_cell_indexes = [0, 1, 2]
-      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_hydrophilia(), cell_indexes: expected_cell_indexes}]
+      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_eye_dropper(), cell_indexes: expected_cell_indexes}]
 
       result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map)
 

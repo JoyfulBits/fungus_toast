@@ -16,6 +16,7 @@ defmodule FungusToast.Games.Skill do
     field :number_of_active_cell_changes, :integer, default: 0
     field :name, :string, size: 64
     field :up_is_good, :boolean
+    field :active_skill, :boolean, default: false
 
     timestamps()
   end
@@ -23,7 +24,7 @@ defmodule FungusToast.Games.Skill do
   @doc false
   def changeset(skill, attrs) do
     skill
-    |> cast(attrs, [:name, :description, :increase_per_point, :number_of_active_cell_changes, :up_is_good])
+    |> cast(attrs, [:name, :description, :increase_per_point, :number_of_active_cell_changes, :up_is_good, :active_skill])
     |> validate_required([:name, :description, :increase_per_point])
     |> validate_length(:name, max: 64)
     |> validate_length(:description, max: 512)

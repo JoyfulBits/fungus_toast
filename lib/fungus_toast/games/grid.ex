@@ -168,13 +168,13 @@ defmodule FungusToast.Games.Grid do
       active_cell_changes
     end
     active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
-      grid_cells = if(active_cell_change.skill_id == Skills.skill_id_hydrophilia()) do
+      grid_cells = if(active_cell_change.skill_id == Skills.skill_id_eye_dropper()) do
         Enum.map(active_cell_change.cell_indexes, fn index ->
           %GridCell{index: index, moist: true}
         end)
       else
         if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
-          raise "Hydrophilia is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
+          raise "Eye Dropper is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
         else
           []
         end

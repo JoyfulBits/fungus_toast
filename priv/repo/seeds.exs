@@ -9,7 +9,7 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
-alias FungusToast.{Accounts, Games}
+alias FungusToast.{Accounts}
 alias FungusToast.Skills.SkillsSeed
 alias FungusToast.Accounts.UsersSeed
 

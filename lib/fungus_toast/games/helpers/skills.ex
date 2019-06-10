@@ -11,6 +11,7 @@ defmodule FungusToast.Skills do
   def skill_id_mycotoxicity, do: 5
   def skill_id_hydrophilia, do: 6
   def skill_id_spores, do: 7
+  def skill_id_eye_dropper, do: 8
 
   defp skill_to_number_of_active_changes_map, do: %{
     skill_id_hypermutation() => 0,
@@ -18,8 +19,9 @@ defmodule FungusToast.Skills do
     skill_id_anti_apoptosis() => 0,
     skill_id_regeneration() => 0,
     skill_id_mycotoxicity() => 0,
-    skill_id_hydrophilia() => 3,
-    skill_id_spores() => 0
+    skill_id_hydrophilia() => 0,
+    skill_id_spores() => 0,
+    skill_id_eye_dropper() => 5
   }
 
   def get_allowed_number_of_active_changes(skill_id) when is_integer(skill_id) do
