@@ -1,20 +1,20 @@
-defmodule FungusToast.Games.Skill do
+defmodule FungusToast.Games.ActiveSkill do
   use Ecto.Schema
   import Ecto.Changeset
 
   @attrs [
     :name,
     :description,
-    :up_is_good
+    :number_of_toast_changes,
+    :minimum_round
   ]
 
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
-  schema "skills" do
+  schema "active_skills" do
     field :description, :string, size: 512
-    field :increase_per_point, :float
+    field :number_of_toast_changes, :integer, default: 0
     field :name, :string, size: 64
-    field :up_is_good, :boolean
     field :minimum_round, :integer, default: 0
 
     timestamps()
@@ -23,8 +23,8 @@ defmodule FungusToast.Games.Skill do
   @doc false
   def changeset(skill, attrs) do
     skill
-    |> cast(attrs, [:name, :description, :increase_per_point, :up_is_good, :minimum_round])
-    |> validate_required([:name, :description, :increase_per_point])
+    |> cast(attrs, [:name, :description, :number_of_toast_changes, :minimum_round])
+    |> validate_required([:name, :description, :number_of_toast_changes, :minimum_round])
     |> validate_length(:name, max: 64)
     |> validate_length(:description, max: 512)
     |> unique_constraint(:name)

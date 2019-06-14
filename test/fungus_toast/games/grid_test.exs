@@ -1,7 +1,7 @@
 defmodule FungusToast.Games.GridTest do
   use ExUnit.Case, async: true
   alias FungusToast.Games.{Grid, GridCell, Player, GrowthCycle, ActiveCellChange}
-  alias FungusToast.Skills
+  alias FungusToast.ActiveSkills
 
   doctest FungusToast.Games.Grid
 
@@ -212,7 +212,7 @@ defmodule FungusToast.Games.GridTest do
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
       expected_cell_indexes = [0, 1, 2]
-      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_eye_dropper(), cell_indexes: expected_cell_indexes}]
+      active_cell_changes = [%ActiveCellChange{active_skill_id: ActiveSkills.skill_id_eye_dropper(), cell_indexes: expected_cell_indexes}]
 
       result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map)
 
@@ -236,15 +236,16 @@ defmodule FungusToast.Games.GridTest do
       end)
     end
 
-    test "that it raises if an active cell change is for a skill that doesn't support active changes" do
+    test "that it raises if an active cell change is for an invalid active skill id" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_budding(), cell_indexes: [0]}]
+      skill_id_that_isnt_active = -1
+      active_cell_changes = [%ActiveCellChange{active_skill_id: skill_id_that_isnt_active, cell_indexes: [0]}]
 
-      assert_raise RuntimeError, fn -> Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map) end
+      assert_raise KeyError, fn -> Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map) end
     end
   end
 

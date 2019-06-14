@@ -430,17 +430,23 @@ defmodule FungusToast.Games do
     end
   end
 
-  def spend_human_player_mutation_points(player_id, game_id, upgrade_attrs) do
+  @doc """
+  Spends points for active and passive skills.
+
+  skill_upgrades must be a map of skill_id => points_spent
+  passive_skill_upgrades must be a map of active_skill_id => %{"active_cell_changes" => [indexes], "points_spent" => points_spent}
+  """
+  def spend_human_player_mutation_points(player_id, game_id, passive_skill_upgrades, active_skill_changes \\ %{}) do
     #TODO check if the game is started and throw a 400 bad request if not
     player = Players.get_player!(player_id)
-    spent_points = PlayerSkills.sum_skill_upgrades(upgrade_attrs)
+    spent_points = PlayerSkills.sum_skill_upgrades(passive_skill_upgrades)
     if(spent_points > player.mutation_points) do
       {:error_illegal_number_of_points_spent}
     else
-      if(ActiveCellChanges.update_active_cell_changes(player_id, game_id, upgrade_attrs)) do
+      if(ActiveCellChanges.update_active_cell_changes(player_id, game_id, active_skill_changes)) do
         total_spent_points = player.spent_mutation_points + spent_points
 
-        player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, upgrade_attrs)
+        player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, passive_skill_upgrades)
         |> Map.put(:mutation_points, player.mutation_points - spent_points)
         |> Map.put(:spent_mutation_points, total_spent_points)
 

@@ -1,6 +1,6 @@
 defmodule FungusToast.Games.Grid do
   alias FungusToast.Games.{CellGrower, GridCell, GrowthCycle, MutationPointsEarned, PlayerStatsChange}
-  alias FungusToast.{Skills, Random}
+  alias FungusToast.{ActiveSkills, Random}
 
   @spec create_starting_grid(integer(), [integer()]) :: any()
   def create_starting_grid(grid_size, player_ids) do
@@ -168,7 +168,7 @@ defmodule FungusToast.Games.Grid do
       active_cell_changes
     end
     active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
-      grid_cells = if(active_cell_change.skill_id == Skills.skill_id_eye_dropper()) do
+      grid_cells = if(active_cell_change.active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
         Enum.map(active_cell_change.cell_indexes, fn index ->
           %GridCell{index: index, moist: true}
         end)

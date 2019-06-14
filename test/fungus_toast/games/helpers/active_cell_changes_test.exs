@@ -1,6 +1,6 @@
 defmodule FungusToast.ActiveCellChangesTest do
   use FungusToast.DataCase
-  alias FungusToast.{Games, Players, Skills, Rounds, ActiveCellChanges}
+  alias FungusToast.{Games, Players, ActiveSkills, Rounds, ActiveCellChanges}
   alias FungusToast.Games.ActiveCellChange
 
   doctest FungusToast.ActiveCellChanges
@@ -14,7 +14,7 @@ defmodule FungusToast.ActiveCellChangesTest do
       user = Fixtures.Accounts.User.create!()
       game = Games.create_game(user.user_name, %{number_of_human_players: 1})
       player = hd(Players.list_players_for_game(game.id))
-      upgrade_attrs = %{"1" => %{"active_cell_changes" => [], "points_spent" => 1}, "2" => %{"active_cell_changes" => [], "points_spent" => 1}}
+      upgrade_attrs = %{"1" => %{"active_cell_changes" => [], "points_spent" => 1}}
       assert ActiveCellChanges.update_active_cell_changes(player.id, game.id, upgrade_attrs)
     end
 
@@ -22,8 +22,8 @@ defmodule FungusToast.ActiveCellChangesTest do
       user = Fixtures.Accounts.User.create!()
       game = Games.create_game(user.user_name, %{number_of_human_players: 1})
       player = hd(Players.list_players_for_game(game.id))
-      skill = Skills.get_skill!(Skills.skill_id_eye_dropper())
-      list_with_max_allowed_changes = Enum.map(1..skill.number_of_active_cell_changes, fn x -> x end)
+      skill = ActiveSkills.get_active_skill!(ActiveSkills.skill_id_eye_dropper())
+      list_with_max_allowed_changes = Enum.map(1..skill.number_of_toast_changes, fn x -> x end)
       upgrade_attrs = %{skill.id=> %{"active_cell_changes" => list_with_max_allowed_changes, "points_spent" => 1}}
       assert ActiveCellChanges.update_active_cell_changes(player.id, game.id, upgrade_attrs)
     end
@@ -32,8 +32,8 @@ defmodule FungusToast.ActiveCellChangesTest do
       user = Fixtures.Accounts.User.create!()
       game = Games.create_game(user.user_name, %{number_of_human_players: 1})
       player = hd(Players.list_players_for_game(game.id))
-      skill = Skills.get_skill!(Skills.skill_id_eye_dropper())
-      list_with_max_allowed_changes = Enum.map(1..skill.number_of_active_cell_changes * 2, fn x -> x end)
+      skill = ActiveSkills.get_active_skill!(ActiveSkills.skill_id_eye_dropper())
+      list_with_max_allowed_changes = Enum.map(1..skill.number_of_toast_changes * 2, fn x -> x end)
       upgrade_attrs = %{skill.id=> %{"active_cell_changes" => list_with_max_allowed_changes, "points_spent" => 2}}
       assert ActiveCellChanges.update_active_cell_changes(player.id, game.id, upgrade_attrs)
     end
@@ -44,8 +44,8 @@ defmodule FungusToast.ActiveCellChangesTest do
     end
 
     test "it returns false when there are more active cell changes than the max allowed for that skill" do
-      skill = Skills.get_skill!(Skills.skill_id_eye_dropper())
-      list_with_one_too_many_changes = Enum.map(1..skill.number_of_active_cell_changes + 1, fn x -> x end)
+      skill = ActiveSkills.get_active_skill!(ActiveSkills.skill_id_eye_dropper())
+      list_with_one_too_many_changes = Enum.map(1..skill.number_of_toast_changes + 1, fn x -> x end)
       upgrade_attrs = %{skill.id => %{"active_cell_changes" => list_with_one_too_many_changes, "points_spent" => 1}}
       refute ActiveCellChanges.update_active_cell_changes(-1, -1, upgrade_attrs)
     end
@@ -55,8 +55,8 @@ defmodule FungusToast.ActiveCellChangesTest do
       game = Games.create_game(user.user_name, %{number_of_human_players: 1})
       player = hd(Players.list_players_for_game(game.id))
 
-      skill = Skills.get_skill!(Skills.skill_id_eye_dropper())
-      list_with_max_allowed_changes = Enum.map(1..skill.number_of_active_cell_changes, fn x -> x end)
+      skill = ActiveSkills.get_active_skill!(ActiveSkills.skill_id_eye_dropper())
+      list_with_max_allowed_changes = Enum.map(1..skill.number_of_toast_changes, fn x -> x end)
       upgrade_attrs = %{skill.id => %{"active_cell_changes" => list_with_max_allowed_changes, "points_spent" => 1}}
 
       assert ActiveCellChanges.update_active_cell_changes(player.id, game.id, upgrade_attrs)
@@ -74,12 +74,12 @@ defmodule FungusToast.ActiveCellChangesTest do
       game = Games.create_game(user.user_name, %{number_of_human_players: 1})
       player = hd(Players.list_players_for_game(game.id))
       latest_round = Rounds.get_latest_round_for_game(game.id)
-      existing_active_cell_changes = [%ActiveCellChange{skill_id: -1, player_id: -1, cell_indexes: [-1]}]
+      existing_active_cell_changes = [%ActiveCellChange{active_skill_id: -1, player_id: -1, cell_indexes: [-1]}]
       Rounds.update_round(latest_round, %{active_cell_changes: existing_active_cell_changes})
 
-      skill = Skills.get_skill!(Skills.skill_id_eye_dropper())
-      list_with_max_allowed_changes = Enum.map(1..skill.number_of_active_cell_changes, fn x -> x end)
-      upgrade_attrs = %{skill.id => %{"active_cell_changes" => list_with_max_allowed_changes, "points_spent" => 1}}
+      active_skill = ActiveSkills.get_active_skill!(ActiveSkills.skill_id_eye_dropper())
+      list_with_max_allowed_changes = Enum.map(1..active_skill.number_of_toast_changes, fn x -> x end)
+      upgrade_attrs = %{active_skill.id => %{"active_cell_changes" => list_with_max_allowed_changes, "points_spent" => 1}}
 
       assert ActiveCellChanges.update_active_cell_changes(player.id, game.id, upgrade_attrs)
 
