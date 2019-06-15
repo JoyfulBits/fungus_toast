@@ -24,5 +24,6 @@ Accounts.create_user(%{user_name: "Human 6"})
 
 #create all of the Skills records
 SkillsSeed.seed_skills()
+SkillsSeed.seed_active_skills()
 #temporary until we get registration and authentication working
 UsersSeed.seed_users()

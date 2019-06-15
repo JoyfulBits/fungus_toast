@@ -6,7 +6,7 @@ defmodule FungusToastWeb.ActiveSkillController do
   action_fallback FungusToastWeb.FallbackController
 
   def index(conn, _) do
-    skills = ActiveSkills.list_skills()
-    render(conn, "index.json", skills: skills)
+    active_skills = ActiveSkills.list_skills()
+    render(conn, "index.json", active_skills: active_skills)
   end
 end

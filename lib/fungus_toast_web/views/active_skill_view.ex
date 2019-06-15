@@ -16,8 +16,9 @@ defmodule FungusToastWeb.ActiveSkillView do
     %{
       id: active_skill.id,
       name: active_skill.name,
-      up_is_good: active_skill.up_is_good,
-      increase_per_point: active_skill.increase_per_point
+      description: active_skill.description,
+      minimum_round: active_skill.minimum_round,
+      number_of_toast_changes: active_skill.number_of_toast_changes
     }
   end
 end

@@ -7,6 +7,8 @@ defmodule FungusToast.ActiveCellChanges do
   resulting from certain skills. These changes are applied to the toast at the start of the round, before growth cycles.
   """
 
+  #TODO should we add number of active skill changes to player? Should these accumulate or must you spend one per round?
+
   defp active_cell_changes_are_valid(upgrade_attrs) do
     Enum.reduce(upgrade_attrs, true, fn {active_skill_id, map}, acc ->
       total_active_changes_for_skill = length(Map.get(map, "active_cell_changes"))
@@ -17,6 +19,7 @@ defmodule FungusToast.ActiveCellChanges do
   end
 
 
+  @spec update_active_cell_changes(any, any, any) :: boolean
   def update_active_cell_changes(player_id, game_id, upgrade_attrs) do
     if(active_cell_changes_are_valid(upgrade_attrs)) do
       active_cell_changes = Enum.map(upgrade_attrs, fn {active_skill_id, map} ->

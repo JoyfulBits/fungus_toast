@@ -17,7 +17,8 @@ defmodule FungusToastWeb.SkillView do
       id: skill.id,
       name: skill.name,
       up_is_good: skill.up_is_good,
-      increase_per_point: skill.increase_per_point
+      increase_per_point: skill.increase_per_point,
+      minimum_round: skill.minimum_round
     }
   end
 end

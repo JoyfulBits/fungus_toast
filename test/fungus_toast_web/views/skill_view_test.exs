@@ -10,7 +10,8 @@ defmodule FungusToastWeb.SkillViewTest do
         id: 1,
         name: "some name",
         up_is_good: true,
-        increase_per_point: 3.14
+        increase_per_point: 3.14,
+        minimum_round: 20
       }
 
       result = SkillView.render("skill.json", %{skill: skill})
@@ -19,6 +20,7 @@ defmodule FungusToastWeb.SkillViewTest do
       assert result.name == skill.name
       assert result.up_is_good == skill.up_is_good
       assert result.increase_per_point == skill.increase_per_point
+      assert result.minimum_round == skill.minimum_round
     end
   end
 end
