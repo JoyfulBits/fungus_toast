@@ -67,28 +67,34 @@ defmodule FungusToast.Games.GridTest do
       growth_cycles = result.growth_cycles
       assert Enum.count(growth_cycles) == 6
 
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 1, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 2, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 3, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 4, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 5, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 1, player1.id, true)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 2, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 3, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 4, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 5, player1.id)
       assert result.new_game_state
       assert length(result.new_game_state) == 1
     end
 
     test "conflicting toast changes will go to the first player that grew into the cell" do
-      #XXXXXX
+      #TODO FINISH THIS
     end
 
-    defp has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, generation_number, player_id) do
+    defp assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, generation_number, player_id, should_have_action_points \\ false) do
       growth_cycle = Enum.find(growth_cycles, fn growth_cycle -> growth_cycle.generation_number == generation_number end)
 
-      points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
+      mutation_points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
         fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.points} end)
-      if(growth_cycle != nil and points_earned_map[player_id] > 0) do
-        true
-      else
-        false
+
+      if(growth_cycle == nil and mutation_points_earned_map[player_id] == 0) do
+        assert false
+      end
+
+
+      action_points_earned_map = Enum.into(growth_cycle.action_points_earned, %{},
+        fn action_points_earned -> {action_points_earned.player_id, action_points_earned.points} end)
+      if(growth_cycle == nil and action_points_earned_map[player_id] == 0) do
+        refute should_have_action_points
       end
     end
 
