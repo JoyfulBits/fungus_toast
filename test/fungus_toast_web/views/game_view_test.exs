@@ -200,11 +200,16 @@ defmodule FungusToastWeb.GameViewTest do
       player_2_mutation_points_earned = %PointsEarned{player_id: player_2_id, points: 30}
       mutation_points_earned = [player_1_mutation_points_earned, player_2_mutation_points_earned]
 
+      player_1_action_points_earned = %PointsEarned{player_id: player_1_id, points: 40}
+      player_2_action_points_earned = %PointsEarned{player_id: player_2_id, points: 50}
+      action_points_earned = [player_1_action_points_earned, player_2_action_points_earned]
+
       growth_cycle_1 = %GrowthCycle
       {
         generation_number: 1,
         toast_changes: growth_cycle_1_toast_changes,
         mutation_points_earned: mutation_points_earned,
+        action_points_earned: action_points_earned,
         player_stats_changes: player_stats_changes
       }
 
@@ -252,6 +257,10 @@ defmodule FungusToastWeb.GameViewTest do
       actual_mutation_points_earned = actual_growth_cycle_1.mutation_points_earned
       assert actual_mutation_points_earned[player_1_mutation_points_earned.player_id] == player_1_mutation_points_earned.points
       assert actual_mutation_points_earned[player_2_mutation_points_earned.player_id] == player_2_mutation_points_earned.points
+
+      actual_action_points_earned = actual_growth_cycle_1.action_points_earned
+      assert actual_action_points_earned[player_1_action_points_earned.player_id] == player_1_action_points_earned.points
+      assert actual_action_points_earned[player_2_action_points_earned.player_id] == player_2_action_points_earned.points
 
       actual_growth_cycle_2 = Enum.at(actual_growth_cycles, 1)
       actual_growth_cycle_2_toast_changes = actual_growth_cycle_2.toast_changes
