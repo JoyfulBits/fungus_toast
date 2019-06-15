@@ -226,7 +226,8 @@ defmodule FungusToast.Games.Grid do
       generation_number: generation_number,
       toast_changes: toast_changes_grid_cell_list,
       player_stats_changes: player_stats_map,
-      mutation_points_earned: mutation_points
+      mutation_points_earned: mutation_points,
+      action_points_earned: []
     }
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
