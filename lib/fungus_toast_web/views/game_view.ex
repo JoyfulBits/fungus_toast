@@ -125,7 +125,11 @@ defmodule FungusToastWeb.GameView do
           {mutation_points_earned.player_id, mutation_points_earned.points} end)
         |> Enum.into(%{})
 
-        %{toast_changes: toast_changes, player_stats_changes: player_stats_changes, mutation_points_earned: mutation_points_earned}
+        action_points_earned = Enum.map(growth_cycle.action_points_earned, fn action_points_earned ->
+          {action_points_earned.player_id, action_points_earned.points} end)
+        |> Enum.into(%{})
+
+        %{toast_changes: toast_changes, player_stats_changes: player_stats_changes, mutation_points_earned: mutation_points_earned, action_points_earned: action_points_earned}
       end)
     end
   end

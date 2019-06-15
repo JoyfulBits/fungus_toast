@@ -12,6 +12,7 @@ defmodule FungusToast.Games do
   alias FungusToast.Game.Status
 
   @starting_mutation_points 5
+  @starting_action_points 1
   @starting_end_of_game_count_down 5
   def starting_end_of_game_count_down, do: @starting_end_of_game_count_down
 
@@ -105,7 +106,8 @@ defmodule FungusToast.Games do
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
-        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, toast_changes: starting_cells }
+        action_points_earned = get_starting_action_points(players)
+        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, action_points_earned: action_points_earned, toast_changes: starting_cells }
         first_round_values = %{
           number: 0,
           growth_cycles: [growth_cycle],
@@ -153,6 +155,9 @@ defmodule FungusToast.Games do
       Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
     end)
 
+    action_points_map = Enum.map(players, fn player -> {player.id, @starting_action_points} end)
+    |> Enum.into(%{})
+
     player_ids = Enum.map(players, fn player -> player.id end)
     #get all of the delta attributes like grown and perished cells (etc.)
     player_growth_cycle_stats_map = Grid.get_player_growth_cycles_stats(player_ids, growth_summary.growth_cycles)
@@ -166,10 +171,12 @@ defmodule FungusToast.Games do
 
     updated_players = Enum.map(players, fn player ->
       mutation_points = mutation_points_map[player.id]
+      action_points = action_points_map[player.id]
       #TODO setting to -1 so there is always an update (since we may have already updated the player struct). May want to clean this up..
       player = %{player | mutation_points: -1}
       existing_stats = %{
         mutation_points: mutation_points,
+        action_points: action_points,
         grown_cells: player.grown_cells,
         regenerated_cells: player.regenerated_cells,
         perished_cells: player.perished_cells,
@@ -259,6 +266,10 @@ defmodule FungusToast.Games do
 
   def get_starting_mutation_points(players) do
     Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: @starting_mutation_points} end)
+  end
+
+  def get_starting_action_points(players) do
+    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: @starting_action_points} end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
