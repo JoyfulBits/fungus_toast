@@ -84,7 +84,7 @@ defmodule FungusToast.Games.GridTest do
       growth_cycle = Enum.find(growth_cycles, fn growth_cycle -> growth_cycle.generation_number == generation_number end)
 
       points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
-        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
+        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.points} end)
       if(growth_cycle != nil and points_earned_map[player_id] > 0) do
         true
       else
@@ -182,7 +182,7 @@ defmodule FungusToast.Games.GridTest do
       growth_cycle = Enum.at(growth_cycles, 1)
 
       points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
-        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
+        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.points} end)
       assert points_earned_map[player_1.id] > 1
       assert points_earned_map[player_2.id] > 1
       assert points_earned_map[player_3.id] > 1

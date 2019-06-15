@@ -8,7 +8,7 @@ defmodule FungusToast.Games do
   alias FungusToast.{Repo, Accounts, Players, PlayerSkills, Rounds, ActiveCellChanges}
   alias FungusToast.Accounts.User
 
-  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, PointsEarned}
   alias FungusToast.Game.Status
 
   @starting_mutation_points 5
@@ -146,7 +146,7 @@ defmodule FungusToast.Games do
 
     mutation_points_map = Enum.reduce(growth_summary.growth_cycles, player_to_mutation_points_map, fn growth_cycle, acc ->
       mutation_points_earned_map = Enum.map(growth_cycle.mutation_points_earned, fn mutuation_points_earned ->
-        {mutuation_points_earned.player_id, mutuation_points_earned.mutation_points}
+        {mutuation_points_earned.player_id, mutuation_points_earned.points}
       end)
       |> Enum.into(%{})
 
@@ -258,7 +258,7 @@ defmodule FungusToast.Games do
   end
 
   def get_starting_mutation_points(players) do
-    Enum.map(players, fn player -> %MutationPointsEarned{player_id: player.id, mutation_points: @starting_mutation_points} end)
+    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: @starting_mutation_points} end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do

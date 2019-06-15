@@ -1,5 +1,5 @@
 defmodule FungusToast.Games.Grid do
-  alias FungusToast.Games.{CellGrower, GridCell, GrowthCycle, MutationPointsEarned, PlayerStatsChange}
+  alias FungusToast.Games.{CellGrower, GridCell, GrowthCycle, PointsEarned, PlayerStatsChange}
   alias FungusToast.{ActiveSkills, Random}
 
   @spec create_starting_grid(integer(), [integer()]) :: any()
@@ -64,8 +64,8 @@ defmodule FungusToast.Games.Grid do
       %FungusToast.Games.GrowthCycle{
         generation_number: 1,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
+          %FungusToast.Games.PointsEarned{
+            points: 1,
             player_id: 1
           }
         ],
@@ -83,8 +83,8 @@ defmodule FungusToast.Games.Grid do
       %FungusToast.Games.GrowthCycle{
         generation_number: 2,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
+          %FungusToast.Games.PointsEarned{
+            points: 1,
             player_id: 1
           }
         ],
@@ -102,8 +102,8 @@ defmodule FungusToast.Games.Grid do
       %FungusToast.Games.GrowthCycle{
         generation_number: 3,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
+          %FungusToast.Games.PointsEarned{
+            points: 1,
             player_id: 1
           }
         ],
@@ -121,8 +121,8 @@ defmodule FungusToast.Games.Grid do
       %FungusToast.Games.GrowthCycle{
         generation_number: 4,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
+          %FungusToast.Games.PointsEarned{
+            points: 1,
             player_id: 1
           }
         ],
@@ -140,8 +140,8 @@ defmodule FungusToast.Games.Grid do
       %FungusToast.Games.GrowthCycle{
         generation_number: 5,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
+          %FungusToast.Games.PointsEarned{
+            points: 1,
             player_id: 1
           }
         ],
@@ -208,7 +208,7 @@ defmodule FungusToast.Games.Grid do
 
     mutation_points = Enum.map(player_id_to_player_map,
       fn{player_id, player}
-        -> %MutationPointsEarned{player_id: player_id, mutation_points: calculate_mutation_points(player)}
+        -> %PointsEarned{player_id: player_id, points: calculate_mutation_points(player)}
       end)
 
     toast_changes_grid_cell_list = Enum.map(toast_changes, fn {_k, grid_cell} -> grid_cell end)
