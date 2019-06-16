@@ -1,7 +1,7 @@
 defmodule FungusToast.GamesTest do
   use FungusToast.DataCase
 
-  alias FungusToast.{Accounts, Games, Players, Rounds, Skills, PlayerSkills, AiStrategies}
+  alias FungusToast.{Accounts, Games, Players, Rounds, Skills, ActiveSkills, PlayerSkills, AiStrategies}
   alias FungusToast.Games.{Game, GameState, Player, GridCell}
   alias FungusToast.Game.Status
 
@@ -429,7 +429,7 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "spend_human_player_mutation_points/3" do
-    test "that an error is returned if too many points were attempted to be spent" do
+    test "that an error is returned if too many mutation points were attempted to be spent" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
       player = hd(game.players)
@@ -437,9 +437,9 @@ defmodule FungusToast.GamesTest do
 
       #spend one too many points
       one_more_than_available_points = player.mutation_points + 1
-      upgrade_attrs = %{skill.id => %{"active_cell_changes" => [], "points_spent" => one_more_than_available_points}}
+      passive_skill_upgrades = %{skill.id => one_more_than_available_points}
 
-      result = Games.spend_human_player_mutation_points(player.id, game.id, upgrade_attrs)
+      result = Games.spend_human_player_mutation_points(player.id, game.id, passive_skill_upgrades)
 
       assert {error_illegal_number_of_points_spent} = result
     end
@@ -448,14 +448,14 @@ defmodule FungusToast.GamesTest do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
       player = hd(game.players)
-      skill = Skills.get_skill_by_name(AiStrategies.skill_name_hydrophilia)
-      illegal_number_of_active_skill_changes = skill.number_of_active_cell_changes + 1
+      active_skill = ActiveSkills.get_active_skill!(ActiveSkills.skill_id_eye_dropper())
+      illegal_number_of_active_skill_changes = active_skill.number_of_toast_changes + 1
       too_many_active_skill_changes = Enum.map(1..illegal_number_of_active_skill_changes, fn x -> x end)
 
       #spend one too many points
-      upgrade_attrs = %{skill.id => %{"active_cell_changes" => too_many_active_skill_changes, "points_spent" => 1}}
+      active_skill_upgrades = %{active_skill.id => %{"active_cell_changes" => too_many_active_skill_changes, "points_spent" => 1}}
 
-      result = Games.spend_human_player_mutation_points(player.id, game.id, upgrade_attrs)
+      result = Games.spend_human_player_mutation_points(player.id, game.id, %{}, active_skill_upgrades)
 
       assert {error_illegal_active_cell_changes} = result
     end
@@ -468,9 +468,9 @@ defmodule FungusToast.GamesTest do
 
       #spend all but one point
       one_less_than_available_points = player.mutation_points - 1
-      upgrade_attrs = %{skill.id => %{"active_cell_changes" => [], "points_spent" => one_less_than_available_points}}
+      passive_skill_upgrades = %{skill.id => one_less_than_available_points}
 
-      result = Games.spend_human_player_mutation_points(player.id, game.id, upgrade_attrs)
+      result = Games.spend_human_player_mutation_points(player.id, game.id, passive_skill_upgrades)
 
       assert {:ok, next_round_available: next_round_available, updated_player: updated_player} = result
       #since not all points were spent this should be false
@@ -494,9 +494,9 @@ defmodule FungusToast.GamesTest do
 
       #spend all of the first player's points
       starting_mutation_points = human_player.mutation_points
-      upgrade_attrs = %{skill.id => %{"active_cell_changes" => [], "points_spent" => starting_mutation_points}}
+      passive_skill_upgrades = %{skill.id => starting_mutation_points}
 
-      result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
+      result = Games.spend_human_player_mutation_points(human_player.id, game.id, passive_skill_upgrades)
 
       assert {:ok, next_round_available: next_round_available, updated_player: _} = result
       #another player hasn't spent all their points so the next round shouldn't be available
@@ -511,8 +511,8 @@ defmodule FungusToast.GamesTest do
 
       #spend all of the player's points
       starting_mutation_points = human_player.mutation_points
-      upgrade_attrs = %{skill.id => %{"active_cell_changes" => [], "points_spent" => starting_mutation_points}}
-      result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
+      passive_skill_upgrades = %{skill.id => starting_mutation_points}
+      result = Games.spend_human_player_mutation_points(human_player.id, game.id, passive_skill_upgrades)
 
       #since all points were spent this should be true
       assert {:ok, next_round_available: next_round_available, updated_player: updated_player} = result
@@ -524,7 +524,6 @@ defmodule FungusToast.GamesTest do
       assert player_skill.skill_level == starting_mutation_points
     end
 
-
     test "that when the next round is triggered AI players automatically spend their points" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
@@ -533,9 +532,9 @@ defmodule FungusToast.GamesTest do
 
       #spend all of the player's points
       starting_mutation_points = human_player.mutation_points
-      upgrade_attrs = %{skill.id => %{"active_cell_changes" => [], "points_spent" => starting_mutation_points}}
+      passive_skill_upgrades = %{skill.id => starting_mutation_points}
 
-      result = Games.spend_human_player_mutation_points(human_player.id, game.id, upgrade_attrs)
+      result = Games.spend_human_player_mutation_points(human_player.id, game.id, passive_skill_upgrades)
 
       assert {:ok, next_round_available: next_round_available, updated_player: _} = result
       #since all points were spent this should be true

@@ -43,5 +43,9 @@ defmodule FungusToastWeb.Router do
     resources "/skills", SkillController, only: [:index] do
       get "/skills", SkillController, :index, as: :skills
     end
+
+    resources "/active-skills", ActiveSkillController, only: [:index] do
+      get "/active-skills", ActiveSkillController, :index, as: :skills
+    end
   end
 end

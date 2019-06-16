@@ -8,10 +8,9 @@ defmodule FungusToast.Games do
   alias FungusToast.{Repo, Accounts, Players, PlayerSkills, Rounds, ActiveCellChanges}
   alias FungusToast.Accounts.User
 
-  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, MutationPointsEarned}
+  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, PointsEarned, Player}
   alias FungusToast.Game.Status
 
-  @starting_mutation_points 5
   @starting_end_of_game_count_down 5
   def starting_end_of_game_count_down, do: @starting_end_of_game_count_down
 
@@ -105,7 +104,8 @@ defmodule FungusToast.Games do
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
-        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, toast_changes: starting_cells }
+        action_points_earned = get_starting_action_points(players)
+        growth_cycle = %GrowthCycle{ mutation_points_earned: mutation_points_earned, action_points_earned: action_points_earned, toast_changes: starting_cells }
         first_round_values = %{
           number: 0,
           growth_cycles: [growth_cycle],
@@ -146,12 +146,15 @@ defmodule FungusToast.Games do
 
     mutation_points_map = Enum.reduce(growth_summary.growth_cycles, player_to_mutation_points_map, fn growth_cycle, acc ->
       mutation_points_earned_map = Enum.map(growth_cycle.mutation_points_earned, fn mutuation_points_earned ->
-        {mutuation_points_earned.player_id, mutuation_points_earned.mutation_points}
+        {mutuation_points_earned.player_id, mutuation_points_earned.points}
       end)
       |> Enum.into(%{})
 
       Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
     end)
+
+    action_points_map = Enum.map(players, fn player -> {player.id, player.action_points + PointsEarned.default_action_points_per_round()} end)
+    |> Enum.into(%{})
 
     player_ids = Enum.map(players, fn player -> player.id end)
     #get all of the delta attributes like grown and perished cells (etc.)
@@ -166,10 +169,12 @@ defmodule FungusToast.Games do
 
     updated_players = Enum.map(players, fn player ->
       mutation_points = mutation_points_map[player.id]
+      action_points = action_points_map[player.id]
       #TODO setting to -1 so there is always an update (since we may have already updated the player struct). May want to clean this up..
       player = %{player | mutation_points: -1}
       existing_stats = %{
         mutation_points: mutation_points,
+        action_points: action_points,
         grown_cells: player.grown_cells,
         regenerated_cells: player.regenerated_cells,
         perished_cells: player.perished_cells,
@@ -258,7 +263,11 @@ defmodule FungusToast.Games do
   end
 
   def get_starting_mutation_points(players) do
-    Enum.map(players, fn player -> %MutationPointsEarned{player_id: player.id, mutation_points: @starting_mutation_points} end)
+    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: Player.default_starting_mutation_points()} end)
+  end
+
+  def get_starting_action_points(players) do
+    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: PointsEarned.default_action_points_per_round()} end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
@@ -430,18 +439,24 @@ defmodule FungusToast.Games do
     end
   end
 
-  def spend_human_player_mutation_points(player_id, game_id, upgrade_attrs) do
+  @doc """
+  Spends points for active and passive skills.
+
+  skill_upgrades must be a map of skill_id => points_spent
+  passive_skill_upgrades must be a map of active_skill_id => %{"active_cell_changes" => [indexes], "points_spent" => points_spent}
+  """
+  def spend_human_player_mutation_points(player_id, game_id, passive_skill_upgrades, active_skill_changes \\ %{}) do
     #TODO check if the game is started and throw a 400 bad request if not
     player = Players.get_player!(player_id)
-    spent_points = PlayerSkills.sum_skill_upgrades(upgrade_attrs)
-    if(spent_points > player.mutation_points) do
+    spent_mutation_points = PlayerSkills.sum_skill_upgrades(passive_skill_upgrades)
+    if(spent_mutation_points > player.mutation_points) do
       {:error_illegal_number_of_points_spent}
     else
-      if(ActiveCellChanges.update_active_cell_changes(player_id, game_id, upgrade_attrs)) do
-        total_spent_points = player.spent_mutation_points + spent_points
+      if(ActiveCellChanges.update_active_cell_changes(player, game_id, active_skill_changes)) do
+        total_spent_points = player.spent_mutation_points + spent_mutation_points
 
-        player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, upgrade_attrs)
-        |> Map.put(:mutation_points, player.mutation_points - spent_points)
+        player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, passive_skill_upgrades)
+        |> Map.put(:mutation_points, player.mutation_points - spent_mutation_points)
         |> Map.put(:spent_mutation_points, total_spent_points)
 
         updated_player = Players.update_player(player, player_changes)

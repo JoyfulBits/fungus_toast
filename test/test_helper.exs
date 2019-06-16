@@ -2,5 +2,5 @@
 ExUnit.start(exclude: [:skip])
 Ecto.Adapters.SQL.Sandbox.mode(FungusToast.Repo, {:shared, self()})
 
-FungusToast.Skills.SkillsSeed.seed_skills()
+FungusToast.Skills.SkillsSeed.reset_skills_in_database()
 

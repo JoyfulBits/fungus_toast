@@ -15,6 +15,10 @@ defmodule FungusToast.Games.AiStrategiesTest do
       end)
     end
 
+    test "that it returns false if the skill can't max out (i.e. doesn't map to a player attribute)" do
+        refute AiStrategies.maxed_out_skill?(AiStrategies.skill_name_eye_dropper, %Player{})
+    end
+
     test "that it returns false when skills that bottom out at 0 are above 0" do
       Enum.each(AiStrategies.skills_that_bottom_out_at_0_percent, fn skill_name ->
         player = AiStrategies.get_player_attributes_for_skill_name(skill_name)

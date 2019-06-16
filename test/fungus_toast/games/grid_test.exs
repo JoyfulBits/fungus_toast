@@ -1,7 +1,7 @@
 defmodule FungusToast.Games.GridTest do
   use ExUnit.Case, async: true
   alias FungusToast.Games.{Grid, GridCell, Player, GrowthCycle, ActiveCellChange}
-  alias FungusToast.Skills
+  alias FungusToast.ActiveSkills
 
   doctest FungusToast.Games.Grid
 
@@ -67,28 +67,34 @@ defmodule FungusToast.Games.GridTest do
       growth_cycles = result.growth_cycles
       assert Enum.count(growth_cycles) == 6
 
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 1, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 2, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 3, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 4, player1.id)
-      assert has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 5, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 1, player1.id, true)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 2, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 3, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 4, player1.id)
+      assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, 5, player1.id)
       assert result.new_game_state
       assert length(result.new_game_state) == 1
     end
 
     test "conflicting toast changes will go to the first player that grew into the cell" do
-      #XXXXXX
+      #TODO FINISH THIS
     end
 
-    defp has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, generation_number, player_id) do
+    defp assert_has_growth_cycle_with_specified_generation_number_and_at_least_one_mutation_point(growth_cycles, generation_number, player_id, should_have_action_points \\ false) do
       growth_cycle = Enum.find(growth_cycles, fn growth_cycle -> growth_cycle.generation_number == generation_number end)
 
-      points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
-        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
-      if(growth_cycle != nil and points_earned_map[player_id] > 0) do
-        true
-      else
-        false
+      mutation_points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
+        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.points} end)
+
+      if(growth_cycle == nil and mutation_points_earned_map[player_id] == 0) do
+        assert false
+      end
+
+
+      action_points_earned_map = Enum.into(growth_cycle.action_points_earned, %{},
+        fn action_points_earned -> {action_points_earned.player_id, action_points_earned.points} end)
+      if(growth_cycle == nil and action_points_earned_map[player_id] == 0) do
+        refute should_have_action_points
       end
     end
 
@@ -182,7 +188,7 @@ defmodule FungusToast.Games.GridTest do
       growth_cycle = Enum.at(growth_cycles, 1)
 
       points_earned_map = Enum.into(growth_cycle.mutation_points_earned, %{},
-        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.mutation_points} end)
+        fn mutation_points_earned -> {mutation_points_earned.player_id, mutation_points_earned.points} end)
       assert points_earned_map[player_1.id] > 1
       assert points_earned_map[player_2.id] > 1
       assert points_earned_map[player_3.id] > 1
@@ -205,14 +211,14 @@ defmodule FungusToast.Games.GridTest do
       %Player{id: id, mutation_chance: 100}
     end
 
-    test "that it applies hydrophilia active cell changes to the starting game state before applying additional growth" do
+    test "that it applies eye dropper active cell changes to the starting game state before applying additional growth" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
       expected_cell_indexes = [0, 1, 2]
-      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_hydrophilia(), cell_indexes: expected_cell_indexes}]
+      active_cell_changes = [%ActiveCellChange{active_skill_id: ActiveSkills.skill_id_eye_dropper(), cell_indexes: expected_cell_indexes}]
 
       result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map)
 
@@ -236,15 +242,16 @@ defmodule FungusToast.Games.GridTest do
       end)
     end
 
-    test "that it raises if an active cell change is for a skill that doesn't support active changes" do
+    test "that it raises if an active cell change is for an invalid active skill id" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-      active_cell_changes = [%ActiveCellChange{skill_id: Skills.skill_id_budding(), cell_indexes: [0]}]
+      skill_id_that_isnt_active = -1
+      active_cell_changes = [%ActiveCellChange{active_skill_id: skill_id_that_isnt_active, cell_indexes: [0]}]
 
-      assert_raise RuntimeError, fn -> Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map) end
+      assert_raise KeyError, fn -> Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map) end
     end
   end
 

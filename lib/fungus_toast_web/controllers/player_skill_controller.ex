@@ -17,16 +17,19 @@ defmodule FungusToastWeb.PlayerSkillController do
   # %{
   #   "game_id" => "48",
   #   "player_id" => "50",
-  #   "upgrades" => %{
-  #     "6" => %{"active_cell_changes" => [1, 2, 3, 4], "points_spent" => 0}
+  #   "skill_upgrades" => %{
+  #     "6" => 1}
+  #   },
+  #   "active_skill_changes" => %{
+  #     "8" => %{"active_cell_changes" => [1, 2, 3, 4], "points_spent" => 1}
   #   }
   # }
   def update(conn, params) do
-
     game_id = Map.get(params, "game_id")
     player_id = Map.get(params, "player_id")
-    upgrades = Map.get(params, "upgrades")
-    result = Games.spend_human_player_mutation_points(player_id, game_id, upgrades)
+    skill_upgrades = Map.get(params, "skill_upgrades")
+    active_skill_changes = Map.get(params, "active_skill_changes")
+    result = Games.spend_human_player_mutation_points(player_id, game_id, skill_upgrades, active_skill_changes)
 
     case result do
       {:ok, next_round_available: next_round_available, updated_player: updated_player} ->

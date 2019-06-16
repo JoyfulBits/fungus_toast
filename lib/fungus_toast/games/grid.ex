@@ -1,6 +1,6 @@
 defmodule FungusToast.Games.Grid do
-  alias FungusToast.Games.{CellGrower, GridCell, GrowthCycle, MutationPointsEarned, PlayerStatsChange}
-  alias FungusToast.{Skills, Random}
+  alias FungusToast.Games.{CellGrower, GridCell, GrowthCycle, PointsEarned, PlayerStatsChange}
+  alias FungusToast.{ActiveSkills, Random}
 
   @spec create_starting_grid(integer(), [integer()]) :: any()
   def create_starting_grid(grid_size, player_ids) do
@@ -56,102 +56,105 @@ defmodule FungusToast.Games.Grid do
   %{
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
+        action_points_earned: [
+          %FungusToast.Games.PointsEarned{player_id: 1, points: 1}
+        ],
         generation_number: 0,
         mutation_points_earned: [],
         player_stats_changes: [],
         toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
+        action_points_earned: [],
         generation_number: 1,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
-            player_id: 1
-          }
+          %FungusToast.Games.PointsEarned{player_id: 1, points: 1}
         ],
         player_stats_changes: [
           %FungusToast.Games.PlayerStatsChange{
             fungicidal_kills: 0,
             grown_cells: 0,
+            lost_dead_cells: 0,
             perished_cells: 0,
             player_id: 1,
-            regenerated_cells: 0
+            regenerated_cells: 0,
+            stolen_dead_cells: 0
           }
         ],
         toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
+        action_points_earned: [],
         generation_number: 2,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
-            player_id: 1
-          }
+          %FungusToast.Games.PointsEarned{player_id: 1, points: 1}
         ],
         player_stats_changes: [
           %FungusToast.Games.PlayerStatsChange{
             fungicidal_kills: 0,
             grown_cells: 0,
+            lost_dead_cells: 0,
             perished_cells: 0,
             player_id: 1,
-            regenerated_cells: 0
+            regenerated_cells: 0,
+            stolen_dead_cells: 0
           }
         ],
         toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
+        action_points_earned: [],
         generation_number: 3,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
-            player_id: 1
-          }
+          %FungusToast.Games.PointsEarned{player_id: 1, points: 1}
         ],
         player_stats_changes: [
           %FungusToast.Games.PlayerStatsChange{
             fungicidal_kills: 0,
             grown_cells: 0,
+            lost_dead_cells: 0,
             perished_cells: 0,
             player_id: 1,
-            regenerated_cells: 0
+            regenerated_cells: 0,
+            stolen_dead_cells: 0
           }
         ],
         toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
+        action_points_earned: [],
         generation_number: 4,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
-            player_id: 1
-          }
+          %FungusToast.Games.PointsEarned{player_id: 1, points: 1}
         ],
         player_stats_changes: [
           %FungusToast.Games.PlayerStatsChange{
             fungicidal_kills: 0,
             grown_cells: 0,
+            lost_dead_cells: 0,
             perished_cells: 0,
             player_id: 1,
-            regenerated_cells: 0
+            regenerated_cells: 0,
+            stolen_dead_cells: 0
           }
         ],
         toast_changes: []
       },
       %FungusToast.Games.GrowthCycle{
+        action_points_earned: [],
         generation_number: 5,
         mutation_points_earned: [
-          %FungusToast.Games.MutationPointsEarned{
-            mutation_points: 1,
-            player_id: 1
-          }
+          %FungusToast.Games.PointsEarned{player_id: 1, points: 1}
         ],
         player_stats_changes: [
           %FungusToast.Games.PlayerStatsChange{
             fungicidal_kills: 0,
             grown_cells: 0,
+            lost_dead_cells: 0,
             perished_cells: 0,
             player_id: 1,
-            regenerated_cells: 0
+            regenerated_cells: 0,
+            stolen_dead_cells: 0
           }
         ],
         toast_changes: []
@@ -159,7 +162,6 @@ defmodule FungusToast.Games.Grid do
     ],
     new_game_state: []
   }
-
   """
   def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, generation_number \\ 1) do
     active_cell_changes = if(active_cell_changes == nil) do
@@ -168,13 +170,13 @@ defmodule FungusToast.Games.Grid do
       active_cell_changes
     end
     active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
-      grid_cells = if(active_cell_change.skill_id == Skills.skill_id_hydrophilia()) do
+      grid_cells = if(active_cell_change.active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
         Enum.map(active_cell_change.cell_indexes, fn index ->
           %GridCell{index: index, moist: true}
         end)
       else
         if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
-          raise "Hydrophilia is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
+          raise "Eye Dropper is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
         else
           []
         end
@@ -185,10 +187,16 @@ defmodule FungusToast.Games.Grid do
 
     pre_generation_number = generation_number - 1
 
+    #each player gets one action point each round
+    action_points = Enum.map(player_id_to_player_map, fn{player_id, _player}
+      -> %PointsEarned{player_id: player_id, points: PointsEarned.default_action_points_per_round()}
+    end)
+
     active_cell_changes_growth_cycle = %GrowthCycle{
       generation_number: pre_generation_number,
       toast_changes: active_toast_changes,
-      mutation_points_earned: []
+      mutation_points_earned: [],
+      action_points_earned: action_points
     }
 
     active_toast_changes_map = Enum.into(active_toast_changes, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
@@ -208,7 +216,7 @@ defmodule FungusToast.Games.Grid do
 
     mutation_points = Enum.map(player_id_to_player_map,
       fn{player_id, player}
-        -> %MutationPointsEarned{player_id: player_id, mutation_points: calculate_mutation_points(player)}
+        -> %PointsEarned{player_id: player_id, points: calculate_mutation_points(player)}
       end)
 
     toast_changes_grid_cell_list = Enum.map(toast_changes, fn {_k, grid_cell} -> grid_cell end)
@@ -218,7 +226,8 @@ defmodule FungusToast.Games.Grid do
       generation_number: generation_number,
       toast_changes: toast_changes_grid_cell_list,
       player_stats_changes: player_stats_map,
-      mutation_points_earned: mutation_points
+      mutation_points_earned: mutation_points,
+      action_points_earned: []
     }
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
