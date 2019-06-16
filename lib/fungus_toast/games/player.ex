@@ -28,6 +28,7 @@ defmodule FungusToast.Games.Player do
     :name,
     :human,
     :mutation_points,
+    :action_points,
     :top_left_growth_chance,
     :top_growth_chance,
     :top_right_growth_chance,
@@ -59,6 +60,7 @@ defmodule FungusToast.Games.Player do
     :name,
     :human,
     :mutation_points,
+    :action_points,
     :top_left_growth_chance,
     :top_growth_chance,
     :top_right_growth_chance,
@@ -93,6 +95,7 @@ defmodule FungusToast.Games.Player do
     field :ai_type, :string, null: true
 
     field :mutation_points, :integer, default: @default_starting_mutation_points, null: false
+    field :action_points, :integer, default: 0, null: false
 
     field :top_left_growth_chance, :float, default: 0.0, null: false
     field :top_growth_chance, :float, default: @default_top_right_bottom_left_growth_chance, null: false
