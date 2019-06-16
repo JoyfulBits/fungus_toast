@@ -4,8 +4,8 @@ defmodule FungusToast.Games.PointsEarned do
 
   @starting_mutation_points 5
   def starting_mutation_points, do: @starting_mutation_points
-  @starting_action_points 1
-  def starting_action_points, do: @starting_action_points
+  @default_action_points_per_round 1
+  def default_action_points_per_round, do: @default_action_points_per_round
 
   @attrs [
     :player_id,

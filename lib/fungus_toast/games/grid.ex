@@ -189,7 +189,7 @@ defmodule FungusToast.Games.Grid do
 
     #each player gets one action point each round
     action_points = Enum.map(player_id_to_player_map, fn{player_id, _player}
-      -> %PointsEarned{player_id: player_id, points: PointsEarned.starting_action_points()}
+      -> %PointsEarned{player_id: player_id, points: PointsEarned.default_action_points_per_round()}
     end)
 
     active_cell_changes_growth_cycle = %GrowthCycle{

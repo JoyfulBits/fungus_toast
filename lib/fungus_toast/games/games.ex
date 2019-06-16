@@ -8,7 +8,7 @@ defmodule FungusToast.Games do
   alias FungusToast.{Repo, Accounts, Players, PlayerSkills, Rounds, ActiveCellChanges}
   alias FungusToast.Accounts.User
 
-  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, PointsEarned}
+  alias FungusToast.Games.{Game, GameState, Grid, Round, GrowthCycle, PointsEarned, Player}
   alias FungusToast.Game.Status
 
   @starting_end_of_game_count_down 5
@@ -153,7 +153,7 @@ defmodule FungusToast.Games do
       Map.merge(acc, mutation_points_earned_map, fn _k, v1, v2 -> v1 + v2 end)
     end)
 
-    action_points_map = Enum.map(players, fn player -> {player.id, PointsEarned.starting_action_points()} end)
+    action_points_map = Enum.map(players, fn player -> {player.id, player.action_points + PointsEarned.default_action_points_per_round()} end)
     |> Enum.into(%{})
 
     player_ids = Enum.map(players, fn player -> player.id end)
@@ -263,11 +263,11 @@ defmodule FungusToast.Games do
   end
 
   def get_starting_mutation_points(players) do
-    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: PointsEarned.starting_mutation_points()} end)
+    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: Player.default_starting_mutation_points()} end)
   end
 
   def get_starting_action_points(players) do
-    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: PointsEarned.starting_action_points()} end)
+    Enum.map(players, fn player -> %PointsEarned{player_id: player.id, points: PointsEarned.default_action_points_per_round()} end)
   end
 
   def create_game_for_user(game_changeset, user_name) when is_binary(user_name) do
