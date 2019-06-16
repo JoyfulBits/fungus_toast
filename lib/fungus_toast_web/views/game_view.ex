@@ -55,6 +55,7 @@ defmodule FungusToastWeb.GameView do
       id: player.id,
       name: player.name,
       mutation_points: player.mutation_points,
+      action_points: player.action_points,
       human: player.human,
       top_left_growth_chance: player.top_left_growth_chance,
       top_growth_chance: player.top_growth_chance,

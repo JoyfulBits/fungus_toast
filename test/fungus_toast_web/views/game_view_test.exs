@@ -16,6 +16,7 @@ defmodule FungusToastWeb.GameViewTest do
         name: "player name",
         id: 1,
         mutation_points: 2,
+        action_points: 20,
         human: true,
         top_left_growth_chance: 3,
         top_growth_chance: 4,
@@ -67,6 +68,8 @@ defmodule FungusToastWeb.GameViewTest do
       actual_player_1_info = Enum.filter(result.players, fn player -> player.id == player_1.id end) |> hd
 
       assert actual_player_1_info.id == player_1.id
+      assert actual_player_1_info.mutation_points == player_1.mutation_points
+      assert actual_player_1_info.action_points == player_1.action_points
       assert actual_player_1_info.top_left_growth_chance == player_1.top_left_growth_chance
       assert actual_player_1_info.top_growth_chance == player_1.top_growth_chance
       assert actual_player_1_info.top_right_growth_chance == player_1.top_right_growth_chance
