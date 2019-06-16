@@ -452,7 +452,7 @@ defmodule FungusToast.Games do
     if(spent_points > player.mutation_points) do
       {:error_illegal_number_of_points_spent}
     else
-      if(ActiveCellChanges.update_active_cell_changes(player_id, game_id, active_skill_changes)) do
+      if(ActiveCellChanges.update_active_cell_changes(player, game_id, active_skill_changes)) do
         total_spent_points = player.spent_mutation_points + spent_points
 
         player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, passive_skill_upgrades)

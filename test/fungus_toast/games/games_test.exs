@@ -429,7 +429,7 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "spend_human_player_mutation_points/3" do
-    test "that an error is returned if too many points were attempted to be spent" do
+    test "that an error is returned if too many mutation points were attempted to be spent" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
       player = hd(game.players)
