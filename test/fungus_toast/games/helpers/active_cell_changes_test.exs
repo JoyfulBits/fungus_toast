@@ -28,6 +28,8 @@ defmodule FungusToast.ActiveCellChangesTest do
       list_with_max_allowed_changes = Enum.map(1..skill.number_of_toast_changes, fn x -> x end)
       upgrade_attrs = %{skill.id=> %{"active_cell_changes" => list_with_max_allowed_changes, "points_spent" => 1}}
       assert ActiveCellChanges.update_active_cell_changes(player, game.id, upgrade_attrs)
+      updated_player = Players.get_player!(player.id)
+      assert updated_player.action_points == 0
     end
 
     test "it returns true when two action points are spent and two times the max cell changes are requested" do

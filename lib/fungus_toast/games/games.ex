@@ -448,15 +448,15 @@ defmodule FungusToast.Games do
   def spend_human_player_mutation_points(player_id, game_id, passive_skill_upgrades, active_skill_changes \\ %{}) do
     #TODO check if the game is started and throw a 400 bad request if not
     player = Players.get_player!(player_id)
-    spent_points = PlayerSkills.sum_skill_upgrades(passive_skill_upgrades)
-    if(spent_points > player.mutation_points) do
+    spent_mutation_points = PlayerSkills.sum_skill_upgrades(passive_skill_upgrades)
+    if(spent_mutation_points > player.mutation_points) do
       {:error_illegal_number_of_points_spent}
     else
       if(ActiveCellChanges.update_active_cell_changes(player, game_id, active_skill_changes)) do
-        total_spent_points = player.spent_mutation_points + spent_points
+        total_spent_points = player.spent_mutation_points + spent_mutation_points
 
         player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, passive_skill_upgrades)
-        |> Map.put(:mutation_points, player.mutation_points - spent_points)
+        |> Map.put(:mutation_points, player.mutation_points - spent_mutation_points)
         |> Map.put(:spent_mutation_points, total_spent_points)
 
         updated_player = Players.update_player(player, player_changes)
