@@ -1,5 +1,6 @@
 defmodule FungusToast.AiStrategies do
-  alias FungusToast.Games.Player
+  alias FungusToast.Games.{Player, Grid}
+  alias FungusToast.ActiveSkills
 
   @ai_type_random "Random"
   def ai_type_random, do: @ai_type_random
@@ -154,5 +155,63 @@ defmodule FungusToast.AiStrategies do
 
     return_value
     end
+  end
+
+  def use_active_skills(%Player{action_points: action_points} = ai_player, toast_grid, grid_size, remaining_cells) do
+    Enum.reduce(1..action_points, [], fn _, acc ->
+      candidate_skills = get_candidate_active_skills(remaining_cells)
+      if(length(candidate_skills) > 0) do
+        chosen_active_skill_id = Enum.random(candidate_skills)
+
+        if(chosen_active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
+          #def place_water_droplets(ai_player, original_toast_grid, grid_size, original_toast_grid, droplet_indexes, got_all_droplets \\ false)
+          acc ++ place_water_droplets(ai_player, toast_grid, grid_size, toast_grid)
+        else
+          acc
+        end
+      else
+        acc
+      end
+    end)
+  end
+
+  @minimum_remaining_cells_for_eye_dropper 100
+
+  @doc """
+  Gets the active skills that the AI player could potentially use
+  """
+  def get_candidate_active_skills(remaining_cells) do
+    if(remaining_cells > @minimum_remaining_cells_for_eye_dropper) do
+      [ActiveSkills.skill_id_eye_dropper()]
+    else
+      []
+    end
+  end
+
+  @doc """
+  Attempts to place water droplets only in adjacent empty cells. Could place less than the max if it doesn't found enough adjacent.
+  """
+  def place_water_droplets(ai_player, original_toast_grid_map, grid_size, toast_grid_list, droplet_indexes \\ [], got_all_droplets \\ false)
+  def place_water_droplets(ai_player, original_toast_grid_map, grid_size, [grid_cell | remaining_toast], droplet_indexes, got_all_droplets) when got_all_droplets == false do
+    new_droplet_indexes = if(grid_cell.live and grid_cell.player_id == ai_player.id) do
+     Grid.get_surrounding_cells(original_toast_grid_map, grid_size, grid_cell.index)
+      |> Enum.reduce([], fn {_location, adjacent_grid_cell}, acc ->
+        if(adjacent_grid_cell.empty and !adjacent_grid_cell.moist) do
+          acc ++ [adjacent_grid_cell.index]
+        else
+          acc
+        end
+      end)
+    else
+      []
+    end
+    unique_water_droplets = droplet_indexes ++ new_droplet_indexes
+    |> Enum.uniq
+    got_enough_droplets = length(unique_water_droplets) >= ActiveSkills.number_of_toast_changes_for_eye_dropper() or remaining_toast == []
+    place_water_droplets(ai_player, original_toast_grid_map, grid_size, remaining_toast, unique_water_droplets, got_enough_droplets)
+  end
+
+  def place_water_droplets(_ai_player, _original_toast_grid_map, _grid_size, _empty_list, droplet_indexes, got_all_droplets) when got_all_droplets == true do
+    Enum.take(droplet_indexes, ActiveSkills.number_of_toast_changes_for_eye_dropper())
   end
 end
