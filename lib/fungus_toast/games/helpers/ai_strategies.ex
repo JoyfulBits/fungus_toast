@@ -1,5 +1,5 @@
 defmodule FungusToast.AiStrategies do
-  alias FungusToast.Games.{Player, Grid}
+  alias FungusToast.Games.{Player, Grid, ActiveCellChange}
   alias FungusToast.ActiveSkills
 
   @ai_type_random "Random"
@@ -158,14 +158,15 @@ defmodule FungusToast.AiStrategies do
   end
 
   def use_active_skills(%Player{action_points: action_points} = ai_player, toast_grid, grid_size, remaining_cells) do
-    Enum.reduce(1..action_points, [], fn _, acc ->
+    toast_grid_map = Enum.map(toast_grid, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    |> Enum.into(%{})
+    toast_changes = Enum.reduce(1..action_points, [], fn _, acc ->
       candidate_skills = get_candidate_active_skills(remaining_cells)
       if(length(candidate_skills) > 0) do
         chosen_active_skill_id = Enum.random(candidate_skills)
 
         if(chosen_active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
-          #def place_water_droplets(ai_player, original_toast_grid, grid_size, original_toast_grid, droplet_indexes, got_all_droplets \\ false)
-          acc ++ place_water_droplets(ai_player, toast_grid, grid_size, toast_grid)
+          acc ++ place_water_droplets(ai_player, toast_grid_map, grid_size, toast_grid)
         else
           acc
         end
@@ -173,6 +174,9 @@ defmodule FungusToast.AiStrategies do
         acc
       end
     end)
+
+    #for now, all action points are always spent by the AI
+    {toast_changes, ai_player.action_points}
   end
 
   @minimum_remaining_cells_for_eye_dropper 100
@@ -207,11 +211,17 @@ defmodule FungusToast.AiStrategies do
     end
     unique_water_droplets = droplet_indexes ++ new_droplet_indexes
     |> Enum.uniq
+
     got_enough_droplets = length(unique_water_droplets) >= ActiveSkills.number_of_toast_changes_for_eye_dropper() or remaining_toast == []
     place_water_droplets(ai_player, original_toast_grid_map, grid_size, remaining_toast, unique_water_droplets, got_enough_droplets)
   end
 
-  def place_water_droplets(_ai_player, _original_toast_grid_map, _grid_size, _empty_list, droplet_indexes, got_all_droplets) when got_all_droplets == true do
-    Enum.take(droplet_indexes, ActiveSkills.number_of_toast_changes_for_eye_dropper())
+  def place_water_droplets(ai_player, _original_toast_grid_map, _grid_size, _empty_list, droplet_indexes, got_all_droplets) when got_all_droplets == true do
+    cell_indexes = Enum.take(droplet_indexes, ActiveSkills.number_of_toast_changes_for_eye_dropper())
+    if(cell_indexes == []) do
+      []
+    else
+      [%ActiveCellChange{player_id: ai_player.id, active_skill_id: ActiveSkills.skill_id_eye_dropper(), cell_indexes: cell_indexes}]
+    end
   end
 end

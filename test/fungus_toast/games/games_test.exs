@@ -2,7 +2,7 @@ defmodule FungusToast.GamesTest do
   use FungusToast.DataCase
 
   alias FungusToast.{Accounts, Games, Players, Rounds, Skills, ActiveSkills, PlayerSkills, AiStrategies}
-  alias FungusToast.Games.{Game, GameState, Player, GridCell}
+  alias FungusToast.Games.{Game, GameState, Player, GridCell, PointsEarned}
   alias FungusToast.Game.Status
 
   defp user_fixture(attrs \\ %{}) do
@@ -271,7 +271,7 @@ defmodule FungusToast.GamesTest do
   end
 
   describe "trigger_next_round/1" do
-    test "that AI player's mutation points get spent" do
+    test "that AI player's mutation and action points get spent" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 2})
 
@@ -292,7 +292,7 @@ defmodule FungusToast.GamesTest do
       end)
     end
 
-    test "that AI and Human players are awarded their new mutation points, but AI players already spent theirs" do
+    test "that AI and Human players are awarded their new mutation and action points, but AI players already spent theirs" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 1})
 
@@ -304,10 +304,14 @@ defmodule FungusToast.GamesTest do
       |> Enum.each(fn player ->
         if(player.human) do
           assert player.mutation_points >= Player.default_starting_mutation_points
+          #since the player didn't spend any points and this is the 2nd round, there should be 2 rounds of points accumulated
+          assert player.action_points == PointsEarned.default_action_points_per_round() * 2
         else
-          #TODO add total_spent_points to Player
           #since this is the 2nd round of expenditures, make sure the AI player as spent at least 2x the minimum
-          #assert player.total_spent_points >= Player.default_starting_mutation_points * 2
+          assert player.spent_mutation_points >= Player.default_starting_mutation_points * 2
+          assert player.mutation_points == 0
+          #for now the AI player spends all of it's action points. This may change in the future.
+          assert player.action_points == 0
         end
 
       end)

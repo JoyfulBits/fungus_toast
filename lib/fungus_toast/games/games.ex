@@ -89,19 +89,33 @@ defmodule FungusToast.Games do
   end
 
   def start_game(game = %Game{id: id, players: players, grid_size: grid_size, number_of_human_players: number_of_human_players, number_of_ai_players: number_of_ai_players}) do
-    if(number_of_ai_players > 0) do
-      total_cells = grid_size * grid_size
-      Enum.each(players, fn player ->
-        if(!player.human and player.mutation_points > 0) do
-          Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_cells)
-        end
-      end)
-    end
-
     number_of_joined_human_players = Players.get_number_of_users_who_joined_game(id)
     if(number_of_joined_human_players == number_of_human_players) do
         player_ids = Enum.map(players, fn(x) -> x.id end)
         starting_cells = Grid.create_starting_grid(grid_size, player_ids)
+
+        ai_active_skill_changes = if(number_of_ai_players > 0) do
+          total_cells = grid_size * grid_size
+
+          Enum.filter(players, fn player -> !player.human end)
+          |> Enum.map(fn player ->
+            if(player.mutation_points > 0) do
+              Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_cells)
+            end
+
+            if(player.action_points > 0) do
+              {active_skill_changes, _updated_player} = Players.spend_ai_action_points(player, starting_cells, grid_size, total_cells)
+              active_skill_changes
+            else
+              []
+            end
+          end)
+          |> Enum.reduce([], fn active_skill_changes, acc ->
+            acc ++ active_skill_changes
+          end)
+        else
+          []
+        end
         #create the first round with an empty starting_game_state and toast changes for the initial cells
         mutation_points_earned = get_starting_mutation_points(players)
         action_points_earned = get_starting_action_points(players)
@@ -123,7 +137,8 @@ defmodule FungusToast.Games do
             number: 1,
             growth_cycles: [],
             starting_game_state: %GameState{cells: starting_cells, round_number: 1},
-            starting_player_stats: starting_player_stats
+            starting_player_stats: starting_player_stats,
+            active_cell_changes: ai_active_skill_changes
           }
 
           Rounds.create_round(game.id, first_round_values)
@@ -196,11 +211,6 @@ defmodule FungusToast.Games do
 
     {updated_game, updated_players}
   end
-
-
-
-
-
 
   def set_starting_game_stats(game = %Game{players: players}, cells) do
     player_stats_map = get_live_and_dead_cells_for_player(players, cells)
@@ -399,10 +409,19 @@ defmodule FungusToast.Games do
       if(updated_game.status == Status.status_finished) do
         latest_round
       else
-        #spend AI mutation points immediately
-        Enum.filter(updated_players, fn player -> !player.human end)
-        |> Enum.each(fn player ->
+        #spend AI mutation and action points immediately
+        ai_active_skill_changes = Enum.filter(updated_players, fn player -> !player.human end)
+        |> Enum.map(fn player ->
             Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
+            if(player.action_points > 0) do
+              {active_skill_changes, _updated_player} = Players.spend_ai_action_points(player, growth_summary.new_game_state, game.grid_size, total_cells)
+              active_skill_changes
+            else
+              []
+            end
+        end)
+        |> Enum.reduce([], fn active_skill_changes, acc ->
+          acc ++ active_skill_changes
         end)
 
         #set up the new round with only the starting game state and starting player stats
@@ -412,7 +431,8 @@ defmodule FungusToast.Games do
           number: next_round_number, growth_cycles: [],
           starting_game_state: %GameState{round_number: next_round_number,
           cells: growth_summary.new_game_state},
-          starting_player_stats: starting_player_stats
+          starting_player_stats: starting_player_stats,
+          active_cell_changes: ai_active_skill_changes
         }
         Rounds.create_round(game.id, next_round)
       end

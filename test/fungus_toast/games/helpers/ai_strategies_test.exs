@@ -118,9 +118,9 @@ defmodule FungusToast.Games.AiStrategiesTest do
       toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
       |> Enum.into(%{})
 
-      indexes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
 
-      assert length(indexes) == 0
+      assert length(active_cell_changes) == 0
     end
 
     test "it places 0 droplets if there are no empty cells surrounding the player's live cells" do
@@ -135,9 +135,9 @@ defmodule FungusToast.Games.AiStrategiesTest do
       toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
       |> Enum.into(%{})
 
-      indexes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
 
-      assert length(indexes) == 0
+      assert length(active_cell_changes) == 0
     end
 
     test "it doesn't place droplets on cells that are already moist" do
@@ -153,9 +153,9 @@ defmodule FungusToast.Games.AiStrategiesTest do
       toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
       |> Enum.into(%{})
 
-      indexes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
 
-      assert length(indexes) == 0
+      assert length(active_cell_changes) == 0
     end
 
     test "it places droplets on empty surrounding cells" do
@@ -175,10 +175,11 @@ defmodule FungusToast.Games.AiStrategiesTest do
       toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
       |> Enum.into(%{})
 
-      indexes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
 
-      assert length(indexes) == 1
-      assert hd(indexes) == expected_index
+      assert length(active_cell_changes) == 1
+      active_cell_changes = hd(active_cell_changes)
+      assert hd(active_cell_changes.cell_indexes) == expected_index
     end
 
     test "it places no more than the maximum number of water droplets" do
@@ -192,13 +193,15 @@ defmodule FungusToast.Games.AiStrategiesTest do
       toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
       |> Enum.into(%{})
 
-      indexes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
 
-      assert length(indexes) == ActiveSkills.number_of_toast_changes_for_eye_dropper()
+      assert length(active_cell_changes) == 1
+      active_cell_change = hd(active_cell_changes)
+      assert length(active_cell_change.cell_indexes) == ActiveSkills.number_of_toast_changes_for_eye_dropper()
       valid_indexes = [0, 2, 50, 51, 52]
-      assert Enum.at(valid_indexes, 0) in valid_indexes
-      assert Enum.at(valid_indexes, 1) in valid_indexes
-      assert Enum.at(valid_indexes, 2) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 0) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 1) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 2) in valid_indexes
     end
 
 
@@ -214,14 +217,17 @@ defmodule FungusToast.Games.AiStrategiesTest do
       toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
       |> Enum.into(%{})
 
-      indexes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
 
-      assert length(indexes) == 3
+      assert length(active_cell_changes) == 1
+      active_cell_change = hd(active_cell_changes)
+      assert length(active_cell_change.cell_indexes) == ActiveSkills.number_of_toast_changes_for_eye_dropper()
+
       valid_indexes = [50, 51, 52]
       #index 50 would show up as an open space for both living cells
-      assert Enum.at(valid_indexes, 0) in valid_indexes
-      assert Enum.at(valid_indexes, 1) in valid_indexes
-      assert Enum.at(valid_indexes, 2) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 0) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 1) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 2) in valid_indexes
     end
   end
 end
