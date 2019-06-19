@@ -1,7 +1,7 @@
 defmodule FungusToast.Games.AiStrategiesTest do
   use ExUnit.Case, async: true
-  alias FungusToast.AiStrategies
-  alias FungusToast.Games.Player
+  alias FungusToast.{AiStrategies, ActiveSkills}
+  alias FungusToast.Games.{GridCell, Player}
 
   describe "maxed_out_skill/2" do
     test "that it returns true when skills that bottom out at 0 are at 0" do
@@ -61,7 +61,6 @@ defmodule FungusToast.Games.AiStrategiesTest do
       #force mid game so Anti-Apoptosis would be picked for the test player
       remaining_cells = total_cells - 100 * AiStrategies.early_game_treshhold + 1
       candidate_skills = AiStrategies.get_candidate_skills(player, total_cells, remaining_cells)
-
       assert length(candidate_skills) == 1
       assert hd(candidate_skills) == "Anti-Apoptosis"
     end
@@ -88,6 +87,22 @@ defmodule FungusToast.Games.AiStrategiesTest do
       assert hd(candidate_skills) == "Regeneration"
     end
 
+    test "that it returns duplicates of the same skills in accordance to their weights" do
+      player = %Player{ai_type: "TEST2"}
+      total_cells = 100
+      #force early game so Anti-Apoptosis and Budding would be picked for the TEST2 player
+      remaining_cells = total_cells
+      candidate_skills = AiStrategies.get_candidate_skills(player, total_cells, remaining_cells)
+
+      assert length(candidate_skills) == 3
+
+      skill_to_occurrences_map = Enum.reduce(candidate_skills, %{}, fn skill_name, acc ->
+        Map.update(acc, skill_name, 1, &(&1 + 1))
+      end)
+      assert skill_to_occurrences_map[AiStrategies.skill_name_budding] == 2
+      assert skill_to_occurrences_map[AiStrategies.skill_name_anti_apoptosis] == 1
+    end
+
     test "that it defaults to Anti-Apoptosis when the player has already maxed out the candidate skills" do
       player = %Player{ai_type: "TEST", regeneration_chance: 100}
       total_cells = 100
@@ -108,6 +123,126 @@ defmodule FungusToast.Games.AiStrategiesTest do
 
       assert length(candidate_skills) == 1
       assert hd(candidate_skills) == AiStrategies.skill_name_mycotoxicity
+    end
+  end
+
+  describe "place_water_droplets/6" do
+    test "it places 0 droplets if there are no live cells for the player" do
+      player = %Player{id: 1}
+      toast = Enum.map(1..5, fn x -> %GridCell{index: 500 + x, live: false, player_id: player.id} end)
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+
+      assert length(active_cell_changes) == 0
+    end
+
+    test "it places 0 droplets if there are no empty cells surrounding the player's live cells" do
+      player = %Player{id: 1}
+      #create a grid with a live cell at index 0 so we need to place less surrounding cells
+      toast = [
+        %GridCell{index: 0, live: true, empty: false, player_id: player.id},
+        %GridCell{index: 1, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 50, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 51, live: false, empty: false, player_id: player.id}
+      ]
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+
+      assert length(active_cell_changes) == 0
+    end
+
+    test "it doesn't place droplets on cells that are already moist" do
+      player = %Player{id: 1}
+      #create a grid with a live cell at index 0 so we need to place less surrounding cells
+      toast = [
+        %GridCell{index: 0, live: true, player_id: player.id},
+        %GridCell{index: 1, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 50, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 51, live: false, empty: true, moist: true}
+      ]
+
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+
+      assert length(active_cell_changes) == 0
+    end
+
+    test "it places droplets on empty surrounding cells" do
+      player = %Player{id: 1}
+      expected_index = 2
+      #create a grid with a live cell at index 1 so we can have live, moist, dead, and empty cells
+      toast = [
+        %GridCell{index: 0, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 1, live: true, empty: false, player_id: player.id}, #the player's one live cell
+        %GridCell{index: expected_index, empty: true }, #empty space that should get moisture drop
+        %GridCell{index: 3, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 50, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 51, live: false, empty: false, player_id: player.id},
+        %GridCell{index: 52, live: false, empty: true, moist: true}
+      ]
+
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+
+      assert length(active_cell_changes) == 1
+      active_cell_changes = hd(active_cell_changes)
+      assert hd(active_cell_changes.cell_indexes) == expected_index
+    end
+
+    test "it places no more than the maximum number of water droplets" do
+      player = %Player{id: 1}
+      #create a grid with a live cell at index 1 so it has a chance for up to 5 adjacent cells
+      toast = [
+
+        %GridCell{index: 1, live: true, empty: false, player_id: player.id} #the player's one live cell
+      ]
+
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+
+      assert length(active_cell_changes) == 1
+      active_cell_change = hd(active_cell_changes)
+      assert length(active_cell_change.cell_indexes) == ActiveSkills.number_of_toast_changes_for_eye_dropper()
+      valid_indexes = [0, 2, 50, 51, 52]
+      assert Enum.at(active_cell_change.cell_indexes, 0) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 1) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 2) in valid_indexes
+    end
+
+
+    test "it doesn't duplicate the same index" do
+      player = %Player{id: 1}
+      #create a grid with a live cell at index 0 and 1 so they have overlapping adjacent empty spaces
+      toast = [
+        %GridCell{index: 0, live: true, empty: false, player_id: player.id},
+        %GridCell{index: 1, live: true, empty: false, player_id: player.id},
+        %GridCell{index: 2, live: false, empty: false, player_id: player.id}
+      ]
+
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_changes = AiStrategies.place_water_droplets(player, toast_map, 50, toast)
+
+      assert length(active_cell_changes) == 1
+      active_cell_change = hd(active_cell_changes)
+      assert length(active_cell_change.cell_indexes) == ActiveSkills.number_of_toast_changes_for_eye_dropper()
+
+      valid_indexes = [50, 51, 52]
+      #index 50 would show up as an open space for both living cells
+      assert Enum.at(active_cell_change.cell_indexes, 0) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 1) in valid_indexes
+      assert Enum.at(active_cell_change.cell_indexes, 2) in valid_indexes
     end
   end
 end
