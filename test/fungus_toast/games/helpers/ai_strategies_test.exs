@@ -61,7 +61,6 @@ defmodule FungusToast.Games.AiStrategiesTest do
       #force mid game so Anti-Apoptosis would be picked for the test player
       remaining_cells = total_cells - 100 * AiStrategies.early_game_treshhold + 1
       candidate_skills = AiStrategies.get_candidate_skills(player, total_cells, remaining_cells)
-
       assert length(candidate_skills) == 1
       assert hd(candidate_skills) == "Anti-Apoptosis"
     end
@@ -86,6 +85,22 @@ defmodule FungusToast.Games.AiStrategiesTest do
 
       assert length(candidate_skills) == 1
       assert hd(candidate_skills) == "Regeneration"
+    end
+
+    test "that it returns duplicates of the same skills in accordance to their weights" do
+      player = %Player{ai_type: "TEST2"}
+      total_cells = 100
+      #force early game so Anti-Apoptosis and Budding would be picked for the TEST2 player
+      remaining_cells = total_cells
+      candidate_skills = AiStrategies.get_candidate_skills(player, total_cells, remaining_cells)
+
+      assert length(candidate_skills) == 3
+
+      skill_to_occurrences_map = Enum.reduce(candidate_skills, %{}, fn skill_name, acc ->
+        Map.update(acc, skill_name, 1, &(&1 + 1))
+      end)
+      assert skill_to_occurrences_map[AiStrategies.skill_name_budding] == 2
+      assert skill_to_occurrences_map[AiStrategies.skill_name_anti_apoptosis] == 1
     end
 
     test "that it defaults to Anti-Apoptosis when the player has already maxed out the candidate skills" do

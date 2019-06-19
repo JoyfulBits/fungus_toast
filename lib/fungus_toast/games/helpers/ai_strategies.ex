@@ -69,27 +69,28 @@ defmodule FungusToast.AiStrategies do
   end
 
   @candidate_skills_map %{
-    "Random|EarlyGame" => [@skill_name_budding, @skill_name_hypermutation],
-    "Random|MidGame" => [@skill_name_anti_apoptosis, @skill_name_budding, @skill_name_hypermutation],
-    "Random|LateGame" => [@skill_name_anti_apoptosis, @skill_name_regeneration, @skill_name_mycotoxicity],
-    "Growth|EarlyGame" => [@skill_name_budding],
-    "Growth|MidGame" => [@skill_name_anti_apoptosis, @skill_name_budding],
-    "Growth|LateGame" => [@skill_name_anti_apoptosis, @skill_name_budding, @skill_name_regeneration],
-    "Spores|EarlyGame" => [@skill_name_spores, @skill_name_hypermutation],
-    "Spores|MidGame" => [@skill_name_anti_apoptosis, @skill_name_spores],
-    "Spores|LateGame" => [@skill_name_anti_apoptosis, @skill_name_regeneration, @skill_name_mycotoxicity],
-    "Toxic|EarlyGame" => [@skill_name_budding, @skill_name_hypermutation],
-    "Toxic|MidGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],
-    "Toxic|LateGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],
-    "Experimental 1|EarlyGame" => [@skill_name_budding],
-    "Experimental 1|MidGame" => [@skill_name_regeneration, @skill_name_mycotoxicity],
-    "Experimental 1|LateGame" => [@skill_name_mycotoxicity],
-    "Long Term|EarlyGame" => [@skill_name_hypermutation],
-    "Long Term|MidGame" => [@skill_name_hypermutation, @skill_name_budding],
-    "Long Term|LateGame" => [@skill_name_anti_apoptosis, @skill_name_regeneration, @skill_name_mycotoxicity],
-    "TEST|EarlyGame" => [@skill_name_anti_apoptosis],
-    "TEST|MidGame" => [@skill_name_budding],
-    "TEST|LateGame" => [@skill_name_regeneration]
+    "Random|EarlyGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_budding => 1, @skill_name_hypermutation => 1, @skill_name_spores => 1, @skill_name_hydrophilia => 1},
+    "Random|MidGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_budding => 1, @skill_name_hypermutation => 1, @skill_name_spores => 1},
+    "Random|LateGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_regeneration => 1, @skill_name_mycotoxicity => 1},
+    "Growth|EarlyGame" => %{@skill_name_budding => 4, @skill_name_spores => 2, @skill_name_hypermutation => 1, @skill_name_hydrophilia => 1},
+    "Growth|MidGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_budding => 2},
+    "Growth|LateGame" => %{@skill_name_anti_apoptosis => 2, @skill_name_budding => 1, @skill_name_regeneration => 4},
+    "Spores|EarlyGame" => %{@skill_name_hydrophilia => 1, @skill_name_spores => 4, @skill_name_hypermutation => 1, @skill_name_budding => 1},
+    "Spores|MidGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_spores => 1},
+    "Spores|LateGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_regeneration => 1},
+    "Toxic|EarlyGame" => %{@skill_name_hypermutation => 3, @skill_name_budding => 2, @skill_name_spores => 1},
+    "Toxic|MidGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_regeneration => 1, @skill_name_mycotoxicity => 2},
+    "Toxic|LateGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_regeneration => 2, @skill_name_mycotoxicity => 4},
+    "Experimental 1|EarlyGame" => %{@skill_name_budding => 1},
+    "Experimental 1|MidGame" => %{@skill_name_budding => 1},
+    "Experimental 1|LateGame" => %{@skill_name_budding => 1},
+    "Long Term|EarlyGame" => %{@skill_name_hypermutation => 4, @skill_name_budding => 1, @skill_name_spores => 1},
+    "Long Term|MidGame" => %{@skill_name_hypermutation => 2, @skill_name_anti_apoptosis => 1, @skill_name_regeneration => 2},
+    "Long Term|LateGame" => %{ @skill_name_anti_apoptosis => 1, @skill_name_regeneration => 2, @skill_name_mycotoxicity => 2},
+    "TEST|EarlyGame" => %{@skill_name_anti_apoptosis => 1},
+    "TEST|MidGame" => %{@skill_name_budding => 1},
+    "TEST|LateGame" => %{@skill_name_regeneration => 1},
+    "TEST2|EarlyGame" => %{@skill_name_anti_apoptosis => 1, @skill_name_budding => 2}
   }
 
   def candidate_skills_map, do: @candidate_skills_map
@@ -110,6 +111,9 @@ defmodule FungusToast.AiStrategies do
     |> Enum.random
   end
 
+  @doc """
+  Returns a list of candidate skill names, with repetitions corresponding to the weight (i.e. chance that the skill should be selected)
+  """
   def get_candidate_skills(ai_player, total_cells, number_of_remaining_cells) do
     key = ai_player.ai_type <> "|" <> case { ((total_cells - number_of_remaining_cells) / total_cells) } do
       {x} when x < @early_game_threshold -> "EarlyGame"
@@ -117,17 +121,24 @@ defmodule FungusToast.AiStrategies do
       _ -> "LateGame"
     end
 
-    candidate_skills = Map.get(candidate_skills_map(), key)
-    |> Enum.filter(fn skill_name -> !maxed_out_skill?(skill_name, ai_player) end)
+    candidate_skills_with_weights = Map.get(candidate_skills_map(), key)
 
-    if(length(candidate_skills) > 0) do
-      candidate_skills
-    else
+    list_of_skill_names_with_duplicates = Enum.reduce(candidate_skills_with_weights, [], fn {skill_name, weight}, acc ->
+      if(!maxed_out_skill?(skill_name, ai_player)) do
+        acc ++ Enum.map(1..weight, fn _ -> skill_name end)
+      else
+        acc
+      end
+    end)
+
+    if(length(list_of_skill_names_with_duplicates) == 0) do
       if(maxed_out_skill?(@skill_name_anti_apoptosis, ai_player)) do
         [@skill_name_mycotoxicity]
       else
         [@skill_name_anti_apoptosis]
       end
+    else
+      list_of_skill_names_with_duplicates
     end
   end
 
@@ -138,21 +149,25 @@ defmodule FungusToast.AiStrategies do
       false
     else
       attribute_to_check = hd(attributes)
-    percentage_chance = Map.get(player, attribute_to_check)
-    return_value = if(Enum.member?(@skills_that_bottom_out_at_0_percent, skill_name)) do
-      if(percentage_chance <= 0) do
-        true
+      percentage_chance = Map.get(player, attribute_to_check)
+      return_value = if(Enum.member?(@skills_that_bottom_out_at_0_percent, skill_name)) do
+        if(percentage_chance <= 0) do
+          true
+        else
+          false
+        end
       else
-        false
+        #TODO this should be changed to be more scalable.
+        if(skill_name == skill_name_hydrophilia() and percentage_chance > 50) do
+          true
+        else
+          if(percentage_chance >= 100) do
+            true
+          else
+            false
+          end
+        end
       end
-    else
-      if(percentage_chance >= 100) do
-        true
-      else
-        false
-      end
-    end
-
     return_value
     end
   end
