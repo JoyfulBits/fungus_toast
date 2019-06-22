@@ -175,10 +175,16 @@ defmodule FungusToast.Games.Grid do
           %GridCell{index: index, moist: true}
         end)
       else
-        if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
-          raise "Eye Dropper is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
+        if(active_cell_change.active_skill_id == ActiveSkills.skill_id_dead_cell()) do
+          Enum.map(active_cell_change.cell_indexes, fn index ->
+            %GridCell{index: index, empty: false, player_id: active_cell_change.player_id}
+          end)
         else
-          []
+          if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
+            raise "You attemped to place active cell changes for skill with id #{active_cell_change.skill_id}, which is not a valid active skill!"
+          else
+            []
+          end
         end
       end
 
