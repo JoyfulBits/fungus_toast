@@ -5,11 +5,14 @@ defmodule FungusToast.ActiveSkills do
   alias FungusToast.Games.ActiveSkill
 
   def skill_id_eye_dropper, do: 1
+  def skill_id_dead_cell, do: 2
   def number_of_toast_changes_for_eye_dropper, do: 3
+  def number_of_toast_changes_for_dead_cell, do: 1
 
   #TODO this should come from the database instead of being hard-coded here
   defp skill_to_number_of_active_changes_map, do: %{
-    skill_id_eye_dropper() => number_of_toast_changes_for_eye_dropper()
+    skill_id_eye_dropper() => number_of_toast_changes_for_eye_dropper(),
+    skill_id_dead_cell() => number_of_toast_changes_for_dead_cell()
   }
 
   def get_allowed_number_of_active_changes(active_skill_id) when is_integer(active_skill_id) do

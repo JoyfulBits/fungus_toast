@@ -118,8 +118,16 @@ defmodule FungusToast.Skills.SkillsSeed do
       number_of_toast_changes: ActiveSkills.number_of_toast_changes_for_eye_dropper,
       minimum_round: 0
     })
-  end
 
+    upsert_active_skill(%{
+      id: ActiveSkills.skill_id_dead_cell,
+      name: "Dead Cell",
+      description:
+        "Allows you to place one of your dead cells on any empty space.",
+      number_of_toast_changes: ActiveSkills.number_of_toast_changes_for_dead_cell,
+      minimum_round: 3
+    })
+  end
 
   def reset_skills_in_database() do
     Repo.delete_all(FungusToast.Games.Skill)
