@@ -41,7 +41,6 @@ defmodule FungusToast.ActiveCellChanges do
         end)
 
         if(length(active_cell_changes) > 0) do
-          #TODO update the player's action points
           Players.update_player(player, %{action_points: player.action_points - action_points_spent})
           latest_round = Rounds.get_latest_round_for_game(game_id)
 
