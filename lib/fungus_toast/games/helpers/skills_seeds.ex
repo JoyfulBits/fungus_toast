@@ -125,7 +125,7 @@ defmodule FungusToast.Skills.SkillsSeed do
       description:
         "Allows you to place one of your dead cells on any empty space.",
       number_of_toast_changes: ActiveSkills.number_of_toast_changes_for_dead_cell,
-      minimum_round: 3
+      minimum_round: ActiveSkills.minimum_number_of_rounds_for_dead_cell
     })
   end
 

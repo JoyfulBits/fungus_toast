@@ -172,11 +172,11 @@ defmodule FungusToast.AiStrategies do
     end
   end
 
-  def use_active_skills(%Player{action_points: action_points} = ai_player, toast_grid, grid_size, remaining_cells) do
+  def use_active_skills(%Player{action_points: action_points} = ai_player, toast_grid, grid_size, remaining_cells, round_number) do
     toast_grid_map = Enum.map(toast_grid, fn grid_cell -> {grid_cell.index, grid_cell} end)
     |> Enum.into(%{})
     toast_changes = Enum.reduce(1..action_points, [], fn _, acc ->
-      candidate_skills = get_candidate_active_skills(grid_size, remaining_cells)
+      candidate_skills = get_candidate_active_skills(grid_size, remaining_cells, round_number)
 
       if(length(candidate_skills) > 0) do
         chosen_active_skill_id = Enum.random(candidate_skills)
@@ -205,14 +205,14 @@ defmodule FungusToast.AiStrategies do
   @doc """
   Gets the active skills that the AI player could potentially use
   """
-  def get_candidate_active_skills(grid_size, remaining_cells) do
+  def get_candidate_active_skills(grid_size, remaining_cells, round_number) do
     candidate_skills = if(remaining_cells >= @minimum_remaining_cells_for_eye_dropper) do
       [ActiveSkills.skill_id_eye_dropper()]
     else
       []
     end
 
-    candidate_skills ++ if(remaining_cells >= grid_size * grid_size / 2) do
+    candidate_skills ++ if(remaining_cells >= grid_size * grid_size / 2 and round_number >= ActiveSkills.minimum_number_of_rounds_for_dead_cell) do
       [ActiveSkills.skill_id_dead_cell()]
     else
       []

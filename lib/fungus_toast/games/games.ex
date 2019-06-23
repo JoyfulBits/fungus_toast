@@ -104,7 +104,7 @@ defmodule FungusToast.Games do
             end
 
             if(player.action_points > 0) do
-              {active_skill_changes, _updated_player} = Players.spend_ai_action_points(player, starting_cells, grid_size, total_cells)
+              {active_skill_changes, _updated_player} = Players.spend_ai_action_points(player, starting_cells, grid_size, total_cells, 1)
               active_skill_changes
             else
               []
@@ -406,6 +406,8 @@ defmodule FungusToast.Games do
 
       updated_game = check_for_game_end(updated_game)
 
+      next_round_number = latest_round.number + 1
+
       if(updated_game.status == Status.status_finished) do
         latest_round
       else
@@ -414,7 +416,7 @@ defmodule FungusToast.Games do
         |> Enum.map(fn player ->
             Players.spend_ai_mutation_points(player, player.mutation_points, total_cells, total_remaining_cells)
             if(player.action_points > 0) do
-              {active_skill_changes, _updated_player} = Players.spend_ai_action_points(player, growth_summary.new_game_state, game.grid_size, total_cells)
+              {active_skill_changes, _updated_player} = Players.spend_ai_action_points(player, growth_summary.new_game_state, game.grid_size, total_cells, next_round_number)
               active_skill_changes
             else
               []
@@ -426,7 +428,7 @@ defmodule FungusToast.Games do
 
         #set up the new round with only the starting game state and starting player stats
         starting_player_stats = Players.make_starting_player_stats(updated_players)
-        next_round_number = latest_round.number + 1
+        next_round_number = next_round_number
         next_round = %{
           number: next_round_number, growth_cycles: [],
           starting_game_state: %GameState{round_number: next_round_number,

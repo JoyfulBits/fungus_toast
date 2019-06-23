@@ -214,8 +214,8 @@ defmodule FungusToast.Players do
     end)
   end
 
-  def spend_ai_action_points(ai_player, toast_grid, grid_size, remaining_cells) do
-    {active_cell_changes, action_points_spent} = AiStrategies.use_active_skills(ai_player, toast_grid, grid_size, remaining_cells)
+  def spend_ai_action_points(ai_player, toast_grid, grid_size, remaining_cells, round_number) do
+    {active_cell_changes, action_points_spent} = AiStrategies.use_active_skills(ai_player, toast_grid, grid_size, remaining_cells, round_number)
     updated_player = update_player(ai_player, %{action_points: ai_player.action_points - action_points_spent})
     {active_cell_changes, updated_player}
   end

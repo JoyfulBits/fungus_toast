@@ -299,7 +299,7 @@ defmodule FungusToast.Games.AiStrategiesTest do
     test "that it returns eye dropper if there are the minimum number of cells open" do
       grid_size = 50
       remaining_cells = AiStrategies.minimum_remaining_cells_for_eye_dropper
-      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells)
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, 0)
 
       assert Enum.member?(candidate_skills, ActiveSkills.skill_id_eye_dropper())
     end
@@ -307,15 +307,15 @@ defmodule FungusToast.Games.AiStrategiesTest do
     test "that it doesn't return eye dropper if there are less than the minimum number of cells open" do
       grid_size = 50
       remaining_cells = AiStrategies.minimum_remaining_cells_for_eye_dropper - 1
-      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells)
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, 0)
 
       refute Enum.member?(candidate_skills, ActiveSkills.skill_id_eye_dropper())
     end
 
-    test "that it returns dead cell if at least half of the grid is still empty" do
+    test "that it returns dead cell if at least half of the grid is still empty and it's at the minimum round" do
       grid_size = 50
       remaining_cells = grid_size * grid_size / 2
-      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells)
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, ActiveSkills.minimum_number_of_rounds_for_dead_cell)
 
       assert Enum.member?(candidate_skills, ActiveSkills.skill_id_dead_cell())
     end
@@ -323,7 +323,16 @@ defmodule FungusToast.Games.AiStrategiesTest do
     test "that it does not return dead cell if less than half of the grid is still empty" do
       grid_size = 50
       remaining_cells = (grid_size * grid_size / 2) - 1
-      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells)
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, ActiveSkills.minimum_number_of_rounds_for_dead_cell)
+
+      refute Enum.member?(candidate_skills, ActiveSkills.skill_id_dead_cell())
+    end
+
+    test "that it does not return dead cell if less than the minimum round" do
+      grid_size = 50
+      remaining_cells = (grid_size * grid_size / 2)
+      too_early_round_number = ActiveSkills.minimum_number_of_rounds_for_dead_cell - 1
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, too_early_round_number)
 
       refute Enum.member?(candidate_skills, ActiveSkills.skill_id_dead_cell())
     end

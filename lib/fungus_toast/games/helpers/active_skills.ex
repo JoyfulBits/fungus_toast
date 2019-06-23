@@ -8,6 +8,7 @@ defmodule FungusToast.ActiveSkills do
   def skill_id_dead_cell, do: 2
   def number_of_toast_changes_for_eye_dropper, do: 3
   def number_of_toast_changes_for_dead_cell, do: 1
+  def minimum_number_of_rounds_for_dead_cell, do: 3
 
   #TODO this should come from the database instead of being hard-coded here
   defp skill_to_number_of_active_changes_map, do: %{
