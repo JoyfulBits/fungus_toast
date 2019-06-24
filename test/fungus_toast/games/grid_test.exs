@@ -242,6 +242,43 @@ defmodule FungusToast.Games.GridTest do
       end)
     end
 
+    test "that it applies dead cell active cell changes to the starting game state before applying additional growth" do
+      player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
+      player_id_to_player_map = %{player1.id => player1}
+      grid_size = 50
+      starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
+      starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      expected_cell_indexes = [0]
+      active_cell_changes = [%ActiveCellChange{active_skill_id: ActiveSkills.skill_id_dead_cell(), cell_indexes: expected_cell_indexes, player_id: player1.id}]
+
+      result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map)
+
+      assert result.growth_cycles
+      growth_cycles = result.growth_cycles
+      assert Enum.count(growth_cycles) == 6
+      active_cell_changes_growth_cycle = hd(result.growth_cycles)
+      assert active_cell_changes_growth_cycle.generation_number == 0
+      #make sure the 3 active cell changes are accounted for in toast changes
+      Enum.each(expected_cell_indexes, fn cell_index ->
+        matching_cell = hd(Enum.filter(active_cell_changes_growth_cycle.toast_changes, fn grid_cell -> grid_cell.index == cell_index end))
+        assert matching_cell
+        refute matching_cell.empty
+        assert matching_cell.player_id == player1.id
+        refute matching_cell.live
+        assert matching_cell.previous_player_id == nil
+      end)
+
+      #make sure the active cell change is accounted for in the updated game state
+      Enum.each(expected_cell_indexes, fn cell_index ->
+        matching_cell = hd(Enum.filter(result.new_game_state, fn grid_cell -> grid_cell.index == cell_index end))
+        assert matching_cell
+        refute matching_cell.empty
+        assert matching_cell.player_id == player1.id
+        refute matching_cell.live
+        assert matching_cell.previous_player_id == nil
+      end)
+    end
+
     test "that it raises if an active cell change is for an invalid active skill id" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}

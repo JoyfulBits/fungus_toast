@@ -245,4 +245,96 @@ defmodule FungusToast.Games.AiStrategiesTest do
       assert Enum.at(active_cell_change.cell_indexes, 2) in valid_indexes
     end
   end
+
+  describe "place_dead_cell/5" do
+    test "it returns a cell index adjacent to an enemy live cell" do
+      player_1 = %Player{id: 1}
+      player_2 = %Player{id: 2}
+
+      empty_cell_index = 51
+      #create a grid with a live cell at index 0 and leave only one empty spot
+      toast = [
+        %GridCell{index: 0, live: true, empty: false, player_id: player_2.id},
+        %GridCell{index: 1, live: false, empty: false, player_id: player_2.id},
+        %GridCell{index: 50, live: false, empty: false, player_id: player_2.id},
+        %GridCell{index: empty_cell_index, empty: true}
+      ]
+
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_change = AiStrategies.place_dead_cell(player_1, toast_map, 50, toast)
+
+      assert length(active_cell_change.cell_indexes) == ActiveSkills.number_of_toast_changes_for_dead_cell()
+
+      #index 50 would show up as an open space for both living cells
+      assert hd(active_cell_change.cell_indexes) == empty_cell_index
+    end
+
+    test "it returns any empty cell if there are no cells open adjacent to enemies" do
+      player_1 = %Player{id: 1}
+      player_2 = %Player{id: 2}
+
+      #create a grid with a live cell at index 0 and leave only one empty spot
+      toast = [
+        %GridCell{index: 0, live: true, empty: false, player_id: player_2.id},
+        %GridCell{index: 1, live: false, empty: false, player_id: player_2.id},
+        %GridCell{index: 50, live: false, empty: false, player_id: player_2.id},
+        %GridCell{index: 51, live: false, empty: false, player_id: player_2.id},
+      ]
+
+      toast_map = Enum.map(toast, fn grid_cell -> {grid_cell.index, grid_cell} end)
+      |> Enum.into(%{})
+
+      active_cell_change = AiStrategies.place_dead_cell(player_1, toast_map, 50, toast)
+
+      cell_index = hd(active_cell_change.cell_indexes)
+
+      #make sure this is an empty cell
+      refute Map.has_key?(toast_map, cell_index)
+    end
+  end
+
+  describe "get_candidate_active_skills/2" do
+    test "that it returns eye dropper if there are the minimum number of cells open" do
+      grid_size = 50
+      remaining_cells = AiStrategies.minimum_remaining_cells_for_eye_dropper
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, 0)
+
+      assert Enum.member?(candidate_skills, ActiveSkills.skill_id_eye_dropper())
+    end
+
+    test "that it doesn't return eye dropper if there are less than the minimum number of cells open" do
+      grid_size = 50
+      remaining_cells = AiStrategies.minimum_remaining_cells_for_eye_dropper - 1
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, 0)
+
+      refute Enum.member?(candidate_skills, ActiveSkills.skill_id_eye_dropper())
+    end
+
+    test "that it returns dead cell if at least half of the grid is still empty and it's at the minimum round" do
+      grid_size = 50
+      remaining_cells = grid_size * grid_size / 2
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, ActiveSkills.minimum_number_of_rounds_for_dead_cell)
+
+      assert Enum.member?(candidate_skills, ActiveSkills.skill_id_dead_cell())
+    end
+
+    test "that it does not return dead cell if less than half of the grid is still empty" do
+      grid_size = 50
+      remaining_cells = (grid_size * grid_size / 2) - 1
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, ActiveSkills.minimum_number_of_rounds_for_dead_cell)
+
+      refute Enum.member?(candidate_skills, ActiveSkills.skill_id_dead_cell())
+    end
+
+    test "that it does not return dead cell if less than the minimum round" do
+      grid_size = 50
+      remaining_cells = (grid_size * grid_size / 2)
+      too_early_round_number = ActiveSkills.minimum_number_of_rounds_for_dead_cell - 1
+      candidate_skills = AiStrategies.get_candidate_active_skills(grid_size, remaining_cells, too_early_round_number)
+
+      refute Enum.member?(candidate_skills, ActiveSkills.skill_id_dead_cell())
+    end
+  end
 end

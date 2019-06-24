@@ -170,19 +170,7 @@ defmodule FungusToast.Games.Grid do
       active_cell_changes
     end
     active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
-      grid_cells = if(active_cell_change.active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
-        Enum.map(active_cell_change.cell_indexes, fn index ->
-          %GridCell{index: index, moist: true}
-        end)
-      else
-        if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
-          raise "Eye Dropper is currently the only skill that supports active cell changes, but you attemped to place some for skill with id #{active_cell_change.skill_id}!"
-        else
-          []
-        end
-      end
-
-      acc ++ grid_cells
+      acc ++ get_grid_cells_from_active_cell_change(active_cell_change)
     end)
 
     pre_generation_number = generation_number - 1
@@ -204,6 +192,26 @@ defmodule FungusToast.Games.Grid do
     updated_grid = Map.merge(starting_grid_map, active_toast_changes_map, fn _index, grid_cell_1, _grid_cell_2 -> grid_cell_1 end)
 
     generate_growth_summary_after_active_cell_changes(updated_grid, grid_size, player_id_to_player_map, generation_number, [active_cell_changes_growth_cycle])
+  end
+
+  defp get_grid_cells_from_active_cell_change(active_cell_change) do
+    if(active_cell_change.active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
+      Enum.map(active_cell_change.cell_indexes, fn index ->
+        %GridCell{index: index, moist: true}
+      end)
+    else
+      if(active_cell_change.active_skill_id == ActiveSkills.skill_id_dead_cell()) do
+        Enum.map(active_cell_change.cell_indexes, fn index ->
+          %GridCell{index: index, empty: false, player_id: active_cell_change.player_id}
+        end)
+      else
+        if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
+          raise "You attemped to place active cell changes for skill with id #{active_cell_change.skill_id}, which is not a valid active skill!"
+        else
+          []
+        end
+      end
+    end
   end
 
   @spec generate_growth_summary_after_active_cell_changes(map(), integer(), map(), integer(), list()) :: any()

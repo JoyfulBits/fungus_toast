@@ -172,18 +172,23 @@ defmodule FungusToast.AiStrategies do
     end
   end
 
-  def use_active_skills(%Player{action_points: action_points} = ai_player, toast_grid, grid_size, remaining_cells) do
+  def use_active_skills(%Player{action_points: action_points} = ai_player, toast_grid, grid_size, remaining_cells, round_number) do
     toast_grid_map = Enum.map(toast_grid, fn grid_cell -> {grid_cell.index, grid_cell} end)
     |> Enum.into(%{})
     toast_changes = Enum.reduce(1..action_points, [], fn _, acc ->
-      candidate_skills = get_candidate_active_skills(remaining_cells)
+      candidate_skills = get_candidate_active_skills(grid_size, remaining_cells, round_number)
+
       if(length(candidate_skills) > 0) do
         chosen_active_skill_id = Enum.random(candidate_skills)
 
         if(chosen_active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
           acc ++ place_water_droplets(ai_player, toast_grid_map, grid_size, toast_grid)
         else
-          acc
+          if(chosen_active_skill_id == ActiveSkills.skill_id_dead_cell()) do
+            acc ++ [place_dead_cell(ai_player, toast_grid_map, grid_size, toast_grid)]
+          else
+            acc
+          end
         end
       else
         acc
@@ -195,13 +200,20 @@ defmodule FungusToast.AiStrategies do
   end
 
   @minimum_remaining_cells_for_eye_dropper 100
+  def minimum_remaining_cells_for_eye_dropper, do: @minimum_remaining_cells_for_eye_dropper
 
   @doc """
   Gets the active skills that the AI player could potentially use
   """
-  def get_candidate_active_skills(remaining_cells) do
-    if(remaining_cells > @minimum_remaining_cells_for_eye_dropper) do
+  def get_candidate_active_skills(grid_size, remaining_cells, round_number) do
+    candidate_skills = if(remaining_cells >= @minimum_remaining_cells_for_eye_dropper) do
       [ActiveSkills.skill_id_eye_dropper()]
+    else
+      []
+    end
+
+    candidate_skills ++ if(remaining_cells >= grid_size * grid_size / 2 and round_number >= ActiveSkills.minimum_number_of_rounds_for_dead_cell) do
+      [ActiveSkills.skill_id_dead_cell()]
     else
       []
     end
@@ -238,5 +250,34 @@ defmodule FungusToast.AiStrategies do
     else
       [%ActiveCellChange{player_id: ai_player.id, active_skill_id: ActiveSkills.skill_id_eye_dropper(), cell_indexes: cell_indexes}]
     end
+  end
+
+  def place_dead_cell(ai_player, original_toast_grid_map, grid_size, toast_grid_list, candidate_cells \\ [])
+  def place_dead_cell(ai_player, original_toast_grid_map, grid_size, [grid_cell | remaining_toast], candidate_cells) when candidate_cells == [] and remaining_toast != [] do
+    candidate_cells = if(grid_cell.live and grid_cell.player_id != ai_player.id) do
+      Grid.get_surrounding_cells(original_toast_grid_map, grid_size, grid_cell.index)
+       |> Enum.reduce([], fn {_location, adjacent_grid_cell}, acc ->
+         if(adjacent_grid_cell.empty and !adjacent_grid_cell.moist) do
+           acc ++ [adjacent_grid_cell.index]
+         else
+           acc
+         end
+       end)
+    else
+      []
+    end
+
+    place_dead_cell(ai_player, original_toast_grid_map, grid_size, remaining_toast, candidate_cells)
+  end
+
+  def place_dead_cell(ai_player, original_toast_grid_map, grid_size, [_grid_cell | remaining_toast], candidate_cells) when candidate_cells != [] or remaining_toast == [] do
+    cell_index = if(candidate_cells == []) do
+      #find the first index that has nothing (since this will be empty)
+      Enum.find(0..grid_size-1, fn x -> !Map.has_key?(original_toast_grid_map, x) end)
+    else
+      Enum.random(candidate_cells)
+    end
+
+    %ActiveCellChange{player_id: ai_player.id, active_skill_id: ActiveSkills.skill_id_dead_cell(), cell_indexes: [cell_index]}
   end
 end
