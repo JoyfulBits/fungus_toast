@@ -46,7 +46,8 @@ defmodule FungusToast.ActiveCellChanges do
     end
   end
 
-  @spec update_active_cell_changes(any, any, any, any) :: boolean
+  @spec update_active_cell_changes(atom | %{action_points: any}, any, any, any) ::
+          {:ok} | {:error, any}
   def update_active_cell_changes(player, game_id, round_number, upgrade_attrs) do
     case active_cell_changes_are_valid(player, round_number, upgrade_attrs) do
       {:ok, action_points_spent} ->
@@ -61,8 +62,8 @@ defmodule FungusToast.ActiveCellChanges do
           new_active_cell_changes = latest_round.active_cell_changes ++ active_cell_changes
           Rounds.update_round(latest_round, %{active_cell_changes: new_active_cell_changes})
         end
-        true
-      {:error, _} -> false
+        {:ok}
+      {:error, error_reason} -> {:error, error_reason}
     end
   end
 end
