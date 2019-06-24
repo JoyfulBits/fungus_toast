@@ -8,8 +8,7 @@ defmodule FungusToast.ActiveCellChanges do
   """
 
   #TODO should we add number of active skill changes to player? Should these accumulate or must you spend one per round?
-
-  defp active_cell_changes_are_valid(player, upgrade_attrs) do
+  defp active_cell_changes_are_valid(player, round_number, upgrade_attrs) do
     total_action_points_spent = Enum.reduce(upgrade_attrs, 0, fn {_active_skill_id, map}, acc ->
       Map.get(map, "points_spent") + acc
     end)
@@ -17,24 +16,39 @@ defmodule FungusToast.ActiveCellChanges do
     if(total_action_points_spent > player.action_points) do
       {:error, :not_enough_action_points}
     else
-      legal_number_of_active_cell_changes = Enum.reduce(upgrade_attrs, true, fn {active_skill_id, map}, acc ->
-        total_active_changes_for_skill = length(Map.get(map, "active_cell_changes"))
-        action_points_spent = Map.get(map, "points_spent")
-        max_allowed_active_changes = ActiveSkills.get_allowed_number_of_active_changes(active_skill_id) * action_points_spent
-        acc and total_active_changes_for_skill <= max_allowed_active_changes
+
+      validation_result = Enum.reduce(upgrade_attrs, %{:error => nil}, fn {active_skill_id, map}, acc ->
+        if(Map.get(acc, :error) == nil) do
+          total_active_changes_for_skill = length(Map.get(map, "active_cell_changes"))
+          action_points_spent = Map.get(map, "points_spent")
+          max_allowed_active_changes = ActiveSkills.get_allowed_number_of_active_changes(active_skill_id) * action_points_spent
+          legal_number_of_active_cell_changes = total_active_changes_for_skill <= max_allowed_active_changes
+          if(!legal_number_of_active_cell_changes) do
+            %{:error => :too_many_active_cell_changes}
+          else
+            legal_round_number = round_number >= ActiveSkills.get_minimum_round_number(active_skill_id)
+            if(!legal_round_number) do
+              %{:error => :skill_used_too_early}
+            else
+              acc
+            end
+          end
+        else
+        end
       end)
 
-      if(legal_number_of_active_cell_changes) do
+      error = Map.get(validation_result, :error)
+      if(error == nil) do
         {:ok, total_action_points_spent}
       else
-        {:error, :too_many_active_cell_changes}
+        {:error, error}
       end
     end
   end
 
-  @spec update_active_cell_changes(any, any, any) :: boolean
-  def update_active_cell_changes(player, game_id, upgrade_attrs) do
-    case active_cell_changes_are_valid(player, upgrade_attrs) do
+  @spec update_active_cell_changes(any, any, any, any) :: boolean
+  def update_active_cell_changes(player, game_id, round_number, upgrade_attrs) do
+    case active_cell_changes_are_valid(player, round_number, upgrade_attrs) do
       {:ok, action_points_spent} ->
         active_cell_changes = Enum.map(upgrade_attrs, fn {active_skill_id, map} ->
           %ActiveCellChange{active_skill_id: active_skill_id, player_id: player.id, cell_indexes: Map.get(map, "active_cell_changes")}
