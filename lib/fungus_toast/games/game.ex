@@ -8,6 +8,7 @@ defmodule FungusToast.Games.Game do
     :grid_size,
     :total_live_cells,
     :total_dead_cells,
+    :total_moist_cells,
     :status,
     :end_of_game_count_down
   ]
@@ -24,6 +25,7 @@ defmodule FungusToast.Games.Game do
     field :number_of_ai_players, :integer, default: 0, null: false
     field :total_live_cells, :integer, default: 0, null: false
     field :total_dead_cells, :integer, default: 0, null: false
+    field :total_moist_cells, :integer, default: 0, null: false
     field :end_of_game_count_down, :integer, default: nil, null: true
 
     has_many :rounds, FungusToast.Games.Round, on_delete: :delete_all
@@ -44,6 +46,6 @@ defmodule FungusToast.Games.Game do
   Return the number of empty cells left on the grid
   """
   def number_of_empty_cells(game) do
-    game.grid_size * game.grid_size - game.total_live_cells - game.total_dead_cells
+    game.grid_size * game.grid_size - game.total_live_cells - game.total_dead_cells - game.total_moist_cells
   end
 end

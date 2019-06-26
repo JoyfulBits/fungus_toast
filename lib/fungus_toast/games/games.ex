@@ -129,7 +129,6 @@ defmodule FungusToast.Games do
         {:ok, _} = Repo.transaction(fn ->
           {updated_game, updated_players} = set_starting_game_stats(game, starting_cells)
 
-          #TODO found examples where the number of dead cells on starting player stats is not consistent with what is in the starting game state
           starting_player_stats = Players.make_starting_player_stats(updated_players)
 
           #create the second round with a starting_game_state but no state change yet
@@ -205,9 +204,11 @@ defmodule FungusToast.Games do
 
     #since we've already aggregated player stats, just aggregate those without the player id to get totals for the game
     total_live_and_dead_cells = get_live_and_dead_cell_aggregates(players_live_and_dead_cells_count_map)
+    total_moist_cells = Enum.count(growth_summary.new_game_state, fn grid_cell -> grid_cell.moist end)
     updated_game = update_game(game, %{
       total_live_cells: total_live_and_dead_cells.total_live_cells,
-      total_dead_cells: total_live_and_dead_cells.total_dead_cells})
+      total_dead_cells: total_live_and_dead_cells.total_dead_cells,
+      total_moist_cells: total_moist_cells})
 
     {updated_game, updated_players}
   end
@@ -218,9 +219,11 @@ defmodule FungusToast.Games do
 
     #since we've already aggregated player stats, just aggregate those without the player id to get totals for the game
     total_live_and_dead_cells = get_live_and_dead_cell_aggregates(player_stats_map)
+    total_moist_cells = Enum.count(cells, fn grid_cell -> grid_cell.moist end)
     updated_game = update_game(game, %{
       total_live_cells: total_live_and_dead_cells.total_live_cells,
-      total_dead_cells: total_live_and_dead_cells.total_dead_cells})
+      total_dead_cells: total_live_and_dead_cells.total_dead_cells,
+      total_moist_cells: total_moist_cells})
 
     {updated_game, updated_players}
   end
