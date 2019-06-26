@@ -412,13 +412,15 @@ defmodule FungusToast.GamesTest do
         %GridCell{player_id: player_1_id, live: true, empty: false},
         %GridCell{player_id: player_1_id, live: true, empty: false},
         %GridCell{player_id: player_2_id, live: false, empty: false},
-        %GridCell{player_id: player_2_id, live: false, empty: false}
+        %GridCell{player_id: player_2_id, live: false, empty: false},
+        %GridCell{live: false, empty: true, moist: true}
       ]
 
       {updated_game, updated_players} = Games.set_starting_game_stats(game, grid_cells)
 
       assert updated_game.total_live_cells == 3
       assert updated_game.total_dead_cells == 2
+      assert updated_game.total_moist_cells == 1
 
       player1 = Enum.find(updated_players, fn player -> player.id == player_1_id end)
       assert player1.live_cells == 3
