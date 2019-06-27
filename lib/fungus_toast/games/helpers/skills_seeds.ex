@@ -127,6 +127,24 @@ defmodule FungusToast.Skills.SkillsSeed do
       number_of_toast_changes: ActiveSkills.number_of_toast_changes_for_dead_cell,
       minimum_round: ActiveSkills.minimum_number_of_rounds_for_dead_cell
     })
+
+    upsert_active_skill(%{
+      id: ActiveSkills.skill_id_increase_lighting,
+      name: "Increase Lighting",
+      description:
+        "Allows you to increase the UV lamp light setting by 1 unit, decreasing the growth of most fungal cells by 0.1%.",
+      number_of_toast_changes: ActiveSkills.number_of_toast_changes_for_increase_lighting,
+      minimum_round: ActiveSkills.minimum_number_of_rounds_for_increase_lighting
+    })
+
+    upsert_active_skill(%{
+      id: ActiveSkills.skill_id_decrease_lighting,
+      name: "Decrease Lighting",
+      description:
+        "Allows you to decrease the UV lamp light setting by 1 unit, increasing the growth of most fungal cells by 0.1%.",
+      number_of_toast_changes: ActiveSkills.number_of_toast_changes_for_decrease_lighting,
+      minimum_round: ActiveSkills.minimum_number_of_rounds_for_decrease_lighting
+    })
   end
 
   def reset_skills_in_database() do
