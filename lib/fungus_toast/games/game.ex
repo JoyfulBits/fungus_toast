@@ -10,7 +10,8 @@ defmodule FungusToast.Games.Game do
     :total_dead_cells,
     :total_moist_cells,
     :status,
-    :end_of_game_count_down
+    :end_of_game_count_down,
+    :light_level
   ]
 
   @default_grid_size 50
@@ -27,6 +28,7 @@ defmodule FungusToast.Games.Game do
     field :total_dead_cells, :integer, default: 0, null: false
     field :total_moist_cells, :integer, default: 0, null: false
     field :end_of_game_count_down, :integer, default: nil, null: true
+    field :light_level, :integer, default: 50, null: false
 
     has_many :rounds, FungusToast.Games.Round, on_delete: :delete_all
     has_many :players, FungusToast.Games.Player, on_delete: :delete_all
