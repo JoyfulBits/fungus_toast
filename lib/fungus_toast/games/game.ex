@@ -16,6 +16,8 @@ defmodule FungusToast.Games.Game do
 
   @default_grid_size 50
   def default_grid_size, do: @default_grid_size
+  @default_light_level 50
+  def default_light_level, do: @default_light_level
 
   @derive {Jason.Encoder, only: [:id] ++ @attrs}
 
@@ -28,7 +30,7 @@ defmodule FungusToast.Games.Game do
     field :total_dead_cells, :integer, default: 0, null: false
     field :total_moist_cells, :integer, default: 0, null: false
     field :end_of_game_count_down, :integer, default: nil, null: true
-    field :light_level, :integer, default: 50, null: false
+    field :light_level, :integer, default: @default_light_level, null: false
 
     has_many :rounds, FungusToast.Games.Round, on_delete: :delete_all
     has_many :players, FungusToast.Games.Player, on_delete: :delete_all

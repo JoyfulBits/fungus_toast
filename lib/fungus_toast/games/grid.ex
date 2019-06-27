@@ -52,7 +52,7 @@ defmodule FungusToast.Games.Grid do
   Returns the specified number of growth cycles, as well as the ending game state.
 
   ##Examples
-  iex> Grid.generate_growth_summary(%{}, [], 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
+  iex> Grid.generate_growth_summary(%{}, [], 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}}, 50)
   %{
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
@@ -163,7 +163,7 @@ defmodule FungusToast.Games.Grid do
     new_game_state: []
   }
   """
-  def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, generation_number \\ 1) do
+  def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, light_level, generation_number \\ 1) do
     active_cell_changes = if(active_cell_changes == nil) do
       []
     else
@@ -191,7 +191,7 @@ defmodule FungusToast.Games.Grid do
     #merge the maps together. Active cell changes do not take precedence (to avoid chicanery from the API)
     updated_grid = Map.merge(starting_grid_map, active_toast_changes_map, fn _index, grid_cell_1, _grid_cell_2 -> grid_cell_1 end)
 
-    generate_growth_summary_after_active_cell_changes(updated_grid, grid_size, player_id_to_player_map, generation_number, [active_cell_changes_growth_cycle])
+    generate_growth_summary_after_active_cell_changes(updated_grid, grid_size, player_id_to_player_map, light_level, generation_number, [active_cell_changes_growth_cycle])
   end
 
   defp get_grid_cells_from_active_cell_change(active_cell_change) do
@@ -214,12 +214,12 @@ defmodule FungusToast.Games.Grid do
     end
   end
 
-  @spec generate_growth_summary_after_active_cell_changes(map(), integer(), map(), integer(), list()) :: any()
-  defp generate_growth_summary_after_active_cell_changes(starting_grid_map, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
+  @spec generate_growth_summary_after_active_cell_changes(map(), integer(), map(), integer(), integer(), list()) :: any()
+  defp generate_growth_summary_after_active_cell_changes(starting_grid_map, grid_size, player_id_to_player_map, light_level, generation_number, acc) when generation_number < 6 do
     live_cells = Enum.filter(starting_grid_map, fn {_, grid_cell} -> grid_cell.live end)
     |> Enum.into(%{})
 
-    toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid_map, grid_size, player_id_to_player_map, grid_cell) end)
+    toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid_map, grid_size, player_id_to_player_map, grid_cell, light_level) end)
       |> Enum.reduce(%{}, fn(x, acc) -> Map.merge(x, acc) end)
 
     mutation_points = Enum.map(player_id_to_player_map,
@@ -240,19 +240,19 @@ defmodule FungusToast.Games.Grid do
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
     Map.merge(starting_grid_map, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)
-    |> generate_growth_summary_after_active_cell_changes(grid_size, player_id_to_player_map, generation_number + 1, acc ++ [growth_cycle])
+    |> generate_growth_summary_after_active_cell_changes(grid_size, player_id_to_player_map, light_level, generation_number + 1, acc ++ [growth_cycle])
   end
 
-  defp generate_growth_summary_after_active_cell_changes(ending_grid, _, _, _, acc) do
+  defp generate_growth_summary_after_active_cell_changes(ending_grid, _, _, _, _, acc) do
     cells_list = Enum.map(ending_grid, fn {_k, grid_cell} -> grid_cell end)
     %{growth_cycles: acc, new_game_state: cells_list}
   end
 
-  def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
+  def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell, light_level) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
     player = player_id_to_player_map[grid_cell.player_id]
-    cell_changes = CellGrower.calculate_cell_growth(starting_grid, grid_size * grid_size, surrounding_cells, player)
+    cell_changes = CellGrower.calculate_cell_growth(starting_grid, grid_size * grid_size, surrounding_cells, player, light_level)
     #check if the cell dies from apoptosis or starvation
     Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
   end

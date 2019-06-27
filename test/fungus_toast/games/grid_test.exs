@@ -53,7 +53,7 @@ defmodule FungusToast.Games.GridTest do
     end
   end
 
-  describe "generate_growth_summary/4" do
+  describe "generate_growth_summary/5" do
     test "that a single player game with no growth or mutation chance will generate 6 sequential growth cycles with no toast changes, and 1 mutation point per growth cycle" do
       player1 = %Player{id: 1, top_growth_chance: 0, right_growth_chance: 0, bottom_growth_chance: 0, left_growth_chance: 0, mutation_chance: 0}
       player_id_to_player_map = %{player1.id => player1}
@@ -61,7 +61,7 @@ defmodule FungusToast.Games.GridTest do
       starting_grid = Grid.create_starting_grid(grid_size, [player1.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
 
-      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map)
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, 50)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -107,7 +107,7 @@ defmodule FungusToast.Games.GridTest do
       grid_size = 50
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id, player_2.id, player_3.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map)
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, 50)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -156,7 +156,7 @@ defmodule FungusToast.Games.GridTest do
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id])#, player_2.id, player_3.id, player_4.id, player_5.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
       #set the growth_cycle number to -43 so that we get a full 50 growth cycles (43 + 6 + empty active cell canges to get up to +5) -- more than enough to fill the entire grid
-      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, -43)
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, 50, -43)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -179,7 +179,7 @@ defmodule FungusToast.Games.GridTest do
       starting_grid = Grid.create_starting_grid(grid_size, [player_1.id, player_2.id, player_3.id])
       starting_grid_map = Enum.into(starting_grid, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
       #set the generation to 5 so it only does one cycle (plus empty active cell changes)
-      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, 5)
+      result = Grid.generate_growth_summary(starting_grid_map, [], grid_size, player_id_to_player_map, 50, 5)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -220,7 +220,7 @@ defmodule FungusToast.Games.GridTest do
       expected_cell_indexes = [0, 1, 2]
       active_cell_changes = [%ActiveCellChange{active_skill_id: ActiveSkills.skill_id_eye_dropper(), cell_indexes: expected_cell_indexes}]
 
-      result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map)
+      result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, 50)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -251,7 +251,7 @@ defmodule FungusToast.Games.GridTest do
       expected_cell_indexes = [0]
       active_cell_changes = [%ActiveCellChange{active_skill_id: ActiveSkills.skill_id_dead_cell(), cell_indexes: expected_cell_indexes, player_id: player1.id}]
 
-      result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map)
+      result = Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, 50)
 
       assert result.growth_cycles
       growth_cycles = result.growth_cycles
@@ -288,7 +288,7 @@ defmodule FungusToast.Games.GridTest do
       skill_id_that_isnt_active = -1
       active_cell_changes = [%ActiveCellChange{active_skill_id: skill_id_that_isnt_active, cell_indexes: [0]}]
 
-      assert_raise KeyError, fn -> Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map) end
+      assert_raise KeyError, fn -> Grid.generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, 50) end
     end
   end
 

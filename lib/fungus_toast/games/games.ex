@@ -386,7 +386,7 @@ defmodule FungusToast.Games do
   @doc """
   Executes a full round of growth cycles and creates a new round for this game
   """
-  def trigger_next_round(%Game{players: players} = game) do
+  def trigger_next_round(%Game{players: players, light_level: light_level} = game) do
     player_id_to_player_map = players
       |> Map.new(fn x -> {x.id, x} end)
 
@@ -396,7 +396,7 @@ defmodule FungusToast.Games do
       current_game_state = latest_round.starting_game_state
 
       starting_grid_map = Enum.into(current_game_state.cells, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
-      growth_summary = Grid.generate_growth_summary(starting_grid_map, latest_round.active_cell_changes, game.grid_size, player_id_to_player_map)
+      growth_summary = Grid.generate_growth_summary(starting_grid_map, latest_round.active_cell_changes, game.grid_size, player_id_to_player_map, light_level)
 
       #set the growth cycles on the latest around
       latest_round = Rounds.get_latest_round_for_game(game)
