@@ -16,7 +16,7 @@ defmodule FungusToast.ActiveSkills do
   def minimum_number_of_rounds_for_increase_lighting, do: 0
   def minimum_number_of_rounds_for_decrease_lighting, do: 0
 
-  def lighting_points_per_lighting_skill_use, do: 0.1
+  def lighting_points_per_lighting_skill_use, do: 1
 
   #TODO this should come from the database instead of being hard-coded here
   defp skill_to_number_of_active_changes_map, do: %{
