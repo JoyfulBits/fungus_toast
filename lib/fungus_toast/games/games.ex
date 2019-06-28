@@ -152,7 +152,7 @@ defmodule FungusToast.Games do
       end
   end
 
-  def update_players_for_next_round(game = %Game{players: players}, growth_summary) do
+  def update_game_and_players_for_next_round(game = %Game{players: players}, growth_summary) do
     players_live_and_dead_cells_count_map = get_live_and_dead_cells_for_player(players, growth_summary.new_game_state)
 
     player_to_mutation_points_map = Enum.map(players, fn player -> {player.id, 0} end)
@@ -208,7 +208,8 @@ defmodule FungusToast.Games do
     updated_game = update_game(game, %{
       total_live_cells: total_live_and_dead_cells.total_live_cells,
       total_dead_cells: total_live_and_dead_cells.total_dead_cells,
-      total_moist_cells: total_moist_cells})
+      total_moist_cells: total_moist_cells,
+      light_level: growth_summary.light_level}) #the updated light_level is passed in from the growth summary and is awkwardly updated here since we're already updating the game
 
     {updated_game, updated_players}
   end
@@ -402,7 +403,7 @@ defmodule FungusToast.Games do
       latest_round = Rounds.get_latest_round_for_game(game)
         |> Rounds.update_round(%{growth_cycles: growth_summary.growth_cycles})
 
-      {updated_game, updated_players} = update_players_for_next_round(game, growth_summary)
+      {updated_game, updated_players} = update_game_and_players_for_next_round(game, growth_summary)
 
       updated_game = check_for_game_end(updated_game)
 
