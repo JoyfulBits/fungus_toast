@@ -123,24 +123,24 @@ defmodule FungusToast.Games.CellGrower do
   iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level())
   0.0
 
-  #it returns 0.1 if the light level is reduced by 1
+  #it returns 0.2 if the light level is reduced by 1
   iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() - 1)
-  0.1
+  0.2
 
-  #it returns -0.1 if the light level is increased by 1
+  #it returns -0.2 if the light level is increased by 1
   iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() + 1)
-  -0.1
+  -0.2
 
-  #it returns 5.0 if the light level is decreased by 50
+  #it returns 10.0 if the light level is decreased by 50
   iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() - 50)
-  5.0
+  10.0
 
-  #it returns -5.0 if the light level is increased by 50
+  #it returns -10.0 if the light level is increased by 50
   iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() + 50)
-  -5.0
+  -10.0
   """
   def get_light_level_growth_adjustment(light_level) do
-    (Game.default_light_level() - light_level) * 0.1
+    (Game.default_light_level() - light_level) * 0.2
   end
 
   @doc ~S"""
