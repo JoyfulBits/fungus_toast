@@ -52,7 +52,7 @@ defmodule FungusToast.Games.Grid do
   Returns the specified number of growth cycles, as well as the ending game state.
 
   ##Examples
-  iex> Grid.generate_growth_summary(%{}, [], 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}})
+  iex> Grid.generate_growth_summary(%{}, [], 50, %{1 => %Player{top_growth_chance: 100, id: 1, mutation_chance: 0}}, 50)
   %{
     growth_cycles: [
       %FungusToast.Games.GrowthCycle{
@@ -160,18 +160,24 @@ defmodule FungusToast.Games.Grid do
         toast_changes: []
       }
     ],
+    light_level: 50,
     new_game_state: []
   }
   """
-  def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, generation_number \\ 1) do
+  def generate_growth_summary(starting_grid_map, active_cell_changes, grid_size, player_id_to_player_map, light_level, generation_number \\ 1) do
     active_cell_changes = if(active_cell_changes == nil) do
       []
     else
       active_cell_changes
     end
-    active_toast_changes = Enum.reduce(active_cell_changes, [], fn active_cell_change, acc ->
-      acc ++ get_grid_cells_from_active_cell_change(active_cell_change)
+    active_skills_result = Enum.reduce(active_cell_changes, %{active_cell_changes: [], lighting_level_change: 0}, fn active_cell_change, acc ->
+      result = get_grid_cells_and_lighting_level_change_from_active_cell_change(active_cell_change)
+
+      update_in(acc, [:active_cell_changes], &(&1 ++ result.active_cell_changes))
+      |> update_in([:lighting_level_change], &(&1 + result.lighting_level_change))
     end)
+
+    updated_light_level = light_level + active_skills_result.lighting_level_change
 
     pre_generation_number = generation_number - 1
 
@@ -182,44 +188,67 @@ defmodule FungusToast.Games.Grid do
 
     active_cell_changes_growth_cycle = %GrowthCycle{
       generation_number: pre_generation_number,
-      toast_changes: active_toast_changes,
+      toast_changes: active_skills_result.active_cell_changes,
       mutation_points_earned: [],
       action_points_earned: action_points
     }
 
-    active_toast_changes_map = Enum.into(active_toast_changes, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
+    active_toast_changes_map = Enum.into(active_skills_result.active_cell_changes, %{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
     #merge the maps together. Active cell changes do not take precedence (to avoid chicanery from the API)
     updated_grid = Map.merge(starting_grid_map, active_toast_changes_map, fn _index, grid_cell_1, _grid_cell_2 -> grid_cell_1 end)
 
-    generate_growth_summary_after_active_cell_changes(updated_grid, grid_size, player_id_to_player_map, generation_number, [active_cell_changes_growth_cycle])
+    #pass along updated light level so it can be updated on game and used in cell growth calculations
+    generate_growth_summary_after_active_cell_changes(updated_grid, grid_size, player_id_to_player_map, updated_light_level, generation_number, [active_cell_changes_growth_cycle])
   end
 
-  defp get_grid_cells_from_active_cell_change(active_cell_change) do
-    if(active_cell_change.active_skill_id == ActiveSkills.skill_id_eye_dropper()) do
-      Enum.map(active_cell_change.cell_indexes, fn index ->
-        %GridCell{index: index, moist: true}
-      end)
+  def get_grid_cells_and_lighting_level_change_from_active_cell_change(active_cell_change) do
+    max_toast_changes = ActiveSkills.get_allowed_number_of_active_changes(active_cell_change.active_skill_id)
+    if(max_toast_changes > 0 and active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) == 0) do
+      raise "You attemped to use active skill with id #{active_cell_change.active_skill_id}, but placed no toast changes!"
     else
-      if(active_cell_change.active_skill_id == ActiveSkills.skill_id_dead_cell()) do
-        Enum.map(active_cell_change.cell_indexes, fn index ->
-          %GridCell{index: index, empty: false, player_id: active_cell_change.player_id}
-        end)
-      else
-        if(active_cell_change.cell_indexes != nil and length(active_cell_change.cell_indexes) > 0) do
-          raise "You attemped to place active cell changes for skill with id #{active_cell_change.skill_id}, which is not a valid active skill!"
-        else
-          []
-        end
+        # def skill_id_eye_dropper, do: 1
+        # def skill_id_dead_cell, do: 2
+        # def skill_id_increase_lighting, do: 3
+        # def skill_id_decrease_lighting, do: 4
+        skill_id_eye_dropper = ActiveSkills.skill_id_eye_dropper()
+        skill_id_dead_cell = ActiveSkills.skill_id_dead_cell()
+        skill_id_increase_lighting = ActiveSkills.skill_id_increase_lighting()
+        skill_id_decrease_lighting = ActiveSkills.skill_id_decrease_lighting()
+
+      case active_cell_change.active_skill_id do
+        ^skill_id_eye_dropper ->
+          active_cell_changes = Enum.map(active_cell_change.cell_indexes, fn index ->
+            %GridCell{index: index, moist: true}
+          end)
+
+          %{active_cell_changes: active_cell_changes, lighting_level_change: 0}
+
+        ^skill_id_dead_cell ->
+          active_cell_changes = Enum.map(active_cell_change.cell_indexes, fn index ->
+            %GridCell{index: index, empty: false, player_id: active_cell_change.player_id}
+          end)
+
+          %{active_cell_changes: active_cell_changes, lighting_level_change: 0}
+
+        ^skill_id_increase_lighting ->
+          %{active_cell_changes: [], lighting_level_change: ActiveSkills.lighting_points_per_lighting_skill_use()}
+
+        ^skill_id_decrease_lighting ->
+          %{active_cell_changes: [], lighting_level_change: -1.0 * ActiveSkills.lighting_points_per_lighting_skill_use()}
+
+        _ ->
+          raise "You attemped to place active cell changes for skill with id #{active_cell_change.active_skill_id}, which is not a valid active skill!"
+
       end
     end
   end
 
-  @spec generate_growth_summary_after_active_cell_changes(map(), integer(), map(), integer(), list()) :: any()
-  defp generate_growth_summary_after_active_cell_changes(starting_grid_map, grid_size, player_id_to_player_map, generation_number, acc) when generation_number < 6 do
+  @spec generate_growth_summary_after_active_cell_changes(map(), integer(), map(), integer(), integer(), list()) :: any()
+  defp generate_growth_summary_after_active_cell_changes(starting_grid_map, grid_size, player_id_to_player_map, light_level, generation_number, acc) when generation_number < 6 do
     live_cells = Enum.filter(starting_grid_map, fn {_, grid_cell} -> grid_cell.live end)
     |> Enum.into(%{})
 
-    toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid_map, grid_size, player_id_to_player_map, grid_cell) end)
+    toast_changes = Enum.map(live_cells, fn{_, grid_cell} -> generate_toast_changes(starting_grid_map, grid_size, player_id_to_player_map, grid_cell, light_level) end)
       |> Enum.reduce(%{}, fn(x, acc) -> Map.merge(x, acc) end)
 
     mutation_points = Enum.map(player_id_to_player_map,
@@ -240,19 +269,19 @@ defmodule FungusToast.Games.Grid do
 
     #merge the maps together. The changes from the growth cycle replace what's in the grid if there are conflicts.
     Map.merge(starting_grid_map, toast_changes, fn _index, _grid_cell_1, grid_cell_2 -> grid_cell_2 end)
-    |> generate_growth_summary_after_active_cell_changes(grid_size, player_id_to_player_map, generation_number + 1, acc ++ [growth_cycle])
+    |> generate_growth_summary_after_active_cell_changes(grid_size, player_id_to_player_map, light_level, generation_number + 1, acc ++ [growth_cycle])
   end
 
-  defp generate_growth_summary_after_active_cell_changes(ending_grid, _, _, _, acc) do
+  defp generate_growth_summary_after_active_cell_changes(ending_grid, _, _, light_level, _, acc) do
     cells_list = Enum.map(ending_grid, fn {_k, grid_cell} -> grid_cell end)
-    %{growth_cycles: acc, new_game_state: cells_list}
+    %{growth_cycles: acc, new_game_state: cells_list, light_level: light_level}
   end
 
-  def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell) do
+  def generate_toast_changes(starting_grid, grid_size, player_id_to_player_map, grid_cell, light_level) do
     surrounding_cells = get_surrounding_cells(starting_grid, grid_size, grid_cell.index)
 
     player = player_id_to_player_map[grid_cell.player_id]
-    cell_changes = CellGrower.calculate_cell_growth(starting_grid, grid_size * grid_size, surrounding_cells, player)
+    cell_changes = CellGrower.calculate_cell_growth(starting_grid, grid_size * grid_size, surrounding_cells, player, light_level)
     #check if the cell dies from apoptosis or starvation
     Map.merge(cell_changes, CellGrower.check_for_cell_death(grid_cell, surrounding_cells, player))
   end

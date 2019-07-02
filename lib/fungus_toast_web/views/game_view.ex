@@ -33,7 +33,8 @@ defmodule FungusToastWeb.GameView do
       total_regenerated_cells: game_totals.total_regenerated_cells,
       total_moist_cells: game.total_moist_cells,
       total_empty_cells: Game.number_of_empty_cells(game),
-      end_of_game_count_down: game.end_of_game_count_down
+      end_of_game_count_down: game.end_of_game_count_down,
+      light_level: game.light_level
     }
   end
 

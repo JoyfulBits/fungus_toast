@@ -54,6 +54,7 @@ defmodule FungusToastWeb.GameViewTest do
       game = Map.put(game, :players, [player_1, player_2])
       game = Map.put(game, :end_of_game_count_down, 5)
       game = Map.put(game, :total_moist_cells, 1)
+      game = Map.put(game, :light_level, 55)
       game_with_round = %{game: game, latest_completed_round: nil}
 
       result = GameView.render("game.json", %{game: game_with_round})
@@ -101,6 +102,7 @@ defmodule FungusToastWeb.GameViewTest do
 
       assert result.total_empty_cells == Game.number_of_empty_cells(game)
       assert result.total_moist_cells  == game.total_moist_cells
+      assert result.light_level  == game.light_level
     end
 
     test "that AI players and players with user ids have a status of Joined and humans without user ids are Not Joined" do

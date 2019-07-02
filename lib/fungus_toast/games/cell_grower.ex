@@ -1,8 +1,6 @@
 defmodule FungusToast.Games.CellGrower do
   alias FungusToast.Random
-  alias FungusToast.Games.GridCell
-  alias FungusToast.Games.Player
-  alias FungusToast.Games.GridCell
+  alias FungusToast.Games.{Game, Player, GridCell}
 
   @starvation_death_chance 10.0
   @minimum_live_cells_for_apoptosis 8
@@ -11,9 +9,9 @@ defmodule FungusToast.Games.CellGrower do
   @doc ~S"""
     Iterates over surrounding cells calculating new growths, regenerations, and deaths. Returns GridCells that changed
   """
-  @spec calculate_cell_growth(map(), integer(), map(), %Player{}) :: map()
-  def calculate_cell_growth(toast_grid_map, number_of_grid_cells, surrounding_cells, player) do
-    grown_cells = Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player) end)
+  @spec calculate_cell_growth(map(), integer(), map(), %Player{}, integer()) :: map()
+  def calculate_cell_growth(toast_grid_map, number_of_grid_cells, surrounding_cells, player, light_level) do
+    grown_cells = Enum.map(surrounding_cells, fn {k,v} -> process_cell(k, v, player, light_level) end)
       |> Enum.filter(fn x -> x != nil end)
       |> Enum.into(%{}, fn grid_cell -> {grid_cell.index, grid_cell} end)
 
@@ -29,9 +27,9 @@ defmodule FungusToast.Games.CellGrower do
       end
   end
 
-  def process_cell(position, grid_cell, player) do
+  def process_cell(position, grid_cell, player, light_level) do
     if(grid_cell.empty) do
-      try_growing_cell(position, grid_cell.index, grid_cell.moist, player)
+      try_growing_cell(position, grid_cell.index, grid_cell.moist, player, light_level)
     else
       if(grid_cell.live) do
         check_for_mycotoxin_murder(grid_cell, player)
@@ -72,7 +70,7 @@ defmodule FungusToast.Games.CellGrower do
   ## Examples
 
   #it generates a new live cell with that player's id if the growth percentage hits
-  iex> CellGrower.try_growing_cell(:right_cell, 0, false, %FungusToast.Games.Player{right_growth_chance: 100, id: 1})
+  iex> CellGrower.try_growing_cell(:right_cell, 0, false, %FungusToast.Games.Player{right_growth_chance: 100, id: 1}, 50)
   %FungusToast.Games.GridCell{
     empty: false,
     index: 0,
@@ -83,7 +81,7 @@ defmodule FungusToast.Games.CellGrower do
   }
 
   #it generates a new live cell with that player's id if the cell is moist and the player's moisture_growth_boost hits
-  iex> CellGrower.try_growing_cell(:right_cell, 0, true, %FungusToast.Games.Player{right_growth_chance: 0, moisture_growth_boost: 100, id: 1})
+  iex> CellGrower.try_growing_cell(:right_cell, 0, true, %FungusToast.Games.Player{right_growth_chance: 0, moisture_growth_boost: 100, id: 1}, 50)
   %FungusToast.Games.GridCell{
     empty: false,
     index: 0,
@@ -95,12 +93,12 @@ defmodule FungusToast.Games.CellGrower do
   }
 
   #it returns nil if the growth chance didn't hit
-  iex> CellGrower.try_growing_cell(:right_cell, 0, false, %FungusToast.Games.Player{right_growth_chance: 0, id: 1})
+  iex> CellGrower.try_growing_cell(:right_cell, 0, false, %FungusToast.Games.Player{right_growth_chance: 0, id: 1}, 50)
   nil
 
   """
-  @spec try_growing_cell(atom(), integer(), boolean(), %Player{}) :: map()
-  def try_growing_cell(position, cell_index, moist, player) do
+  @spec try_growing_cell(atom(), integer(), boolean(), %Player{}, integer()) :: map()
+  def try_growing_cell(position, cell_index, moist, player, light_level) do
     {:ok, growth_attribute} = Map.fetch(Player.position_to_attribute_map, position)
     {:ok, growth_chance} = Map.fetch(player, growth_attribute)
     bonus_growth_chance = if(moist) do
@@ -108,9 +106,41 @@ defmodule FungusToast.Games.CellGrower do
     else
       0.0
     end
+
+    bonus_growth_chance = bonus_growth_chance + get_light_level_growth_adjustment(light_level)
+
     if(Random.random_chance_hit(growth_chance + bonus_growth_chance)) do
       %GridCell{index: cell_index, live: true, empty: false, moist: false, out_of_grid: false, player_id: player.id}
     end
+  end
+
+   @doc ~S"""
+  Returns a %GridCell{} if the growth chance corresponding to the cell position hits. Returns nil otherwise.
+
+  ## Examples
+
+  #it returns 0 if the light level is the default value
+  iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level())
+  0.0
+
+  #it returns 0.2 if the light level is reduced by 1
+  iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() - 1)
+  0.2
+
+  #it returns -0.2 if the light level is increased by 1
+  iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() + 1)
+  -0.2
+
+  #it returns 10.0 if the light level is decreased by 50
+  iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() - 50)
+  10.0
+
+  #it returns -10.0 if the light level is increased by 50
+  iex> CellGrower.get_light_level_growth_adjustment(FungusToast.Games.Game.default_light_level() + 50)
+  -10.0
+  """
+  def get_light_level_growth_adjustment(light_level) do
+    (Game.default_light_level() - light_level) * 0.2
   end
 
   @doc ~S"""
