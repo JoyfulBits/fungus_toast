@@ -2,7 +2,7 @@ defmodule FungusToast.Skills do
   import Ecto.Query, warn: false
   alias FungusToast.Repo
 
-  alias FungusToast.Games.Skill
+  alias FungusToast.Games.{Skill, SkillPrerequisite}
 
   def skill_id_hypermutation, do: 1
   def skill_id_budding, do: 2
@@ -11,25 +11,7 @@ defmodule FungusToast.Skills do
   def skill_id_mycotoxicity, do: 5
   def skill_id_hydrophilia, do: 6
   def skill_id_spores, do: 7
-
-  #TODO this should come from the database instead of being hard-coded here
-  defp skill_to_number_of_active_changes_map, do: %{
-    skill_id_hypermutation() => 0,
-    skill_id_budding() => 0,
-    skill_id_anti_apoptosis() => 0,
-    skill_id_regeneration() => 0,
-    skill_id_mycotoxicity() => 0,
-    skill_id_hydrophilia() => 0,
-    skill_id_spores() => 0
-  }
-
-  def get_allowed_number_of_active_changes(skill_id) when is_integer(skill_id) do
-    Map.get(skill_to_number_of_active_changes_map(), skill_id)
-  end
-
-  def get_allowed_number_of_active_changes(skill_id) when is_binary(skill_id) do
-    Map.get(skill_to_number_of_active_changes_map(), String.to_integer(skill_id))
-  end
+  def skill_id_regenerating_spores, do: 8
 
   @doc """
   Returns the list of skills.
@@ -91,38 +73,24 @@ defmodule FungusToast.Skills do
 
   @doc """
   Creates a skill.
-
-  ## Examples
-
-      iex> create_skill(%{field: value})
-      {:ok, %Skill{}}
-
-      iex> create_skill(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
   def create_skill(attrs \\ %{}) do
-    %Skill{}
+    {:ok, skill} = %Skill{}
     |> Skill.changeset(attrs)
     |> Repo.insert()
+
+    skill
   end
 
   @doc """
   Updates a skill.
-
-  ## Examples
-
-      iex> update_skill(skill, %{field: new_value})
-      {:ok, %Skill{}}
-
-      iex> update_skill(skill, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
   def update_skill(%Skill{} = skill, attrs) do
-    skill
+    {:ok, updated_skill} = skill
     |> Skill.changeset(attrs)
     |> Repo.update()
+
+    updated_skill
   end
 
   @doc """
@@ -152,5 +120,13 @@ defmodule FungusToast.Skills do
   """
   def change_skill(%Skill{} = skill) do
     Skill.changeset(skill, %{})
+  end
+
+  def create_skill_prerequisite(changes = %{skill_id: _, required_skill_id: _, required_skill_level: _}) do
+    {:ok, skill_prerequisite} = %SkillPrerequisite{}
+    |> SkillPrerequisite.changeset(changes)
+    |> Repo.insert()
+
+    skill_prerequisite
   end
 end

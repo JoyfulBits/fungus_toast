@@ -1,5 +1,6 @@
 defmodule FungusToast.Skills.SkillsSeed do
   alias FungusToast.{Repo, Skills, ActiveSkills}
+  alias FungusToast.Games.SkillPrerequisite
 
   defp upsert_skill(changes = %{
     id: _,
@@ -8,15 +9,21 @@ defmodule FungusToast.Skills.SkillsSeed do
     increase_per_point: _,
     up_is_good: _,
     minimum_round: _
-  }) do
+  },
+  skill_prerequisites \\ %{}) do
     skill = Skills.get_skill_by_name(name)
-    if(skill == nil) do
+    updated_or_created_skill = if(skill == nil) do
       Skills.create_skill(changes)
     else
       Skills.update_skill(skill, changes)
     end
 
-    true
+    Enum.each(skill_prerequisites, fn skill_prerequisite ->
+      skill_prerequisite_with_skill_id = Map.put(skill_prerequisite, :skill_id, updated_or_created_skill.id)
+      Skills.create_skill_prerequisite(skill_prerequisite_with_skill_id)
+    end)
+
+    updated_or_created_skill
   end
 
   defp upsert_active_skill(changes = %{
@@ -37,6 +44,8 @@ defmodule FungusToast.Skills.SkillsSeed do
   end
 
   def seed_skills do
+    Repo.delete_all(SkillPrerequisite)
+
     upsert_skill(%{
       id: Skills.skill_id_hypermutation,
       name: "Hypermutation",
@@ -106,6 +115,20 @@ defmodule FungusToast.Skills.SkillsSeed do
       minimum_round: 0
     })
 
+    upsert_skill(%{
+      id: Skills.skill_id_regenerating_spores,
+      name: "Regenerating Spores",
+      description:
+        "Allows a chance for spores that land on dead cells to regenerate them. Dependent upon Spores and Regeneration skills.",
+      increase_per_point: 10.0,
+      up_is_good: true,
+      minimum_round: 0
+    },
+    [
+      %{required_skill_id: Skills.skill_id_spores, required_skill_level: 10},
+      %{required_skill_id: Skills.skill_id_regeneration, required_skill_level: 10}
+    ])
+
     true
   end
 
@@ -149,10 +172,12 @@ defmodule FungusToast.Skills.SkillsSeed do
 
   def reset_skills_in_database() do
     Repo.delete_all(FungusToast.Games.Skill)
+    Repo.delete_all(FungusToast.Games.SkillPrerequisite)
     Repo.delete_all(FungusToast.Games.ActiveSkill)
     #reset the identity so the skill ids can match the desired values again
     Repo.query("ALTER SEQUENCE skills_id_seq RESTART")
     Repo.query("ALTER SEQUENCE active_skills_id_seq RESTART")
+    Repo.query("ALTER SEQUENCE skill_prerequisites_id_seq RESTART")
     seed_skills()
     seed_active_skills()
   end

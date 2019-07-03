@@ -450,6 +450,22 @@ defmodule FungusToast.GamesTest do
       assert {error_illegal_number_of_points_spent} = result
     end
 
+    # test "that an error is returned if the skill prerequisites weren't met" do
+    #   user = user_fixture(%{user_name: "user name"})
+    #   game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
+    #   player = hd(game.players)
+    #   skill = Skills.get_skill_by_name(AiStrategies.skill_name_anti_apoptosis)
+
+    #   #spend one too many points
+    #   one_more_than_available_points = player.mutation_points + 1
+    #   passive_skill_upgrades = %{skill.id => one_more_than_available_points}
+
+    #   result = Games.spend_human_player_mutation_points(player.id, game.id, passive_skill_upgrades, 0)
+
+    #   assert {error_illegal_number_of_points_spent} = result
+    # end
+
+
     test "that an error is returned if too many active cell changes were made" do
       user = user_fixture(%{user_name: "user name"})
       game = Games.create_game(user.user_name, %{number_of_human_players: 1, number_of_ai_players: 0})
