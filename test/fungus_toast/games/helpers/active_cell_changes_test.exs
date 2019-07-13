@@ -123,15 +123,4 @@ defmodule FungusToast.ActiveCellChangesTest do
       assert length(active_cell_changes) == 2
     end
   end
-
-  describe "validate_active_cell_changes/3" do
-    test "that it returns not_enough_action_points if the player attempts to spend more points than they have" do
-      player = %Player{action_points: 1}
-      upgrade_attrs = %{"1" => %{"active_cell_changes" => [], "points_spent" => 2}}
-
-      validation_result = ActiveCellChanges.validate_active_cell_changes(player, 1, upgrade_attrs)
-
-      assert {:error, :not_enough_action_points} == validation_result
-    end
-  end
 end
