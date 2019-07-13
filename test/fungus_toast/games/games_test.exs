@@ -447,7 +447,7 @@ defmodule FungusToast.GamesTest do
 
       result = Games.spend_human_player_mutation_points(player.id, game.id, passive_skill_upgrades, 0)
 
-      assert {error_illegal_number_of_points_spent} = result
+      assert {:error, :error_illegal_number_of_points_spent} = result
     end
 
     # test "that an error is returned if the skill prerequisites weren't met" do
@@ -479,7 +479,7 @@ defmodule FungusToast.GamesTest do
 
       result = Games.spend_human_player_mutation_points(player.id, game.id, %{}, active_skill_upgrades, 0)
 
-      assert {error_illegal_active_cell_changes} = result
+      assert {:error, :too_many_active_cell_changes} = result
     end
 
     test "that the next round is not available if the player didn't spend all of their points" do

@@ -34,11 +34,13 @@ defmodule FungusToastWeb.PlayerSkillController do
     case result do
       {:ok, next_round_available: next_round_available, updated_player: updated_player} ->
         render(conn, "player_skill_update.json", model: %{next_round_available: next_round_available, updated_player: updated_player})
-      {:error_illegal_number_of_points_spent} ->
+
+      {:error, :error_illegal_number_of_points_spent} ->
         conn
         |> put_status(:bad_request)
         |> render("illegal_points_spent.json", %{})
-      {:error_illegal_active_cell_changes} ->
+
+      {:error, :error_illegal_active_cell_changes} ->
       conn
       |> put_status(:bad_request)
       |> render("illegal_active_cell_changes.json", %{})

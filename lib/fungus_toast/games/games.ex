@@ -473,39 +473,43 @@ defmodule FungusToast.Games do
   def spend_human_player_mutation_points(player_id, game_id, passive_skill_upgrades, active_skill_changes \\ %{}, round_number \\ nil) do
     #TODO check if the game is started and throw a 400 bad request if not
     player = Players.get_player!(player_id)
-    spent_mutation_points = PlayerSkills.sum_skill_upgrades(passive_skill_upgrades)
-    if(spent_mutation_points > player.mutation_points) do
-      {:error_illegal_number_of_points_spent}
-    else
-      round_number = if(round_number == nil) do
-        latest_round = Rounds.get_latest_round_for_game(game_id)
-        latest_round.number
-      else
-        round_number
-      end
 
-      update_active_cell_changes_result = ActiveCellChanges.update_active_cell_changes(player, game_id, round_number, active_skill_changes)
-      case update_active_cell_changes_result do
-        {:ok} ->
-          total_spent_points = player.spent_mutation_points + spent_mutation_points
+    passive_skills_upgrade_validation_result = PlayerSkills.validate_passive_skills_upgrade(player, passive_skill_upgrades)
 
-          player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, passive_skill_upgrades)
-          |> Map.put(:mutation_points, player.mutation_points - spent_mutation_points)
-          |> Map.put(:spent_mutation_points, total_spent_points)
+    case passive_skills_upgrade_validation_result do
+      {:ok, spent_mutation_points} ->
+        round_number = if(round_number == nil) do
+          latest_round = Rounds.get_latest_round_for_game(game_id)
+          latest_round.number
+        else
+          round_number
+        end
 
-          updated_player = Players.update_player(player, player_changes)
+        update_active_cell_changes_result = ActiveCellChanges.update_active_cell_changes(player, game_id, round_number, active_skill_changes)
+        case update_active_cell_changes_result do
+          {:ok} ->
+            total_spent_points = player.spent_mutation_points + spent_mutation_points
 
-          game = get_game!(game_id)
-          new_round = next_round_available?(game)
+            player_changes = PlayerSkills.update_player_skills_and_get_player_changes(player, passive_skill_upgrades)
+            |> Map.put(:mutation_points, player.mutation_points - spent_mutation_points)
+            |> Map.put(:spent_mutation_points, total_spent_points)
 
-          if(new_round) do
-            trigger_next_round(game)
-          end
+            updated_player = Players.update_player(player, player_changes)
 
-          {:ok, next_round_available: new_round, updated_player: updated_player}
-        {:error, error_reason} ->
-          {error_reason}
-      end
+            game = get_game!(game_id)
+            new_round = next_round_available?(game)
+
+            if(new_round) do
+              trigger_next_round(game)
+            end
+
+            {:ok, next_round_available: new_round, updated_player: updated_player}
+          {:error, error_reason} ->
+            {:error, error_reason}
+        end
+
+      {:error, error_reason} ->
+        {:error, error_reason}
     end
   end
 
