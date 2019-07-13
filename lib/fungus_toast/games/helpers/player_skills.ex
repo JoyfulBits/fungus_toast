@@ -169,12 +169,38 @@ defmodule FungusToast.PlayerSkills do
   end
 
   @doc """
-  Returns how many mutation points are required for all of the requested skill upgrades
+  Returns how many mutation points are required for all of the requested passive skill upgrades
 
   """
-  def sum_skill_upgrades(skill_upgrades) do
-    skill_upgrades
+  def sum_skill_upgrades(passive_skill_upgrades) do
+    passive_skill_upgrades
     |> Enum.reduce(0, fn {_skill_id, points_spent}, acc -> acc + points_spent end)
+  end
+
+  @doc """
+    Validates the passive skills upgrade request and returns the number of points attempting to be spent
+
+    ## Examples
+
+        iex> validate_passive_skills_upgrade(%FungusToast.Games.Player{mutation_points: 0}, [%{"1" => 1}])
+        {:error, :error_illegal_number_of_points_spent}
+
+        iex> validate_passive_skills_upgrade(%FungusToast.Games.Player{mutation_points: 1}, [%{"1" => 1}])
+        {:ok, 1}
+
+        iex> validate_passive_skills_upgrade(%FungusToast.Games.Player{mutation_points: 1}, [%{"1" => 1, "2" => 2}])
+        {:ok, 3}
+
+  """
+  def validate_passive_skills_upgrade(player, passive_skill_upgrades) do
+    attempted_number_of_points = sum_skill_upgrades(passive_skill_upgrades)
+
+    if(player.mutation_points >= attempted_number_of_points) do
+      {:ok, attempted_number_of_points}
+    else
+      {:error, :error_illegal_number_of_points_spent}
+    end
+
   end
 
   @doc """
